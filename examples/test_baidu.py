@@ -1,6 +1,6 @@
 
 
-from databot.flow import Pipe,Passby,Branch,Loop
+from databot.flow import Pipe,Bypass,Branch,Loop
 from databot.bot import Bot
 
 from dataclasses import dataclass

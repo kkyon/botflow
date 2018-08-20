@@ -1,5 +1,5 @@
 
-from databot.flow import Pipe,Loop,Passby
+from databot.flow import Pipe,Loop,Bypass
 from databot.bot import Bot
 
 
@@ -24,7 +24,7 @@ def main():
     Pipe(
 
             Loop(range(10)),
-            Passby(print,op_sum),
+            Bypass(print, op_sum),
 
         )
 

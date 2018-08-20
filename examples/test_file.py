@@ -3,7 +3,7 @@ import random
 import asyncio
 from aiohttp import ClientSession
 import aiohttp
-from databot.flow import Pipe,Passby,Branch,Timer
+from databot.flow import Pipe,Bypass,Branch,Timer
 from databot.bot import Bot
 from databot.httploader import FileSaver
 

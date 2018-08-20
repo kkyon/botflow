@@ -311,7 +311,7 @@ class Branch(Route):
 
 #无法知道该类是被那里使用。更复杂实现是需要控制所有route初始化的顺序，需要外层初始化结束，建in,out队列传递到内侧
 #make bot时候，对route只需要建立队列关系，而不需要，使用for循环来处理call
-class Passby(Route):
+class Bypass(Route):
 
     # |
     # | x
