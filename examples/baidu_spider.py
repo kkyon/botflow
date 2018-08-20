@@ -9,8 +9,6 @@ import logging
 logging.basicConfig(level=logging.INFO)
 
 
-result=[]
-
 
 
 @dataclass
@@ -70,8 +68,7 @@ def get_all_page_url(html):
     return itemList
 
 
-def print_progress(h):
-    print('got len %s'%(len(result)))
+
 
 
 def main():
@@ -84,7 +81,7 @@ def main():
     p=Pipe(
              Loop(urls),
              HttpLoader(),
-             Branch(get_all_items,print,route_type=ResultItem,share=False),
+             Branch(get_all_items,print),
              Branch(get_all_page_url, HttpLoader(), get_all_items,print),
 
              )
