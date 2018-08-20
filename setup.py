@@ -18,6 +18,7 @@ setup(name='databot',
       author='Guojian Li',
       author_email='guojianlee@gmail.com',
       license='BSD',
+     python_requires=">=3.6.5",
       classifiers=[
           'Development Status :: 1 - Alpha',
           'Intended Audience :: Developers',
@@ -26,7 +27,7 @@ setup(name='databot',
       ],
       packages=['databot'],
       install_requires=[
-          'aiohttp>=3.3.2'
+          'aiohttp>=3.3.0'
 
       ],
 
