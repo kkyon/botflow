@@ -30,7 +30,7 @@ class UrlItem:
     url: str
 
 
-
+#解析具体条目
 def get_all_items(html):
 
     from bs4 import BeautifulSoup
@@ -50,7 +50,7 @@ def get_all_items(html):
 
 
 
-
+#解析 分页 链接
 def get_all_page_url(html):
 
     itemList=[]
@@ -78,7 +78,7 @@ def main():
 
 
     #make data flow net
-    p=Pipe(
+    Pipe(
              Loop(urls),
              HttpLoader(),
              Branch(get_all_items,print),
@@ -89,7 +89,7 @@ def main():
 
 
     Bot.run()
-    print('len',len(result))
+
 
 
 
