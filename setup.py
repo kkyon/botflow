@@ -20,7 +20,7 @@ setup(name='databot',
       license='BSD',
      python_requires=">=3.6.5",
       classifiers=[
-          'Development Status :: 1 - Alpha',
+          'Development Status :: 3 - Alpha',
           'Intended Audience :: Developers',
           'License :: OSI Approved :: BSD License',
           'Programming Language :: Python :: 3'

@@ -3,6 +3,7 @@ import asyncio
 import logging
 from collections import namedtuple
 from . import flow
+from . import node
 import types
 
 class BotInfo(object):
@@ -33,7 +34,9 @@ async def call_wrap(func, param, q):
         await asyncio.get_event_loop().create_task(sync_two_source())
 
     else:
-        if asyncio.iscoroutine(r_or_c):
+        if  isinstance(r_or_c,types.GeneratorType):
+            r=r_or_c
+        elif asyncio.iscoroutine(r_or_c):
             r=await r_or_c
 
 
@@ -41,7 +44,7 @@ async def call_wrap(func, param, q):
         else:
             r=r_or_c
         logging.debug('task_wrape call result r' + str(type(r)))
-        if isinstance(r,list):
+        if isinstance(r,list) or isinstance(r_or_c,types.GeneratorType):
             for i in r:
                 await q.put(i)
         #TODO
@@ -93,7 +96,7 @@ class Bot(object):
     def make_bot(cls,i, o, f):
 
         async def _make_bot(i_q, o_q, func):
-            if isinstance(func, flow.Node):
+            if isinstance(func, node.Node):
                 await func.node_init()
 
             is_stop = False
@@ -105,7 +108,7 @@ class Bot(object):
                     logging.debug('%s,stop %s', str(func), is_stop)
                     await o_q.put(StopIteration())
 
-                    if isinstance(func, flow.Node):
+                    if isinstance(func, node.Node):
                         await func.node_close()
 
                     break
@@ -113,7 +116,7 @@ class Bot(object):
                 t = await i_q.get()
                 data_list.append(t)
                 while not i_q.empty():
-                    t = i_q.get_nowait()
+                    t = await i_q.get()
                     data_list.append(t)
 
                 for data in data_list:

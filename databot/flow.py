@@ -35,8 +35,6 @@ class RouteRule(object):
 
 
 
-
-
 class RouteTable(object):
     __slots__ = ['rules']
     def __init__(self):
@@ -93,10 +91,10 @@ class Route(object):
                 if matched and share==False:
                     pass
                 else:
-                    main_o_q.put_nowait(item)
+                    await main_o_q.put(item)
 
                 if is_stop:
-                    main_o_q.put_nowait(item)
+                    await  main_o_q.put(item)
                     break
 
         fc = asyncio.ensure_future(wrap())
@@ -201,15 +199,23 @@ class Join(Route):
 
 
 
-
+#No read inpute
 class Loop(Route):
     def __init__(self,input):
         self.input=input
 
     def make_route_bot(self, iq, oq):
-        self.input.append(StopIteration())
-        lq=ListQueue(self.input)
-        self.q_one_to_one(lq,oq)
+
+
+        async def nest_loop(iq,oq):
+
+            for i in self.input:
+                await oq.put(i)
+            await oq.put(StopIteration())
+
+        Bot.make_bot_raw(iq,oq,nest_loop)
+
+
 
 
 class Timer(Route):
@@ -333,8 +339,6 @@ class Passby(Route):
         self.q_one_to_two_type(iq,oq,self.q_in_list,self.route_type,self.share)
 
 
-    def __call__(self, data):
-        pass
 
 
 
@@ -356,25 +360,21 @@ class NullQueue(asyncio.Queue):
     def empty(self):
         return False
     def put_nowait(self, item):
-        pass
+        raise NotImplementedError()
 
     async def put(self, item):
         #do nothing
         await asyncio.sleep(0)
 
     async def get(self):
-        await asyncio.sleep(0)
+        await asyncio.sleep(0,)
 
     def get_nowait(self):
-        return 'a'
+        raise NotImplementedError()
 
 
 
 
-class Node(object):
-    async def node_init(self):
-        await asyncio.sleep(0)
-    async def node_close(self):
-        await asyncio.sleep(0)
+
 
 

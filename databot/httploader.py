@@ -3,7 +3,7 @@ from aiohttp import ClientSession
 import aiohttp
 import asyncio
 from functools import partial
-from databot.flow import Node
+from databot.node import Node
 headers = {
 
     'user-agent': "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36",
