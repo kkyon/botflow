@@ -61,14 +61,9 @@ A Spider(crawler) Example
 
     from databot.flow import Pipe,Bypass,Branch,Loop
     from databot.bot import Bot
-
+    from bs4 import BeautifulSoup
     from dataclasses import dataclass
     from databot.httploader import HttpLoader
-    import logging
-    logging.basicConfig(level=logging.INFO)
-
-
-
 
     @dataclass
     class ResultItem:
@@ -92,8 +87,6 @@ A Spider(crawler) Example
     #解析具体条目
     def get_all_items(html):
 
-        from bs4 import BeautifulSoup
-
         soup = BeautifulSoup(html,"lxml")
         items=soup.select('div.result.c-container')
         result=[]
@@ -113,8 +106,6 @@ A Spider(crawler) Example
     def get_all_page_url(html):
 
         itemList=[]
-        from bs4 import BeautifulSoup
-
         soup = BeautifulSoup(html,"lxml")
         page=soup.select('div#page')
         for item in page[0].find_all('a'):
@@ -126,15 +117,10 @@ A Spider(crawler) Example
 
         return itemList
 
-
-
-
-
     def main():
         words = ['贸易战', '世界杯']
         baidu_url = 'https://www.baidu.com/s?wd=%s'
         urls=[baidu_url % (word)  for word in words]
-
 
         #make data flow net
         Pipe(
@@ -143,13 +129,28 @@ A Spider(crawler) Example
                  Branch(get_all_items,print),
                  Branch(get_all_page_url, HttpLoader(), get_all_items,print),
 
-                 )
-
-
-
+             )
         Bot.run()
 
-
-
-
     main()
+
+.. code-block:: text
+
+   * it will scraped 20 pages and 191 items with in 5s . it has very high performance .
+   * 5秒钟可以完成，20个网页，包含191个条目抓取。 根据外部资料asyncio 1分钟可以完成，1百万个网页抓取。databot可以达到相近性能。
+
+
+Contributing
+------------
+
+
+
+
+Donate
+------
+
+
+
+
+Links
+-----
