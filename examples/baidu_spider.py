@@ -1,5 +1,5 @@
 from databot.flow import Pipe, Bypass, Branch, Loop
-from databot.bot import Bot
+from databot.botframe import BotFrame
 from bs4 import BeautifulSoup
 from dataclasses import dataclass
 from databot.httploader import HttpLoader
@@ -67,7 +67,7 @@ def main():
         Branch(get_all_page_url, HttpLoader(), get_all_items, print),
 
     )
-    Bot.run()
+    BotFrame.run()
 
 
 main()

@@ -17,7 +17,11 @@ class BotInfo(object):
 
 async def call_wrap(func, param, q):
     logging.debug('task_wrape'+str(type(func))+str(func))
-    r_or_c=func(param)
+    try:
+        r_or_c=func(param)
+    except Exception as e:
+        await q.put(e)
+        return
     if isinstance(r_or_c, types.AsyncGeneratorType):
         async def sync_two_source():
             async for i in r_or_c:
@@ -33,30 +37,27 @@ async def call_wrap(func, param, q):
 
         await asyncio.get_event_loop().create_task(sync_two_source())
 
-    else:
-        if  isinstance(r_or_c,types.GeneratorType):
+
+    elif  isinstance(r_or_c,types.GeneratorType) or isinstance(r_or_c,list):
             r=r_or_c
-        elif asyncio.iscoroutine(r_or_c):
-            r=await r_or_c
-
-
-
-        else:
-            r=r_or_c
-        logging.debug('task_wrape call result r' + str(type(r)))
-        if isinstance(r,list) or isinstance(r_or_c,types.GeneratorType):
             for i in r:
                 await q.put(i)
-        #TODO
-        # elif isinstance(r,asyncio.Queue):
-        #     while r.empty():
-        #
-        #         await q.put()
-        else:
+    elif isinstance(r_or_c,types.CoroutineType):
+
+            r=await r_or_c
             await q.put(r)
 
+    else:
+            await q.put(r_or_c)
 
-class Bot(object):
+class PerfMetric(object):
+    batch_size = 16
+    suspend_time=1
+    def __init__(self):
+      pass
+
+
+class BotFrame(object):
     _bots=[]
 
     @classmethod
@@ -89,8 +90,31 @@ class Bot(object):
     def make_bot_raw(cls,iq,oq,f):
         fc = asyncio.ensure_future(f(iq, oq))
 
-        Bot._bots.append(BotInfo(iq, oq, fc, fc))
+        BotFrame._bots.append(BotInfo(iq, oq, fc, fc))
 
+
+    @classmethod
+    async def copy_size(cls,q):
+        data_list=[]
+        t = await q.get()
+        data_list.append(t)
+
+        qsize = q.qsize()
+        # get branch size without wait.
+
+        count = 0
+        while qsize > 0:
+            try:
+                t = q.get_nowait()
+            except asyncio.queues.QueueEmpty:
+
+                break
+
+            data_list.append(t)
+            count += 1
+            if count >= qsize or count >= PerfMetric.batch_size:
+                break
+        return data_list
 
     @classmethod
     def make_bot(cls,i, o, f):
@@ -112,12 +136,12 @@ class Bot(object):
                         await func.node_close()
 
                     break
-                data_list = []
-                t = await i_q.get()
-                data_list.append(t)
-                while not i_q.empty():
-                    t = await i_q.get()
-                    data_list.append(t)
+                data_list = await cls.copy_size(i_q)
+
+
+                # while not i_q.empty():
+                #     t = await i_q.get()
+                #     data_list.append(t)
 
                 for data in data_list:
                     if isinstance(data, StopIteration):

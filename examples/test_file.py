@@ -4,7 +4,7 @@ import asyncio
 from aiohttp import ClientSession
 import aiohttp
 from databot.flow import Pipe,Bypass,Branch,Timer
-from databot.bot import Bot
+from databot.botframe import BotFrame
 from databot.httploader import FileSaver
 
 from dataclasses import dataclass
@@ -26,7 +26,7 @@ def main():
              )
 
 
-    Bot.run()
+    BotFrame.run()
 
 
 
