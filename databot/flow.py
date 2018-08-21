@@ -1,7 +1,7 @@
 
 import asyncio
 import logging
-from databot.bot import Bot,BotInfo
+from databot.botframe import BotFrame,BotInfo
 import collections
 import queue
 class RouteRule(object):
@@ -64,6 +64,8 @@ class Route(object):
 
         self.in_table=RouteTable()
         self.out_table = RouteTable()
+        if not isinstance(self.route_type,list):
+            self.route_type = [self.route_type ]
 
     def __call__(self,data):
         pass
@@ -99,7 +101,7 @@ class Route(object):
 
         fc = asyncio.ensure_future(wrap())
 
-        Bot._bots.append(BotInfo(input_q, main_o_q, fc, fc))
+        BotFrame._bots.append(BotInfo(input_q, main_o_q, fc, fc))
 
 
     def q_one_to_one(self,input_q,output_q ):
@@ -114,7 +116,7 @@ class Route(object):
 
         fc = asyncio.ensure_future(one_to_one(input_q,output_q))
 
-        Bot._bots.append(BotInfo(input_q, output_q, fc, fc))
+        BotFrame._bots.append(BotInfo(input_q, output_q, fc, fc))
 
 
 
@@ -130,7 +132,7 @@ class Route(object):
 
         fc = asyncio.ensure_future(one_to_many(input_q))
 
-        Bot._bots.append(BotInfo(input_q, None, fc, fc))
+        BotFrame._bots.append(BotInfo(input_q, None, fc, fc))
 
     def q_many_to_one(self,output_q,*input_q):
 
@@ -162,7 +164,7 @@ class Pipe(Route):
             else:
                 q_o = asyncio.Queue()
 
-            Bot.make_bot(q_i, q_o, func)
+            BotFrame.make_bot(q_i, q_o, func)
         self.q_end=q_o
 
     def __call__(self, list):
@@ -171,28 +173,23 @@ class Pipe(Route):
 
 class Join(Route):
 
+    def __init__(self,*args,route_type=object,share=True):
+        self.args=args
+        self.route_type = route_type
 
-    def make_route_bot(self,iq,oq):
+        self.share=share
+        super().__init__()
 
-        #1.
-        #  |
-        # / \
-        # \ /
-        #  |
-        #2.
-        #\|/
-        # |
-        # |
-
-        self.q_output = oq
+    def make_route_bot(self, iq, oq):
+        q_o = oq #the only different with Pass route
         self.q_in_list = []
         for func in self.args:
             q_i = asyncio.Queue()
             self.q_in_list.append(q_i)
-            Bot.make_bot(q_i, self.q_output, func)
+            BotFrame.make_bot(q_i, q_o, func)
 
 
-        self.q_one_to_many(iq,*self.q_in_list)
+        self.q_one_to_two_type(iq,oq,self.q_in_list,self.route_type,self.share)
 
 
 
@@ -213,7 +210,7 @@ class Loop(Route):
                 await oq.put(i)
             await oq.put(StopIteration())
 
-        Bot.make_bot_raw(iq,oq,nest_loop)
+        BotFrame.make_bot_raw(iq, oq, nest_loop)
 
 
 
@@ -248,7 +245,7 @@ class Timer(Route):
             await q_o.put(StopIteration())
 
 
-        Bot.make_bot_raw(iq,oq,data_route)
+        BotFrame.make_bot_raw(iq, oq, data_route)
 
 
 
@@ -294,7 +291,7 @@ class Branch(Route):
             else:
                 q_o = asyncio.Queue()
 
-            Bot.make_bot(q_i, q_o, func)
+            BotFrame.make_bot(q_i, q_o, func)
         # self.in_table.add_rules(RouteRule(oq, [object], True))
         # self.in_table.add_rules(RouteRule(self.q_start, [self.route_type], self.share))
         self.q_one_to_two_type(iq,oq,[self.q_start],self.route_type,self.share)
@@ -333,7 +330,7 @@ class Bypass(Route):
         for func in self.args:
             q_i = asyncio.Queue()
             self.q_in_list.append(q_i)
-            Bot.make_bot(q_i, q_o, func)
+            BotFrame.make_bot(q_i, q_o, func)
 
 
         self.q_one_to_two_type(iq,oq,self.q_in_list,self.route_type,self.share)
