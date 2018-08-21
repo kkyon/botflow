@@ -17,8 +17,8 @@ headers = {
 
 class HttpLoader(Node):
 
-    def __init__(self,speed=None,proxy=None,header=None,session_policy=None):
-        self.speed=speed
+    def __init__(self,delay=0,proxy=None,header=None,session_policy=None):
+        self.dely=0
 
     async def node_init(self):
         self.session = ClientSession(headers=headers, connector=aiohttp.TCPConnector(verify_ssl=False))
@@ -34,7 +34,7 @@ class HttpLoader(Node):
             url = url.url
         response = await self.session.get(url, headers=headers)
         html = await    response.read()
-
+        await asyncio.sleep(self.dely)
         return html
 
 
