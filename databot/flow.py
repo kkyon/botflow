@@ -73,6 +73,10 @@ class Route(object):
         raise NotImplementedError()
 
 
+    def create_queue(self) -> asyncio.Queue:
+        return asyncio.Queue(maxsize=128)
+
+
     def type_match(self,msg,type_list):
         for t in type_list:
             if isinstance(msg,t):
@@ -99,9 +103,8 @@ class Route(object):
                     await  main_o_q.put(item)
                     break
 
-        fc = asyncio.ensure_future(wrap())
+        BotFrame.make_bot_raw(input_q,inside_q_list,wrap())
 
-        BotFrame._bots.append(BotInfo(input_q, main_o_q, fc, fc))
 
 
     def q_one_to_one(self,input_q,output_q ):
@@ -114,9 +117,10 @@ class Route(object):
 
                     break
 
-        fc = asyncio.ensure_future(one_to_one(input_q,output_q))
+        BotFrame.make_bot_raw(input_q, output_q, one_to_one(input_q,output_q))
 
-        BotFrame._bots.append(BotInfo(input_q, output_q, fc, fc))
+
+
 
 
 
@@ -130,9 +134,8 @@ class Route(object):
 
                     break
 
-        fc = asyncio.ensure_future(one_to_many(input_q))
+        BotFrame.make_bot_raw(input_q, None, one_to_many(input_q))
 
-        BotFrame._bots.append(BotInfo(input_q, None, fc, fc))
 
     def q_many_to_one(self,output_q,*input_q):
 
@@ -155,6 +158,9 @@ class Pipe(Route):
 
     def __init__(self,*args):
         q_o = NullQueue()
+
+        #get this pip own inside bot
+        self.start_index=len(BotFrame.bots)
         self.q_start = q_o
         for func in args:
             q_i = q_o
@@ -162,13 +168,28 @@ class Pipe(Route):
                 q_o = NullQueue()
 
             else:
-                q_o = asyncio.Queue()
+                q_o = self.create_queue()
 
             BotFrame.make_bot(q_i, q_o, func)
+
+        self.end_index=len(BotFrame.bots)
+        for i in  range(self.start_index,self.end_index):
+            BotFrame.bots[i].pipeline=str(self)
         self.q_end=q_o
 
+    def finished(self):
+        for i in  range(self.start_index,self.end_index):
+            fu=BotFrame.bots[i].futr
+            if not fu.done() and not fu.cancelled()  :
+                return False
+        return True
+
+        return isinstance(self.q_end.last_put,StopIteration)
     def __call__(self, list):
         pass
+
+    def __repr__(self):
+        return 'Pip_'+str(id(self))
 
 
 class Join(Route):
@@ -201,22 +222,23 @@ class Loop(Route):
     def __init__(self,input):
         self.input=input
 
+
     def make_route_bot(self, iq, oq):
 
 
-        async def nest_loop(iq,oq):
+        async def nest_loop(oq):
 
             for i in self.input:
-                await oq.put(i)
+                    await oq.put(i)
             await oq.put(StopIteration())
 
-        BotFrame.make_bot_raw(iq, oq, nest_loop)
+        BotFrame.make_bot_raw(iq,oq,nest_loop(oq))
 
 
 
 
 class Timer(Route):
-    def __init__(self, delay=1,max_time=None):
+    def __init__(self, delay=1,max_time=None,until=None):
 
 
 
@@ -226,26 +248,31 @@ class Timer(Route):
 
         self.delay=delay
         self.max_time=max_time
+        self.until=until
 
 
 
     def make_route_bot(self, iq, oq):
-        async def data_route(q_i,q_o):
+        async def data_route(q_o):
             count=0
             while True:
                 count += 1
+
                 if self.max_time and self.max_time < count:
                     break
 
+
+
+                q_o.put_nowait(count)
+
+                if self.until():
+                    break
                 await asyncio.sleep(self.delay)
-
-                q_o.put_nowait('ping %s' %(count))
-
 
             await q_o.put(StopIteration())
 
 
-        BotFrame.make_bot_raw(iq, oq, data_route)
+        BotFrame.make_bot_raw(iq, oq, data_route(oq))
 
 
 
@@ -308,7 +335,7 @@ class Branch(Route):
 
 #无法知道该类是被那里使用。更复杂实现是需要控制所有route初始化的顺序，需要外层初始化结束，建in,out队列传递到内侧
 #make bot时候，对route只需要建立队列关系，而不需要，使用for循环来处理call
-class Bypass(Route):
+class Pass(Route):
 
     # |
     # | x
@@ -353,6 +380,7 @@ class NullQueue(asyncio.Queue):
     # |
     # X
     def __init__(self):
+        self.last_put=None
         pass
     def empty(self):
         return False
@@ -361,6 +389,7 @@ class NullQueue(asyncio.Queue):
 
     async def put(self, item):
         #do nothing
+        self.last_put=item
         await asyncio.sleep(0)
 
     async def get(self):

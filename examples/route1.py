@@ -1,5 +1,5 @@
 
-from databot.flow import Pipe,Loop,Bypass,Branch,Join
+from databot.flow import Pipe,Loop,Pass,Branch,Join
 from databot.botframe import BotFrame
 
 
@@ -33,7 +33,7 @@ def main():
 
     Pipe(
             Loop([A(),B(),A(),A(),B()]),
-            Bypass(process_A,route_type=A),
+            Pass(process_A, route_type=A),
             process_B,
             print
         )

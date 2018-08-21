@@ -7,19 +7,25 @@ from . import node
 import types
 
 class BotInfo(object):
-    def __init__(self,q_i,q_o,func_or_cor,o_f):
-        self.q_i=q_i
-        self.q_o=q_o
-        self.cor=func_or_cor
-        self.o_f = o_f
+    __slots__ = ['iq', 'oq', 'futr','task','func','route_zone','pipeline','stat']
+    def __init__(self):
+        self.iq=None
+        self.oq=None
+        self.futr = None
+        self.task=None
+        self.func=None
+        self.route_zone=None
+        self.pipeline=None
         self.stat='INIT'
 
-
+suppress_exception=False
 async def call_wrap(func, param, q):
     logging.debug('task_wrape'+str(type(func))+str(func))
     try:
         r_or_c=func(param)
     except Exception as e:
+        if not suppress_exception:
+            raise e
         await q.put(e)
         return
     if isinstance(r_or_c, types.AsyncGeneratorType):
@@ -51,21 +57,22 @@ async def call_wrap(func, param, q):
             await q.put(r_or_c)
 
 class PerfMetric(object):
-    batch_size = 16
+    batch_size = 32
     suspend_time=1
     def __init__(self):
       pass
 
 
 class BotFrame(object):
-    _bots=[]
+    bots=[]
 
     @classmethod
     def run(cls):
         bot_nodes=[]
-        for b in cls._bots:
-            bot_nodes.append(b.cor)
-        logging.info('bot number %s',len(cls._bots))
+        for b in cls.bots:
+            bot_nodes.append(b.futr)
+            print('pipe:%s,func:%s'%(b.pipeline,b.func))
+        logging.info('bot number %s', len(cls.bots))
         asyncio.get_event_loop().run_until_complete(asyncio.gather(*bot_nodes))
 
     def debug(name):
@@ -88,9 +95,15 @@ class BotFrame(object):
 
     @classmethod
     def make_bot_raw(cls,iq,oq,f):
-        fc = asyncio.ensure_future(f(iq, oq))
+        fu = asyncio.ensure_future(f)
+        bi=BotInfo()
+        bi.iq=iq
+        bi.oq=oq
+        bi.futr=fu
+        bi.func=f
 
-        BotFrame._bots.append(BotInfo(iq, oq, fc, fc))
+
+        BotFrame.bots.append(bi)
 
 
     @classmethod
@@ -158,6 +171,11 @@ class BotFrame(object):
             f.make_route_bot(i, o)
 
         else:
-            fc = asyncio.ensure_future(_make_bot(i, o, f))
+            fu = asyncio.ensure_future(_make_bot(i, o, f))
+            bi=BotInfo()
+            bi.iq=i
+            bi.oq=o
+            bi.func=f
+            bi.futr=fu
 
-            cls._bots.append(BotInfo(i,o,fc,f))
+            cls.bots.append(bi)

@@ -1,4 +1,4 @@
-from databot.flow import Pipe,Loop,Bypass,Branch
+from databot.flow import Pipe,Loop,Pass,Branch
 from databot.botframe import BotFrame
 class Sum(object):
     def __init__(self):

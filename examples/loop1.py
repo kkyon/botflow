@@ -1,5 +1,5 @@
 
-from databot.flow import Pipe,Loop,Bypass
+from databot.flow import Pipe,Loop,Pass
 from databot.botframe import BotFrame
 
 
@@ -25,7 +25,7 @@ def main():
     Pipe(
 
             Loop(range(1000000)),
-            Bypass(op_sum),
+            Pass(op_sum),
             print
 
         )
