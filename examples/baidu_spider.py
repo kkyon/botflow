@@ -62,7 +62,7 @@ def main():
     # make data flow net
     Pipe(
         Loop(urls),
-        HttpLoader(delay=10),
+        HttpLoader(),
         Branch(get_all_items, print),
         Branch(get_all_page_url, HttpLoader(), get_all_items, print),
 
