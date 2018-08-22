@@ -1,8 +1,8 @@
-from databot.flow import Pipe, Pass, Branch, Loop
+from databot.flow import Pipe, Branch, Loop
 from databot.botframe import BotFrame
 from bs4 import BeautifulSoup
 from dataclasses import dataclass
-from databot.httploader import HttpLoader
+from databot.http.http import HttpLoader
 
 
 @dataclass
