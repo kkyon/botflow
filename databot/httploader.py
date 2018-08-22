@@ -20,11 +20,11 @@ class HttpLoader(Node):
     def __init__(self,delay=0,proxy=None,header=None,session_policy=None):
         self.delay=delay
 
-    async def node_init(self):
+    async def init(self):
         self.session = ClientSession(headers=headers, connector=aiohttp.TCPConnector(verify_ssl=False))
 
 
-    async def node_close(self):
+    async def close(self):
         await self.session.close()
 
 
@@ -58,9 +58,9 @@ class FileSaver(Node):
         self.fd=None
         self.loop=asyncio.get_event_loop()
 
-    async def node_init(self):
+    async def init(self):
         self.fd = await self.open(self.filename, self.mode)
-    async def node_close(self):
+    async def close(self):
         await  self.loop.run_in_executor(None, self.fd.close)
 
     async def __call__(self, text):

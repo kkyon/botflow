@@ -5,9 +5,19 @@ from collections import namedtuple
 from . import flow
 from . import node
 import types
+from . import config
+
+class BotPerf(object):
+    __slots__=['processed_number','func_avr_time','func_max_time','func_min_time']
+    def __init__(self):
+        self.processed_number=0
+        self.func_avr_time=None
+        self.func_max_time = None
+        self.func_min_time = None
+
 
 class BotInfo(object):
-    __slots__ = ['iq', 'oq', 'futr','task','func','route_zone','pipeline','stat']
+    __slots__ = ['iq', 'oq', 'futr','task','func','route_zone','pipeline','stat','perf']
     def __init__(self):
         self.iq=None
         self.oq=None
@@ -17,14 +27,15 @@ class BotInfo(object):
         self.route_zone=None
         self.pipeline=None
         self.stat='INIT'
+        self.perf=BotPerf()
 
-suppress_exception=False
+
 async def call_wrap(func, param, q):
     logging.debug('task_wrape'+str(type(func))+str(func))
     try:
         r_or_c=func(param)
     except Exception as e:
-        if not suppress_exception:
+        if not config.suppress_exception:
             raise e
         await q.put(e)
         return
@@ -51,7 +62,12 @@ async def call_wrap(func, param, q):
     elif isinstance(r_or_c,types.CoroutineType):
 
             r=await r_or_c
-            await q.put(r)
+            if isinstance(r, types.GeneratorType) or isinstance(r, list):
+
+                for i in r:
+                    await q.put(i)
+            else:
+                await q.put(r)
 
     else:
             await q.put(r_or_c)
@@ -71,7 +87,7 @@ class BotFrame(object):
         bot_nodes=[]
         for b in cls.bots:
             bot_nodes.append(b.futr)
-            print('pipe:%s,func:%s'%(b.pipeline,b.func))
+            logging.info('pipe:%s,func:%s'%(b.pipeline,b.func))
         logging.info('bot number %s', len(cls.bots))
         asyncio.get_event_loop().run_until_complete(asyncio.gather(*bot_nodes))
 
@@ -134,7 +150,7 @@ class BotFrame(object):
 
         async def _make_bot(i_q, o_q, func):
             if isinstance(func, node.Node):
-                await func.node_init()
+                await func.init()
 
             is_stop = False
             while True:
@@ -146,7 +162,7 @@ class BotFrame(object):
                     await o_q.put(StopIteration())
 
                     if isinstance(func, node.Node):
-                        await func.node_close()
+                        await func.close()
 
                     break
                 data_list = await cls.copy_size(i_q)

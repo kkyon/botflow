@@ -2,10 +2,19 @@ import asyncio
 
 
 
-
+class dotdict(dict):
+     """dot.notation access to dictionary attributes"""
+     __getattr__ = dict.get
+     __setattr__ = dict.__setitem__
+     __delattr__ = dict.__delitem__
 class Node(object):
-    async def node_init(self):
+
+    def __init__(self,*args,**kwargs):
+        self.args=args
+        self.kwargs=dotdict(kwargs)
+
+    async def init(self):
         await asyncio.sleep(0)
-    async def node_close(self):
+    async def close(self):
         await asyncio.sleep(0)
 
