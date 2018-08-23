@@ -27,7 +27,8 @@ setup(name='databot',
       ],
       packages=['databot'],
       install_requires=[
-          'aiohttp>=3.3.0'
+          'aiohttp>=3.3.0',
+          'aiomysql>=0.0.19'
 
       ],
 
