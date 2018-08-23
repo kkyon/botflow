@@ -1,11 +1,10 @@
-
 import os
 from setuptools import setup
 
 import codecs
 
-def read(fname):
 
+def read(fname):
     return codecs.open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 
@@ -18,21 +17,18 @@ setup(name='databot',
       author='Guojian Li',
       author_email='guojianlee@gmail.com',
       license='BSD',
-     python_requires=">=3.6.5",
+      python_requires=">=3.6.5",
       classifiers=[
           'Development Status :: 3 - Alpha',
           'Intended Audience :: Developers',
           'License :: OSI Approved :: BSD License',
           'Programming Language :: Python :: 3'
       ],
-      packages=['databot'],
+      packages=['databot', 'data.db', 'data.http'],
       install_requires=[
           'aiohttp>=3.3.0',
           'aiomysql>=0.0.19'
 
       ],
 
-)
-
-
-
+      )
