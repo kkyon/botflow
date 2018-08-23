@@ -11,13 +11,11 @@ class Mysql(Node):
         self.pool=None
         self.inited=False
         self.closed=False
-        self.ref=0
 
 
-    async def init(self):
-        self.ref +=1
-        if self.inited == True:
-            return
+
+    async def sub_init(self):
+
 
         loop = asyncio.get_event_loop()
         self.sql=self.args[0]
@@ -27,13 +25,11 @@ class Mysql(Node):
         self.inited=True
 
     async def close(self):
-        self.ref-=1
-        if self.ref>0 or self.closed == True:
-            return
+
 
         self.pool.close()
         await self.pool.wait_closed()
-        self.closed=True
+
 
 
     def map_to_class(self,d):

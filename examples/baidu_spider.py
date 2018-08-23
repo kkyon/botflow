@@ -3,6 +3,7 @@ from databot.botframe import BotFrame
 from bs4 import BeautifulSoup
 from databot.http.http import HttpLoader,HttpResponse
 from databot.db.mysql import Insert
+from databot.db.aiofile import aiofile
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
@@ -17,7 +18,7 @@ class ResultItem:
         self.page_no: int = 0
 
     def __repr__(self):
-        return self.name
+        return  '%s,%s,%d,%d'%(str(self.id),self.name,self.page_no,self.page_rank)
 
 
 
@@ -25,14 +26,6 @@ class UrlItem:
     def __init__(self):
         self.name: str=''
         self.url: str=''
-
-
-dbconf={}
-dbconf['host']= '127.0.0.1'
-dbconf['port']=3306
-dbconf['user']= 'root'
-dbconf['password']= 'admin123'
-dbconf['db']= 'test'
 
 
 # 解析具体条目
@@ -73,14 +66,13 @@ def main():
     baidu_url = 'https://www.baidu.com/s?wd=%s'
     urls = [baidu_url % (word) for word in words]
 
-    # make data flow net
-    insert=Insert("insert into test.baidu (id,name ,url,page_rank,page_no)values('{id}','{name}' ,'{url}',{page_rank},{page_no})",**dbconf)
 
+    outputfile=aiofile('baidu.txt')
     Pipe(
         Loop(urls),
         HttpLoader(),
-        Branch(get_all_items,insert),
-        Branch(get_all_page_url, HttpLoader(), get_all_items, insert),
+        Branch(get_all_items,outputfile),
+        Branch(get_all_page_url, HttpLoader(), get_all_items, outputfile),
 
     )
 

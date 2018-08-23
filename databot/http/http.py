@@ -20,6 +20,7 @@ class HttpResponse(object):
     def __init__(self,body,encoding):
         self._body=body
         self._encoding=encoding
+
     @property
     def text(self,encoding=None,errors='strict'):
 
@@ -36,6 +37,7 @@ class HttpLoader(Node):
 
     def __init__(self,delay=0,proxy=None,header=None,session_policy=None):
         self.delay=delay
+        super().__init__()
 
     async def init(self):
         timeout = aiohttp.ClientTimeout(total=5)
@@ -65,31 +67,5 @@ class HttpSender(object):
     #TODO
 
 
-class FileSaver(Node):
-
-    async def open(self,filename,mode='a'):
-
-
-        cb = partial(open, filename, mode=mode)
-        fd=await  self.loop.run_in_executor(None, cb)
-        return fd
-
-    def __init__(self,fileame,mode='a'):
-        self.filename=fileame
-        self.mode=mode
-        self.fd=None
-        self.loop=asyncio.get_event_loop()
-
-    async def init(self):
-        self.fd = await self.open(self.filename, self.mode)
-    async def close(self):
-        await  self.loop.run_in_executor(None, self.fd.close)
-
-    async def __call__(self, text):
-
-
-
-
-        await  self.loop.run_in_executor(None, self.fd.write,text)
 
 
