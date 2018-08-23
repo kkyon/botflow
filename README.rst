@@ -22,116 +22,131 @@ A Simple Example
 .. code-block:: python
 
 
-    from databot.flow import Pipe,Loop,Bypass
-    from databot.bot import Bot
+    from databot.flow import Pipe, Loop, Fork
+    from databot.botframe import BotFrame
 
 
     class Sum(object):
 
         def __init__(self):
-            self.sum=0
+            self.sum = 0
 
         def __call__(self, i):
-            self.sum+=i
+            self.sum += i
+            return self.sum
 
         def __repr__(self):
-            return 'sum:'+str(self.sum)
+            return 'sum:' + str(self.sum)
 
-    op_sum=Sum()
+
+    op_sum = Sum()
+
 
     def main():
         Pipe(
 
-                Loop(range(10)),
-                Bypass(print, op_sum),
+            Loop(range(1000000)),
+            Fork(op_sum),
+            print
 
-            )
-        Bot.run()
+        )
+
+        BotFrame.run()
         print(op_sum)
 
 
-
-
     main()
+
 
 A Spider(crawler) Example
 ----------------
 .. code-block:: python
 
-    from databot.flow import Pipe,Bypass,Branch,Loop
-    from databot.bot import Bot
-    from bs4 import BeautifulSoup
-    from dataclasses import dataclass
-    from databot.httploader import HttpLoader
 
-    @dataclass
+    from databot.flow import Pipe, Branch, Loop,Join,Timer
+    from databot.botframe import BotFrame
+    from bs4 import BeautifulSoup
+    from databot.http.http import HttpLoader,HttpResponse
+    from databot.db.mysql import Insert
+    from databot.db.aiofile import aiofile
+    import logging
+    logging.basicConfig(level=logging.DEBUG)
+
+
     class ResultItem:
-        id:str=''
-        name: str =''
-        url: str =' '
-        page_rank:int = 0
-        page_no:int =0
+
+        def __init__(self):
+            self.id: str = ''
+            self.name: str = ''
+            self.url: str = ' '
+            self.page_rank: int = 0
+            self.page_no: int = 0
 
         def __repr__(self):
-            return self.name
+            return  '%s,%s,%d,%d'%(str(self.id),self.name,self.page_no,self.page_rank)
 
 
 
-    @dataclass
     class UrlItem:
-        name: str
-        url: str
+        def __init__(self):
+            self.name: str=''
+            self.url: str=''
 
 
-    #解析具体条目
-    def get_all_items(html):
-
-        soup = BeautifulSoup(html,"lxml")
-        items=soup.select('div.result.c-container')
-        result=[]
-        for rank,item in enumerate(items):
+    # 解析具体条目
+    def get_all_items(response):
+        soup = BeautifulSoup(response.text, "lxml")
+        items = soup.select('div.result.c-container')
+        result = []
+        for rank, item in enumerate(items):
             import uuid
-            id=uuid.uuid4()
+            id = uuid.uuid4()
             r = ResultItem()
-            r.id=id
-            r.page_rank=rank
-            r.name=item.h3.get_text()
+            r.id = id
+            r.page_rank = rank
+            r.name = item.h3.get_text()
             result.append(r)
         return result
 
 
-
-    #解析 分页 链接
-    def get_all_page_url(html):
-
-        itemList=[]
-        soup = BeautifulSoup(html,"lxml")
-        page=soup.select('div#page')
+    # 解析 分页 链接
+    def get_all_page_url(response):
+        itemList = []
+        soup = BeautifulSoup(response.text, "lxml")
+        page = soup.select('div#page')
         for item in page[0].find_all('a'):
-            href=item.get('href')
-            no=item.get_text()
+            href = item.get('href')
+            no = item.get_text()
             if '下一页' in no:
                 break
-            itemList.append('https://www.baidu.com'+href)
+            itemList.append('https://www.baidu.com' + href)
 
         return itemList
+
+    def show_info(i):
+        BotFrame.debug()
 
     def main():
         words = ['贸易战', '世界杯']
         baidu_url = 'https://www.baidu.com/s?wd=%s'
-        urls=[baidu_url % (word)  for word in words]
+        urls = [baidu_url % (word) for word in words]
 
-        #make data flow net
+
+        outputfile=aiofile('baidu.txt')
         Pipe(
-                 Loop(urls),
-                 HttpLoader(),
-                 Branch(get_all_items,print),
-                 Branch(get_all_page_url, HttpLoader(), get_all_items,print),
+            Loop(urls),
+            HttpLoader(),
+            Branch(get_all_items,outputfile),
+            Branch(get_all_page_url, HttpLoader(), get_all_items, outputfile),
 
-             )
-        Bot.run()
+        )
+
+        BotFrame.run()
+
 
     main()
+
+
 
 .. code-block:: text
 
