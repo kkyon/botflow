@@ -3,17 +3,38 @@ from aiomysql import create_pool,cursors
 from databot.node import Node
 import pymysql
 #it may need a executor implemention in future
+#close by count ref
+import logging
 class Mysql(Node):
+
+    def init_param(self):
+        self.pool=None
+        self.inited=False
+        self.closed=False
+        self.ref=0
+
+
     async def init(self):
+        self.ref +=1
+        if self.inited == True:
+            return
+
         loop = asyncio.get_event_loop()
         self.sql=self.args[0]
         self.pool=await  create_pool(host=self.kwargs.host, port=self.kwargs.port,
                                user=self.kwargs.user, password=self.kwargs.password,
                                db=self.kwargs.db, loop=loop,cursorclass=cursors.DictCursor)
+        self.inited=True
 
     async def close(self):
+        self.ref-=1
+        if self.ref>0 or self.closed == True:
+            return
+
         self.pool.close()
         await self.pool.wait_closed()
+        self.closed=True
+
 
     def map_to_class(self,d):
         if 'map_class' not in self.kwargs:
@@ -35,7 +56,6 @@ class Mysql(Node):
         if isinstance(param, dict):
             sql = self.sql.format(**param)
         elif hasattr(param, '__dict__') and len(param.__dict__) !=0 :
-            print(param.__dict__)
             try:
                 sql = self.sql.format(**param.__dict__)
             except Exception:
@@ -71,6 +91,7 @@ class Insert(Mysql):
         sql = self.sql_format(param)
         async with self.pool.get() as conn:
             async with conn.cursor() as cur:
+                logging.debug(sql)
                 r = await cur.execute(sql)
                 await conn.commit()
                 return r

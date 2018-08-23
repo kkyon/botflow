@@ -1,8 +1,9 @@
 
 import asyncio
 import logging
-from databot.botframe import BotFrame,BotInfo
+from databot.botframe import BotFrame
 import collections
+from databot.config import config
 import queue
 class RouteRule(object):
     __slots__ = ['output_q', 'type_list','share']
@@ -64,11 +65,14 @@ class Route(object):
 
         self.in_table=RouteTable()
         self.out_table = RouteTable()
-        if not isinstance(self.route_type,list):
+
+        if hasattr(self,'route_type') and not isinstance(self.route_type,list):
             self.route_type = [self.route_type ]
 
     def __call__(self,data):
         pass
+
+
     def make_route_bot(self, iq, oq):
         raise NotImplementedError()
 
@@ -77,70 +81,52 @@ class Route(object):
         return asyncio.Queue(maxsize=128)
 
 
-    def type_match(self,msg,type_list):
+    @classmethod
+    def type_match(cls,msg,type_list):
         for t in type_list:
             if isinstance(msg,t):
                 return True
 
         return False
 
-    def q_one_to_two_type(self,input_q,main_o_q,inside_q_list,type_list=[object],share=True ):
-        async def wrap():
-            while True:
-                item = await input_q.get()
-                matched=self.type_match(item,type_list)
-                is_stop=isinstance(item, StopIteration)
-                if matched or is_stop:
-                    for q in inside_q_list:
-                        await q.put(item)
-
-                if matched and share==False:
-                    pass
-                else:
-                    await main_o_q.put(item)
-
-                if is_stop:
-                    await  main_o_q.put(item)
-                    break
-
-        BotFrame.make_bot_raw(input_q,inside_q_list,wrap())
 
 
-
-    def q_one_to_one(self,input_q,output_q ):
-        async def one_to_one(input_q,output_q):
-            while True:
-                item = await input_q.get()
-                output_q.put_nowait(item)
-
-                if isinstance(item, StopIteration):
-
-                    break
-
-        BotFrame.make_bot_raw(input_q, output_q, one_to_one(input_q,output_q))
-
-
-
-
-
-
-    def q_one_to_many(self,input_q ):
-        async def one_to_many(input_q):
-            while True:
-                item = await input_q.get()
-                await self.in_table.route(item)
-
-                if isinstance(item, StopIteration):
-
-                    break
-
-        BotFrame.make_bot_raw(input_q, None, one_to_many(input_q))
-
-
-    def q_many_to_one(self,output_q,*input_q):
-
-        for q in input_q:
-            self.q_one_to_one(q,output_q)
+    #
+    #
+    # def q_one_to_one(self,input_q,output_q ):
+    #     async def one_to_one(input_q,output_q):
+    #         while True:
+    #             item = await input_q.get()
+    #             output_q.put_nowait(item)
+    #
+    #             if isinstance(item, Retire):
+    #
+    #                 break
+    #
+    #     BotFrame.make_bot_raw(input_q, output_q, one_to_one(input_q,output_q))
+    #
+    #
+    #
+    #
+    #
+    #
+    # def q_one_to_many(self,input_q ):
+    #     async def one_to_many(input_q):
+    #         while True:
+    #             item = await input_q.get()
+    #             await self.in_table.route(item)
+    #
+    #             if isinstance(item, Retire):
+    #
+    #                 break
+    #
+    #     BotFrame.make_bot_raw(input_q, None, one_to_many(input_q))
+    #
+    #
+    # def q_many_to_one(self,output_q,*input_q):
+    #
+    #     for q in input_q:
+    #         self.q_one_to_one(q,output_q)
 
 
 
@@ -152,9 +138,6 @@ class Pipe(Route):
     # |
     # |
     # |
-    # |
-
-
 
     def __init__(self,*args):
         q_o = NullQueue()
@@ -162,6 +145,7 @@ class Pipe(Route):
         #get this pip own inside bot
         self.start_index=len(BotFrame.bots)
         self.q_start = q_o
+        self.joined=False
         for func in args:
             q_i = q_o
             if func == args[-1]:
@@ -171,11 +155,32 @@ class Pipe(Route):
                 q_o = self.create_queue()
 
             BotFrame.make_bot(q_i, q_o, func)
+            if isinstance(func,Route):
+                if hasattr(func,'joined') and func.joined:
+                    self.joined=True
+
+
 
         self.end_index=len(BotFrame.bots)
         for i in  range(self.start_index,self.end_index):
             BotFrame.bots[i].pipeline=str(self)
         self.q_end=q_o
+
+        if self.joined or config.joined_network:
+            self.check_joined_node()
+
+    def check_joined_node(self):
+        for i in range(self.start_index, self.end_index):
+            bot = BotFrame.bots[i]
+            count = 0
+            for j in range(self.start_index, self.end_index):
+
+                for q in BotFrame.bots[j].oq:
+                    if bot.iq is q:
+                        count += 1
+                        bot.parents.append(BotFrame.bots[j])
+
+            bot.parent_count = count
 
     def finished(self):
         for i in  range(self.start_index,self.end_index):
@@ -184,35 +189,12 @@ class Pipe(Route):
                 return False
         return True
 
-        return isinstance(self.q_end.last_put,StopIteration)
+
     def __call__(self, list):
         pass
 
     def __repr__(self):
         return 'Pip_'+str(id(self))
-
-
-class Join(Route):
-
-    def __init__(self,*args,route_type=object,share=True):
-        self.args=args
-        self.route_type = route_type
-
-        self.share=share
-        super().__init__()
-
-    def make_route_bot(self, iq, oq):
-        q_o = oq #the only different with Pass route
-        self.q_in_list = []
-        for func in self.args:
-            q_i = asyncio.Queue()
-            self.q_in_list.append(q_i)
-            BotFrame.make_bot(q_i, q_o, func)
-
-
-        self.q_one_to_two_type(iq,oq,self.q_in_list,self.route_type,self.share)
-
-
 
 
 
@@ -221,18 +203,23 @@ class Join(Route):
 class Loop(Route):
     def __init__(self,input):
         self.input=input
+        self.joined = False
+
 
 
     def make_route_bot(self, iq, oq):
 
 
         async def nest_loop(oq):
-
+            bi=BotFrame.get_botinfo()
             for i in self.input:
                     await oq.put(i)
-            await oq.put(StopIteration())
 
-        BotFrame.make_bot_raw(iq,oq,nest_loop(oq))
+            bi.stoped=True
+            BotFrame.ready_to_stop(bi)
+
+
+        BotFrame.make_bot_raw(None,oq,nest_loop(oq))
 
 
 
@@ -255,6 +242,7 @@ class Timer(Route):
     def make_route_bot(self, iq, oq):
         async def data_route(q_o):
             count=0
+            bi=BotFrame.get_botinfo()
             while True:
                 count += 1
 
@@ -265,14 +253,17 @@ class Timer(Route):
 
                 q_o.put_nowait(count)
 
-                if self.until():
+                if self.until is not None and self.until():
                     break
                 await asyncio.sleep(self.delay)
 
-            await q_o.put(StopIteration())
+            bi.stoped = True
+            BotFrame.ready_to_stop(bi)
+
+            # await q_o.put(Retire())
 
 
-        BotFrame.make_bot_raw(iq, oq, data_route(oq))
+        BotFrame.make_bot_raw(None, oq, data_route(oq))
 
 
 
@@ -292,13 +283,14 @@ class Branch(Route):
     # |
     # |- - -x
     # |
-    def __init__(self,*args,route_type=object,share=True):
+    def __init__(self,*args,route_type=object,share=True,join=False):
         self.args=args
         if isinstance(route_type,list):
             self.route_type=route_type
         else:
             self.route_type = [route_type]
         self.share=share
+        self.joined=join
         super().__init__()
 
     def is_last_one(self,list,item):
@@ -309,19 +301,22 @@ class Branch(Route):
     def make_route_bot(self, iq, oq):
 
 
-        self.q_start = asyncio.Queue()
+        self.q_start = self.create_queue()
         q_o=self.q_start
+        BotFrame.q_one_to_two_type(iq, oq, [self.q_start], self.route_type, self.share)
         for func in self.args:
             q_i = q_o
             if self.is_last_one(self.args,func):
-                q_o= NullQueue()
+                if self.joined:
+                    q_o=oq
+                else:
+                    q_o= NullQueue()
             else:
-                q_o = asyncio.Queue()
+                q_o = self.create_queue()
 
             BotFrame.make_bot(q_i, q_o, func)
-        # self.in_table.add_rules(RouteRule(oq, [object], True))
-        # self.in_table.add_rules(RouteRule(self.q_start, [self.route_type], self.share))
-        self.q_one_to_two_type(iq,oq,[self.q_start],self.route_type,self.share)
+
+
 
 
 
@@ -335,24 +330,28 @@ class Branch(Route):
 
 #无法知道该类是被那里使用。更复杂实现是需要控制所有route初始化的顺序，需要外层初始化结束，建in,out队列传递到内侧
 #make bot时候，对route只需要建立队列关系，而不需要，使用for循环来处理call
-class Pass(Route):
+class Fork(Route):
 
     # |
     # | x
     # |/
     # |\
     # | x
-    def __init__(self,*args,route_type=object,share=True):
+    def __init__(self,*args,route_type=object,share=True,join=False):
         self.args=args
         if isinstance(route_type,list):
             self.route_type=route_type
         else:
             self.route_type = [route_type]
         self.share=share
+        self.joined=join
         super().__init__()
 
     def make_route_bot(self, iq, oq):
-        q_o = NullQueue()
+        if self.joined:
+            q_o=oq
+        else:
+            q_o = NullQueue()
         self.q_in_list = []
         for func in self.args:
             q_i = asyncio.Queue()
@@ -360,10 +359,23 @@ class Pass(Route):
             BotFrame.make_bot(q_i, q_o, func)
 
 
-        self.q_one_to_two_type(iq,oq,self.q_in_list,self.route_type,self.share)
+        BotFrame.q_one_to_two_type(iq,oq,self.q_in_list,self.route_type,self.share)
 
 
+class Join(Fork):
+    def __init__(self, *args, route_type=object, share=True, join=False):
 
+        super().__init__(args, route_type, share, join=True)
+
+
+###########short name ############
+
+F=Fork
+J=Join
+P=Pipe
+B=Branch
+T=Timer
+L=Loop
 
 
 

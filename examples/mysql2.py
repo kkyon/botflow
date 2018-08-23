@@ -1,5 +1,5 @@
 
-from databot.flow import Pipe,Loop,Pass
+from databot.flow import Pipe,Loop,Fork
 from databot.botframe import BotFrame
 from databot.db.mysql import Query,Insert
 
@@ -27,7 +27,7 @@ def main():
 
             Loop(range(1)),
             Query('select * from mysql.user limit 10 ', **dbconf, map_class=User),
-            Pass(print),
+            Fork(print),
             Insert('insert into jk.new_table(user,host)values ("{user}","{host}")', **dbconf),
         )
 

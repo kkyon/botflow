@@ -1,5 +1,5 @@
 
-from databot.flow import Pipe,Loop,Pass
+from databot.flow import Pipe,Loop,Fork
 from databot.botframe import BotFrame
 from databot.db.mysql import Query
 

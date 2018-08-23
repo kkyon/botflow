@@ -1,5 +1,5 @@
 
-from databot.flow import Pipe,Loop,Pass,Branch,Join
+from databot.flow import Pipe,Loop,Fork,Branch,Join
 from databot.botframe import BotFrame
 
 
@@ -31,9 +31,11 @@ def main():
         )
     BotFrame.run()
 
+    print('----ex2')
+
     Pipe(
             Loop([A(),B(),A(),A(),B()]),
-            Pass(process_A, route_type=A),
+            Fork(process_A, route_type=A,share=False),
             process_B,
             print
         )

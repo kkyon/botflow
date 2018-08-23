@@ -3,6 +3,7 @@ from databot.botframe import BotFrame
 from bs4 import BeautifulSoup
 from dataclasses import dataclass
 from databot.http.http import HttpLoader
+from databot.config import config
 
 
 @dataclass
@@ -24,8 +25,8 @@ class UrlItem:
 
 
 # 解析具体条目
-def get_all_items(html):
-    soup = BeautifulSoup(html, "lxml")
+def get_all_items(response):
+    soup = BeautifulSoup(response.text, "lxml")
     items = soup.select('div.result.c-container')
     result = []
     for rank, item in enumerate(items):
@@ -40,9 +41,9 @@ def get_all_items(html):
 
 
 # 解析 分页 链接
-def get_all_page_url(html):
+def get_all_page_url(response):
     itemList = []
-    soup = BeautifulSoup(html, "lxml")
+    soup = BeautifulSoup(response.text, "lxml")
     page = soup.select('div#page')
     for item in page[0].find_all('a'):
         href = item.get('href')
@@ -68,7 +69,7 @@ def show_progress(count):
 
 
 
-
+config.exception_policy=config.Exception_ignore
 def main():
     words = ['贸易战', '世界杯']*50
     baidu_url = 'https://www.baidu.com/s?wd=%s'
