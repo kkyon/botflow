@@ -5,7 +5,7 @@ import codecs
 
 
 def read(fname):
-    return codecs.open(os.path.join(os.path.dirname(__file__), fname)).read()
+    return codecs.open(os.path.join(os.path.dirname(__file__), fname),encoding="utf-8").read()
 
 
 setup(name='databot',
@@ -24,7 +24,7 @@ setup(name='databot',
           'License :: OSI Approved :: BSD License',
           'Programming Language :: Python :: 3'
       ],
-      packages=['databot', 'data.db', 'data.http'],
+      packages=['databot', 'databot.db', 'databot.http'],
       install_requires=[
           'aiohttp>=3.3.0',
           'aiomysql>=0.0.19'
