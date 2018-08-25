@@ -4,6 +4,7 @@ import aiohttp
 import asyncio
 from functools import partial
 from databot.node import Node
+import json
 import random
 headers = {
 
@@ -30,17 +31,27 @@ class HttpResponse(object):
 
         return self._body.decode(encoding, errors=errors)
 
+    @property
+    def json(self,encoding=None):
+
+
+        if encoding is None:
+            encoding = self._encoding
+
+        return json.loads(self._body.decode(encoding))
+
     def __repr__(self):
         return 'httpresponse %s'%(id(self))
 
 class HttpLoader(Node):
 
-    def __init__(self,delay=0,proxy=None,header=None,session_policy=None):
+    def __init__(self,delay=0,proxy=None,header=None,session_policy=None,timeout=20):
         self.delay=delay
+        self.timeout=timeout
         super().__init__()
 
     async def init(self):
-        timeout = aiohttp.ClientTimeout(total=5)
+        timeout = aiohttp.ClientTimeout(total=self.timeout)
         self.session = ClientSession(headers=headers,timeout=timeout, connector=aiohttp.TCPConnector(verify_ssl=False))
 
 

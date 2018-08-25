@@ -76,6 +76,7 @@ def main():
 
     )
 
+    BotFrame.render('baiduspider')
     BotFrame.run()
 
 

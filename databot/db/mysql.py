@@ -14,7 +14,7 @@ class Mysql(Node):
 
 
 
-    async def sub_init(self):
+    async def init(self):
 
 
         loop = asyncio.get_event_loop()
