@@ -19,7 +19,7 @@ class Node(object):
         pass
 
     async def init(self):
-        raise NotImplemented()
+        raise NotImplemented(self)
 
     async def close(self):
         raise NotImplemented()

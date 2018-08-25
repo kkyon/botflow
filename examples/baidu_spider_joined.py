@@ -69,7 +69,7 @@ def get_all_page_url(response):
 def show_info(i):
     BotFrame.debug()
 def main():
-    words = ['贸易战','世界杯']
+    words = ['贸易战']
     baidu_url = 'https://www.baidu.com/s?wd=%s'
     urls = [baidu_url % (word) for word in words]
 
@@ -87,6 +87,8 @@ def main():
     )
 
     Pipe(Timer(delay=2,until=p.finished), show_info)
+
+    BotFrame.render('baiduspider')
     BotFrame.run()
 
 main()

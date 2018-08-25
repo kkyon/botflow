@@ -1,0 +1,25 @@
+// /Users/liguojian/PycharmProjects/databot/databot/botframe.py
+digraph {
+	node [shape=circle]
+	4700069608 [label="Loop object "]
+	4700312632 [label="HttpLoader object "]
+	4700069608 -> 4700312632
+	4687076952 [label="function get_all_items "]
+	4704145624 -> 4687076952
+	4704145624 [label="Branch object "]
+	4700312632 -> 4704145624
+	4704145768 [label="function get_all_page_url "]
+	4705364008 -> 4704145768
+	4704146344 [label="HttpLoader object "]
+	4704145768 -> 4704146344
+	4705364152 [label="function get_all_items "]
+	4704146344 -> 4705364152
+	4705364008 [label="Branch object "]
+	4687076952 -> 4705364008
+	4704145624 -> 4705364008
+	4705364296 [label="Insert object "]
+	4705364152 -> 4705364296
+	4705364440 [label="Timer object "]
+	4705364584 [label="function show_info "]
+	4705364440 -> 4705364584
+}

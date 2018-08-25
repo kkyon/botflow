@@ -1,0 +1,16 @@
+// /Users/liguojian/PycharmProjects/databot/databot/botframe.py
+digraph {
+	node [shape=circle]
+	4570139384 [label="Loop object "]
+	4663654728 [label="function double "]
+	4663867432 [label="function triple "]
+	4663868584 [label="_make_blocked_join_bot_input "]
+	4663869016 [label="_make_blocked_join_bot_merged "]
+	4664492248 [label="built-in function print"]
+	4570139384 -> 4663868584
+	4663868584 -> 4663654728
+	4663654728 -> 4663869016
+	4663868584 -> 4663867432
+	4663867432 -> 4663869016
+	4663869016 -> 4664492248
+}
