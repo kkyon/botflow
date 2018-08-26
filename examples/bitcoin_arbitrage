@@ -1,35 +1,64 @@
 // /Users/liguojian/PycharmProjects/databot/databot/botframe.py
 digraph {
 	node [shape=circle]
-	4516487960 [label="Timer object "]
-	4516490552 [label="_raw_value_wrap "]
-	4516631464 -> 4516490552
-	4516490984 [label="HttpLoader object "]
-	4516490552 -> 4516490984
-	4516632616 [label="function parse_kraken "]
-	4516490984 -> 4516632616
-	4516631464 [label="Return object "]
-	4528997000 -> 4516631464
-	4523396696 [label="_raw_value_wrap "]
-	4523533944 -> 4523396696
-	4523415880 [label="HttpLoader object "]
-	4523396696 -> 4523415880
-	4523535816 [label="function parse_bittrex "]
-	4523415880 -> 4523535816
-	4523533944 [label="Return object "]
-	4528997000 -> 4523533944
-	4523860760 [label="_raw_value_wrap "]
-	4528996424 -> 4523860760
-	4528872472 [label="HttpLoader object "]
-	4523860760 -> 4528872472
-	4528983928 [label="function parse_bitstamp "]
-	4528872472 -> 4528983928
-	4528996424 [label="Return object "]
-	4528997000 -> 4528996424
-	4528997000 [label="Join object "]
-	4516487960 -> 4528997000
-	4528997144 [label="built-in function print"]
-	4516632616 -> 4528997144
-	4523535816 -> 4528997144
-	4528983928 -> 4528997144
+	4626842824 [label="Timer object "]
+	4626845416 [label="_raw_value_wrap "]
+	4626965848 -> 4626845416
+	4626964696 [label="HttpLoader object "]
+	4626845416 -> 4626964696
+	4626967000 [label="function parse_kraken "]
+	4626964696 -> 4626967000
+	4626965848 [label="Return object "]
+	4639308680 -> 4626965848
+	4634054728 [label="_raw_value_wrap "]
+	4633843896 -> 4634054728
+	4633722952 [label="HttpLoader object "]
+	4634054728 -> 4633722952
+	4633723240 [label="function parse_bittrex "]
+	4633722952 -> 4633723240
+	4633843896 [label="Return object "]
+	4639308680 -> 4633843896
+	4634174808 [label="_raw_value_wrap "]
+	4639306232 -> 4634174808
+	4639178328 [label="HttpLoader object "]
+	4634174808 -> 4639178328
+	4639306376 [label="function parse_bitstamp "]
+	4639178328 -> 4639306376
+	4639306232 [label="Return object "]
+	4639308680 -> 4639306232
+	4639306952 [label="_raw_value_wrap "]
+	4639307384 -> 4639306952
+	4639307096 [label="HttpLoader object "]
+	4639306952 -> 4639307096
+	4639307240 [label="function parse_bitfinex "]
+	4639307096 -> 4639307240
+	4639307384 [label="Return object "]
+	4639308680 -> 4639307384
+	4639307528 [label="_raw_value_wrap "]
+	4639307960 -> 4639307528
+	4639307672 [label="HttpLoader object "]
+	4639307528 -> 4639307672
+	4639307816 [label="function parse_bitpay "]
+	4639307672 -> 4639307816
+	4639307960 [label="Return object "]
+	4639308680 -> 4639307960
+	4639308104 [label="_raw_value_wrap "]
+	4639308536 -> 4639308104
+	4639308248 [label="HttpLoader object "]
+	4639308104 -> 4639308248
+	4639308392 [label="function parse_coindesk "]
+	4639308248 -> 4639308392
+	4639308536 [label="Return object "]
+	4639308680 -> 4639308536
+	4639308680 [label="_join_input "]
+	4626842824 -> 4639308680
+	4639308824 [label="_join_merged "]
+	4626967000 -> 4639308824
+	4633723240 -> 4639308824
+	4639306376 -> 4639308824
+	4639307240 -> 4639308824
+	4639307816 -> 4639308824
+	4639308392 -> 4639308824
+	4639308968 [label="built-in function print"]
+	4639308824 -> 4639308968
 }

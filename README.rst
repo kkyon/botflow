@@ -2,9 +2,9 @@
 Databot
 ===========================
 
-*data driven programming framework with asyncio.
-*it hided complex async programming detail .every processor unit will act like a bot .
-*The framework also provider type and content base route function.
+    *data driven programming framework with asyncio.
+    *it hided complex async programming detail .every processor unit will act like a bot .
+    *The framework also provider type and content base route function.
 
 
 Installing
@@ -63,95 +63,111 @@ A Spider(crawler) Example
 .. code-block:: python
 
 
-    from databot.flow import Pipe, Branch, Loop,Join,Timer
+    from databot.flow import Pipe, Loop, Fork,Join,Branch,BlockedJoin,Return,Timer
     from databot.botframe import BotFrame
-    from bs4 import BeautifulSoup
-    from databot.http.http import HttpLoader,HttpResponse
-    from databot.db.mysql import Insert
-    from databot.db.aiofile import aiofile
-    import logging
-    logging.basicConfig(level=logging.DEBUG)
+    from databot.http.http import HttpLoader
+    import time
+    import datetime
+    from databot.config import config
+    class Tick(object):
 
-
-    class ResultItem:
 
         def __init__(self):
-            self.id: str = ''
-            self.name: str = ''
-            self.url: str = ' '
-            self.page_rank: int = 0
-            self.page_no: int = 0
-
+            self.ask=None
+            self.bid=None
+            self.exchange=''
+            self.time=None
         def __repr__(self):
-            return  '%s,%s,%d,%d'%(str(self.id),self.name,self.page_no,self.page_rank)
 
+            st = datetime.datetime.fromtimestamp(self.time).strftime('%Y-%m-%d %H:%M:%S')
+            return "{} {} ask:{} bid:{}".format(self.exchange,st,self.ask,self.bid)
 
+    def parse_kraken(response):
+        json=response.json
+        t=Tick()
+        t.exchange='kraken'
+        t.bid=json['result']['XXBTZUSD']['b'][0]
+        t.ask = json['result']['XXBTZUSD']['a'][0]
+        t.time=time.time()
+        return t
 
-    class UrlItem:
-        def __init__(self):
-            self.name: str=''
-            self.url: str=''
+    def parse_bittrex(response):
+        json=response.json
+        t=Tick()
+        t.exchange='bittrex'
+        t.bid=json['result']['Bid']
+        t.ask = json['result']['Ask']
+        t.time=time.time()
+        return t
 
+    def parse_bitstamp(response):
+        json=response.json
+        t=Tick()
+        t.exchange='bitstamp'
+        t.bid=float(json['bid'])
+        t.ask=float(json['ask'])
+        t.time=time.time()
+        return t
 
-    # 解析具体条目
-    def get_all_items(response):
-        soup = BeautifulSoup(response.text, "lxml")
-        items = soup.select('div.result.c-container')
-        result = []
-        for rank, item in enumerate(items):
-            import uuid
-            id = uuid.uuid4()
-            r = ResultItem()
-            r.id = id
-            r.page_rank = rank
-            r.name = item.h3.get_text()
-            result.append(r)
-        return result
+    #https://api.bitfinex.com/v1/ticker/btcusd
+    def parse_bitfinex(response):
+        json=response.json
+        t=Tick()
+        t.exchange='bitfinex'
+        t.bid=float(json['bid'])
+        t.ask=float(json['ask'])
+        t.time=time.time()
+        return t
+    #https://bitpay.com/api/rates
+    def parse_bitpay(response):
+        json=response.json
+        t=Tick()
+        t.exchange='bitpay'
+        for p in json:
+            if p['code']=='USD':
+                t.bid=p['rate']
+                t.ask=t.bid
+                t.time=time.time()
 
+                return t
+    #http://api.coindesk.com/v1/bpi/currentprice.json
 
-    # 解析 分页 链接
-    def get_all_page_url(response):
-        itemList = []
-        soup = BeautifulSoup(response.text, "lxml")
-        page = soup.select('div#page')
-        for item in page[0].find_all('a'):
-            href = item.get('href')
-            no = item.get_text()
-            if '下一页' in no:
-                break
-            itemList.append('https://www.baidu.com' + href)
+    def parse_coindesk(response):
+        json=response.json
+        t=Tick()
+        t.exchange='coindesk'
+        t.bid = json['bpi']['USD']['rate_float']
+        t.ask = t.bid
+        t.time = time.time()
+        return t
 
-        return itemList
-
-    def show_info(i):
-        BotFrame.debug()
-
+    config.exception_policy=config.Exception_pipein
     def main():
-        words = ['贸易战', '世界杯']
-        baidu_url = 'https://www.baidu.com/s?wd=%s'
-        urls = [baidu_url % (word) for word in words]
 
-
-        outputfile=aiofile('baidu.txt')
+        httpload=HttpLoader(timeout=2)
         Pipe(
-            Loop(urls),
-            HttpLoader(),
-            Branch(get_all_items,outputfile),
-            Branch(get_all_page_url, HttpLoader(), get_all_items, outputfile),
 
+            Timer(delay=10,max_time=5),
+            BlockedJoin(
+                Return("https://api.kraken.com/0/public/Ticker?pair=XBTUSD",httpload , parse_kraken),
+                Return("https://bittrex.com/api/v1.1/public/getticker?market=USD-BTC", httpload, parse_bittrex),
+                Return("https://www.bitstamp.net/api/ticker/", httpload, parse_bitstamp),
+                Return("https://bitpay.com/api/rates", httpload, parse_bitpay),
+                Return("http://api.coindesk.com/v1/bpi/currentprice.json", httpload, parse_coindesk),
+            ),
+            print,
         )
 
+        BotFrame.render('bitcoin_arbitrage')
         BotFrame.run()
+
 
 
     main()
 
-
-
 .. code-block:: text
 
-   * it will scraped 20 pages and 191 items with in 5s . it has very high performance .
-   * 5秒钟可以完成，20个网页，包含191个条目抓取。 根据外部资料asyncio 1分钟可以完成，1百万个网页抓取。databot可以达到相近性能。
+
 
 
 Contributing

@@ -43,13 +43,17 @@ class BotInfo(object):
         return str(id(self))
 
 
-async def handle_exception(e, param, iq):
+async def handle_exception(e, param, iq,oq):
     if config.exception_policy == config.Exception_raise:
         raise e
     elif config.exception_policy == config.Exception_ignore:
-        pass
+        return
+    elif config.exception_policy == config.Exception_pipein:
+        await oq.put(e)
     elif config.exception_policy == config.Exception_retry:
         await iq.put(param)
+    else:
+        raise Exception('undefined exception policy')
 
 
 async def call_wrap(func, param, iq, oq):
@@ -57,7 +61,7 @@ async def call_wrap(func, param, iq, oq):
     try:
         r_or_c = func(param)
     except Exception as e:
-        await handle_exception(e, param, iq)
+        await handle_exception(e, param, iq,oq)
         return
     if isinstance(r_or_c, types.AsyncGeneratorType):
         async def sync_two_source():
@@ -91,7 +95,7 @@ async def call_wrap(func, param, iq, oq):
                 await oq.put(r)
         except Exception as e:
 
-            await handle_exception(e, param, iq)
+            await handle_exception(e, param, iq,oq)
 
         # TODO
 

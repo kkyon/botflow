@@ -1,25 +1,23 @@
 // /Users/liguojian/PycharmProjects/databot/databot/botframe.py
 digraph {
 	node [shape=circle]
-	4700069608 [label="Loop object "]
-	4700312632 [label="HttpLoader object "]
-	4700069608 -> 4700312632
-	4687076952 [label="function get_all_items "]
-	4704145624 -> 4687076952
-	4704145624 [label="Branch object "]
-	4700312632 -> 4704145624
-	4704145768 [label="function get_all_page_url "]
-	4705364008 -> 4704145768
-	4704146344 [label="HttpLoader object "]
-	4704145768 -> 4704146344
-	4705364152 [label="function get_all_items "]
-	4704146344 -> 4705364152
-	4705364008 [label="Branch object "]
-	4687076952 -> 4705364008
-	4704145624 -> 4705364008
-	4705364296 [label="Insert object "]
-	4705364152 -> 4705364296
-	4705364440 [label="Timer object "]
-	4705364584 [label="function show_info "]
-	4705364440 -> 4705364584
+	4759898296 [label="Loop object "]
+	4759883208 [label="HttpLoader object "]
+	4759898296 -> 4759883208
+	4760112440 [label="function get_all_items "]
+	4760343176 -> 4760112440
+	4760110568 [label="aiofile object "]
+	4760112440 -> 4760110568
+	4760343176 [label="Branch object "]
+	4759883208 -> 4760343176
+	4764040072 [label="function get_all_page_url "]
+	4764160648 -> 4764040072
+	4764135288 [label="HttpLoader object "]
+	4764040072 -> 4764135288
+	4764135144 [label="function get_all_items "]
+	4764135288 -> 4764135144
+	4764160504 [label="aiofile object "]
+	4764135144 -> 4764160504
+	4764160648 [label="Branch object "]
+	4760343176 -> 4764160648
 }
