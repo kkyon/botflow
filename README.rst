@@ -52,8 +52,12 @@ What's a Data-driven programming
 All unit(Pipe,Node,Route) communicates via queue and paralle in coroutine . but User of the databot not care too much the detail of asyncio .
 
 Below some graphes will get you some basic concept for the Route:
-
-    .. image:: path/filename.png
+      branch:https://github.com/kkyon/databot/blob/master/docs/databot_branch.jpg
+      fork:https://github.com/kkyon/databot/blob/master/docs/databot_fork.jpg
+      join:https://github.com/kkyon/databot/blob/master/docs/databot_join.jpg
+      return:https://github.com/kkyon/databot/blob/master/docs/databot_return.jpg
+      
+ 
 
 
 
