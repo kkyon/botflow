@@ -21,12 +21,12 @@ class BotPerf(object):
 
 
 class BotInfo(object):
-    __slots__ = ['iq', 'oq', 'futr', 'task', 'func', 'route_zone', 'pipeline', 'stoped', 'perf', 'parent_count','idle',
-                 'stoped_count', 'parents']
+    __slots__ = ['iq', 'oq', 'futr', 'task', 'func', 'route_zone', 'pipeline', 'stoped', 'perf', 'ep','idle',
+                  'parents']
 
     def __init__(self):
-        self.iq = None
-        self.oq = None
+        self.iq = []
+        self.oq = []
         self.futr = None
         self.task = None
         self.func = None
@@ -35,8 +35,7 @@ class BotInfo(object):
         self.stoped = False
         self.idle=True
         self.perf = BotPerf()
-        self.parent_count = 0
-        self.stoped_count = 0
+        self.ep=config.Exception_default
         self.parents = []
 
     def __repr__(self):
@@ -310,7 +309,7 @@ class BotFrame(object):
 
                 if BotFrame.ready_to_stop(bi):
                     bi.stoped = True
-                    await   route(Retire())
+                    await   q.put(Retire())
 
                     break
                 bi.idle = True

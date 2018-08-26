@@ -82,6 +82,136 @@ class TestPipe(TestCase):
         )
 
         BotFrame.run()
-        self.assertEqual(self.b_count,4)
+
+    def test_double_loop(self):
+
+        count=0
+        def sum(x):
+            nonlocal count
+            count+=x
 
 
+        p = Pipe(
+            Loop(range(10)),
+            Loop(range(10)),
+            sum
+
+
+        )
+
+        BotFrame.run()
+        self.assertEqual(count,45*10)
+
+    def test_double_loop(self):
+
+        count=0
+        def sum(x):
+            nonlocal count
+            count+=x
+
+
+        p = Pipe(
+            Loop(range(10)),
+            Loop(range(10)),
+            sum
+
+
+        )
+
+        BotFrame.run()
+        self.assertEqual(count,45*10)
+
+    def test_loop_double(self):
+        count = 0
+
+        def sum(x):
+            nonlocal count
+            count += x
+
+        p = Pipe(
+            Loop(range(10)),
+            Loop(range(10)),
+            sum
+
+        )
+
+        BotFrame.run()
+        self.assertEqual(count, 45 * 10)
+
+
+    def test_blockedjoin(self):
+
+        from databot.flow import BlockedJoin
+        def check(r):
+            self.assertEqual(len(r),2)
+            self.assertTrue(isinstance(r[0],B))
+            self.assertTrue(isinstance(r[0],B))
+
+        p = Pipe(
+            Loop([A()]),
+            BlockedJoin(self.a_to_b,
+                        self.a_to_b
+
+                        ),
+
+            check
+        )
+
+        BotFrame.run()
+
+    def test_blockedjoin_exception2(self):
+
+        from databot.flow import BlockedJoin
+
+        from databot.config import config
+        config.exception_policy=config.Exception_pipein
+
+
+        def raise_exception(a):
+            raise Exception()
+        def check(r):
+            self.assertEqual(len(r),2)
+            self.assertTrue(isinstance(r[0],Exception))
+            self.assertTrue(isinstance(r[1],B))
+
+        p = Pipe(
+            Loop([A()]),
+            BlockedJoin(raise_exception,
+                        self.a_to_b
+
+                        ),
+
+            check
+        )
+
+        BotFrame.run()
+        config.exception_policy = config.Exception_default
+
+
+    def test_blockedjoin_exception(self):
+
+        from databot.flow import BlockedJoin
+
+        from databot.config import config
+        config.exception_policy=config.Exception_ignore
+
+
+        def raise_exception(a):
+            raise Exception()
+        def check(r):
+            self.assertEqual(len(r),2)
+            self.assertTrue(isinstance(r[0],Exception))
+            self.assertTrue(isinstance(r[1],B))
+
+        p = Pipe(
+            Loop([A()]),
+            BlockedJoin(raise_exception,
+                        self.a_to_b
+
+                        ),
+
+            check
+        )
+
+        BotFrame.run()
+        config.exception_policy = config.Exception_default

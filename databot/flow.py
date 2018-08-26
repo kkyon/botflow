@@ -196,7 +196,7 @@ class Pipe(Route):
                         count += 1
                         bot.parents.append(BotFrame.bots[j])
 
-            bot.parent_count = count
+
 
     def finished(self):
         for i in range(self.start_index, self.end_index):
