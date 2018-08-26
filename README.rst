@@ -28,34 +28,30 @@ What's a Data-driven programming
     Data-driven programming is typically applied to streams of structured data, for filtering, transforming, aggregating (such as computing statistics), or calling other programs
 
     Databot have few basic concept to impelement DDP.
-
-    - **Pipe**
-        it is the main stream process of the programe . all unit will work inside.
-
-    - **Node**
+- **Pipe**
+   it is the main stream process of the programe . all unit will work inside.
+- **Node**
         it is the process logic node . it will driven by data. custom function work as Node .
         There are some built-in node  :
-            Loop:work as **for**
-            Timer: it will send message in the pipe by timer param . **delay**, **max_time**
-            HttpLoader: get a url and return Httpresponse
-            Mysql query or insert: for mysql querying and insert
-            File read write: for file write.
-
-    - **Route**
+   * Loop:work as **for**
+   * Timer: it will send message in the pipe by timer param . **delay**, **max_time**
+   * HttpLoader: get a url and return Httpresponse
+   * Mysql query or insert: for mysql querying and insert
+   * File read write: for file write.
+- **Route**
         It will be used to create complex data flow network,not just only one main process. Databot can nest Route in side a Route.
         it would very powerfull.
         There are some pre built-in Route:
-            **Branch**: will duplicte data from parent pipe to a branch .
-            **Return**: will duplicate data from parent pipe, and return finally result to parent pipe.
-            **Filter**: drop out data from pipe by some condition
-            **Fork**: will duplicate data to many branch.
-            **Join**: duplicate data to many branches ,and return result to pipe.
+ * **Branch** : will duplicte data from parent pipe to a branch .
+ * **Return** : will duplicate data from parent pipe, and return finally result to parent pipe.
+ * **Filter** : drop out data from pipe by some condition
+ * **Fork** : will duplicate data to many branch.
+ * **Join** : duplicate data to many branches ,and return result to pipe.
 
 
+All unit(Pipe,Node,Route) communicates via queue and paralle in coroutine . but User of the databot not care too much the detail of asyncio .
 
-    All unit(Pipe,Node,Route) communicates via queue and paralle in coroutine . but User of the databot not care too much the detail of asyncio .
-
-    Below some graphes will get you some basic concept for the Route:
+Below some graphes will get you some basic concept for the Route:
 
     .. image:: path/filename.png
 
@@ -71,6 +67,8 @@ Databot is...
     It has an active, friendly community you can talk to for support,
 
     Here's one of the simplest applications you can make::
+   
+   .. code-block:: python
 
     from databot.flow import Pipe, Loop, Fork,Join,Branch,BlockedJoin,Return
     from databot import flow
