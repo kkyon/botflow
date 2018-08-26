@@ -2,9 +2,9 @@
 Databot
 ===========================
 
-    *data driven programming framework with asyncio.
-    *it hided complex async programming detail .every processor unit will act like a bot .
-    *The framework also provider type and content base route function.
+* data driven programming framework with asyncio.
+* it hided complex async programming detail .every processor unit will act like a bot .
+* The framework also provider type and content base route function.
 
 
 Installing
@@ -19,15 +19,15 @@ What's a Data-driven programming
 ====================
 
 
+Data-driven programming is a programming paradigm in which the program statements describe the data to be matched and the processing required rather than defining a sequence of steps to be taken.
+Standard examples of data-driven languages are the text-processing languages sed and AWK,where the data is a sequence of lines in an input stream.
 
-    Data-driven programming is a programming paradigm in which the program statements describe the data to be matched and the processing required rather than defining a sequence of steps to be taken.
-    Standard examples of data-driven languages are the text-processing languages sed and AWK,where the data is a sequence of lines in an input stream.
+Data-driven programming is similar to event-driven programming, in that both are structured as pattern matching and resulting processing, and are usually implemented by a main loop, though they are typically applied to different domains.
 
-    Data-driven programming is similar to event-driven programming, in that both are structured as pattern matching and resulting processing, and are usually implemented by a main loop, though they are typically applied to different domains.
+Data-driven programming is typically applied to streams of structured data, for filtering, transforming, aggregating (such as computing statistics), or calling other programs
 
-    Data-driven programming is typically applied to streams of structured data, for filtering, transforming, aggregating (such as computing statistics), or calling other programs
+Databot have few basic concept to impelement DDP.
 
-    Databot have few basic concept to impelement DDP.
 - **Pipe**
    it is the main stream process of the programe . all unit will work inside.
 - **Node**
@@ -42,11 +42,11 @@ What's a Data-driven programming
         It will be used to create complex data flow network,not just only one main process. Databot can nest Route in side a Route.
         it would very powerfull.
         There are some pre built-in Route:
- * **Branch** : will duplicte data from parent pipe to a branch .
- * **Return** : will duplicate data from parent pipe, and return finally result to parent pipe.
- * **Filter** : drop out data from pipe by some condition
- * **Fork** : will duplicate data to many branch.
- * **Join** : duplicate data to many branches ,and return result to pipe.
+* **Branch** : will duplicte data from parent pipe to a branch .
+* **Return** : will duplicate data from parent pipe, and return finally result to parent pipe.
+* **Filter** : drop out data from pipe by some condition
+* **Fork** : will duplicate data to many branch.
+* **Join** : duplicate data to many branches ,and return result to pipe.
 
 
 All unit(Pipe,Node,Route) communicates via queue and paralle in coroutine . but User of the databot not care too much the detail of asyncio .
@@ -66,11 +66,11 @@ Databot is...
 
 - **Simple**
 
-    Databot is easy to use and maintain, and does *not need configuration files* and know about asynckio .
+Databot is easy to use and maintain, and does *not need configuration files* and know about asynckio .
 
-    It has an active, friendly community you can talk to for support,
+It has an active, friendly community you can talk to for support,
 
-    Here's one of the simplest applications you can make::
+Here's one of the simplest applications you can make::
    
    .. code-block:: python
 
@@ -143,9 +143,8 @@ Databot is...
 
 
 - **Fast**
-
-    Node will be run in parallel ,and it will get high performance
-    when processing stream data.
+Node will be run in parallel ,and it will get high performance
+when processing stream data.
 
 
 
