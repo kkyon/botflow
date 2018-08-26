@@ -13,7 +13,7 @@ Installing
 Install and update using `pip`_:
 
 
-    pip install -U databot
+**pip install -U databot**
 
 What's a Data-driven programming
 ====================
@@ -70,12 +70,13 @@ Databot is easy to use and maintain, and does *not need configuration files* and
 
 It has an active, friendly community you can talk to for support,
 
-Here's one of the simplest applications you can make::
+Here's one of the simplest applications you can make
 
 
    
 
-    .. code-block:: python
+.. code-block:: python
+
     from databot.flow import Pipe, Loop, Fork,Join,Branch,BlockedJoin,Return
     from databot import flow
     from databot.botframe import BotFrame
