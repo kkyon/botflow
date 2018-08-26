@@ -1,13 +1,14 @@
-from databot.flow import Pipe, Branch, Loop,Join,Timer
+from databot.flow import Pipe, Branch, Loop
 from databot.botframe import BotFrame
 from bs4 import BeautifulSoup
-from databot.http.http import HttpLoader,HttpResponse
-from databot.db.mysql import Insert
+from databot.http.http import HttpLoader
 from databot.db.aiofile import aiofile
 import logging
 logging.basicConfig(level=logging.DEBUG)
 
 
+
+#定义解析结构
 class ResultItem:
 
     def __init__(self):
@@ -19,13 +20,6 @@ class ResultItem:
 
     def __repr__(self):
         return  '%s,%s,%d,%d'%(str(self.id),self.name,self.page_no,self.page_rank)
-
-
-
-class UrlItem:
-    def __init__(self):
-        self.name: str=''
-        self.url: str=''
 
 
 # 解析具体条目
@@ -44,7 +38,7 @@ def get_all_items(response):
     return result
 
 
-# 解析 分页 链接
+# 解析分页链接
 def get_all_page_url(response):
     itemList = []
     soup = BeautifulSoup(response.text, "lxml")
@@ -58,8 +52,6 @@ def get_all_page_url(response):
 
     return itemList
 
-def show_info(i):
-    BotFrame.debug()
 
 def main():
     words = ['贸易战', '世界杯']
@@ -75,12 +67,14 @@ def main():
         Branch(get_all_page_url, HttpLoader(), get_all_items, outputfile),
 
     )
-
+    #生成流程图
     BotFrame.render('baiduspider')
     BotFrame.run()
 
 
 main()
+
+
 
 
 
