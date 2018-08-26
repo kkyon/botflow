@@ -15,60 +15,73 @@ Install and update using `pip`_:
 
     pip install -U databot
 
-
-A Simple Example
-----------------
-
-.. code-block:: python
+What's a Data-driven programming
+====================
 
 
-    from databot.flow import Pipe, Loop, Fork
-    from databot.botframe import BotFrame
+
+    Data-driven programming is a programming paradigm in which the program statements describe the data to be matched and the processing required rather than defining a sequence of steps to be taken.
+    Standard examples of data-driven languages are the text-processing languages sed and AWK,where the data is a sequence of lines in an input stream.
+
+    Data-driven programming is similar to event-driven programming, in that both are structured as pattern matching and resulting processing, and are usually implemented by a main loop, though they are typically applied to different domains.
+
+    Data-driven programming is typically applied to streams of structured data, for filtering, transforming, aggregating (such as computing statistics), or calling other programs
+
+    Databot have few basic concept to impelement DDP.
+
+    - **Pipe**
+        it is the main stream process of the programe . all unit will work inside.
+
+    - **Node**
+        it is the process logic node . it will driven by data. custom function work as Node .
+        There are some built-in node  :
+            Loop:work as **for**
+            Timer: it will send message in the pipe by timer param . **delay**, **max_time**
+            HttpLoader: get a url and return Httpresponse
+            Mysql query or insert: for mysql querying and insert
+            File read write: for file write.
+
+    - **Route**
+        It will be used to create complex data flow network,not just only one main process. Databot can nest Route in side a Route.
+        it would very powerfull.
+        There are some pre built-in Route:
+            **Branch**: will duplicte data from parent pipe to a branch .
+            **Return**: will duplicate data from parent pipe, and return finally result to parent pipe.
+            **Filter**: drop out data from pipe by some condition
+            **Fork**: will duplicate data to many branch.
+            **Join**: duplicate data to many branches ,and return result to pipe.
 
 
-    class Sum(object):
 
-        def __init__(self):
-            self.sum = 0
+    All unit(Pipe,Node,Route) communicates via queue and paralle in coroutine . but User of the databot not care too much the detail of asyncio .
 
-        def __call__(self, i):
-            self.sum += i
-            return self.sum
+    Below some graphes will get you some basic concept for the Route:
 
-        def __repr__(self):
-            return 'sum:' + str(self.sum)
+    .. image:: path/filename.png
 
 
-    op_sum = Sum()
 
+Databot is...
+=============
 
-    def main():
-        Pipe(
+- **Simple**
 
-            Loop(range(1000000)),
-            Fork(op_sum),
-            print
+    Databot is easy to use and maintain, and does *not need configuration files* and know about asynckio .
 
-        )
+    It has an active, friendly community you can talk to for support,
 
-        BotFrame.run()
-        print(op_sum)
+    Here's one of the simplest applications you can make::
 
-
-    main()
-
-
-A Spider(crawler) Example
-----------------
-.. code-block:: python
-
-
-    from databot.flow import Pipe, Loop, Fork,Join,Branch,BlockedJoin,Return,Timer
+    from databot.flow import Pipe, Loop, Fork,Join,Branch,BlockedJoin,Return
+    from databot import flow
     from databot.botframe import BotFrame
     from databot.http.http import HttpLoader
+
     import time
     import datetime
     from databot.config import config
+
+
     class Tick(object):
 
 
@@ -78,7 +91,6 @@ A Spider(crawler) Example
             self.exchange=''
             self.time=None
         def __repr__(self):
-
             st = datetime.datetime.fromtimestamp(self.time).strftime('%Y-%m-%d %H:%M:%S')
             return "{} {} ask:{} bid:{}".format(self.exchange,st,self.ask,self.bid)
 
@@ -100,62 +112,24 @@ A Spider(crawler) Example
         t.time=time.time()
         return t
 
-    def parse_bitstamp(response):
-        json=response.json
-        t=Tick()
-        t.exchange='bitstamp'
-        t.bid=float(json['bid'])
-        t.ask=float(json['ask'])
-        t.time=time.time()
-        return t
 
-    #https://api.bitfinex.com/v1/ticker/btcusd
-    def parse_bitfinex(response):
-        json=response.json
-        t=Tick()
-        t.exchange='bitfinex'
-        t.bid=float(json['bid'])
-        t.ask=float(json['ask'])
-        t.time=time.time()
-        return t
-    #https://bitpay.com/api/rates
-    def parse_bitpay(response):
-        json=response.json
-        t=Tick()
-        t.exchange='bitpay'
-        for p in json:
-            if p['code']=='USD':
-                t.bid=p['rate']
-                t.ask=t.bid
-                t.time=time.time()
 
-                return t
-    #http://api.coindesk.com/v1/bpi/currentprice.json
-
-    def parse_coindesk(response):
-        json=response.json
-        t=Tick()
-        t.exchange='coindesk'
-        t.bid = json['bpi']['USD']['rate_float']
-        t.ask = t.bid
-        t.time = time.time()
-        return t
-
-    config.exception_policy=config.Exception_pipein
+    config.exception_policy=config.Exception_ignore
     def main():
 
-        httpload=HttpLoader(timeout=2)
+
+        hget=HttpLoader(timeout=2)
+
         Pipe(
 
-            Timer(delay=10,max_time=5),
+            flow.Timer(delay=3,max_time=5),
             BlockedJoin(
-                Return("https://api.kraken.com/0/public/Ticker?pair=XBTUSD",httpload , parse_kraken),
-                Return("https://bittrex.com/api/v1.1/public/getticker?market=USD-BTC", httpload, parse_bittrex),
-                Return("https://www.bitstamp.net/api/ticker/", httpload, parse_bitstamp),
-                Return("https://bitpay.com/api/rates", httpload, parse_bitpay),
-                Return("http://api.coindesk.com/v1/bpi/currentprice.json", httpload, parse_coindesk),
+                Return("https://api.kraken.com/0/public/Ticker?pair=XBTUSD", hget, parse_kraken),
+                Return("https://bittrex.com/api/v1.1/public/getticker?market=USD-BTC", hget, parse_bittrex),
+
             ),
             print,
+
         )
 
         BotFrame.render('bitcoin_arbitrage')
@@ -165,8 +139,15 @@ A Spider(crawler) Example
 
     main()
 
-.. code-block:: text
 
+- **Fast**
+
+    Node will be run in parallel ,and it will get high performance
+    when processing stream data.
+
+
+
+- **Visualliztion**
 
 
 
