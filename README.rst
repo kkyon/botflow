@@ -64,7 +64,7 @@ https://github.com/kkyon/databot/tree/master/examples
             Timer(delay=2),#send timer data to pipe every 2 sen
             "http://api.coindesk.com/v1/bpi/currentprice.json", #send url to pipe when timer trigger
             HttpLoader(),#read url and load http response
-            lambda r:r.json['bpi']['USD']['rate_float'], #read http response and parese as json
+            lambda r:r.json['bpi']['USD']['rate_float'], #read http response and parse as json
             print, #print out
         )
 
