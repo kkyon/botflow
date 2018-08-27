@@ -42,12 +42,12 @@ Databot is...
 
 - **Simple**
 
-Databot is easy to use and maintain, and does *not need configuration files* and know about asynckio .
+Databot is easy to use and maintain, and does *not need configuration files* and know about asyncio and how to paralle .
 
-It has an active, friendly community you can talk to for support,
+Here's one of the simple applications you can make.
 
-Here's one of the simple applications you can make.load the bitoin prices every 2 sencond.advantage price aggreagator sample can be found here.
-    https://github.com/kkyon/databot/tree/master/examples
+load the bitoin prices every 2 sencond.advantage price aggreagator sample can be found here.
+https://github.com/kkyon/databot/tree/master/examples
 
 
    
