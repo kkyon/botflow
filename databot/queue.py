@@ -78,11 +78,11 @@ class CachedQueue(asyncio.Queue):
     def __init__(self):
         self.last_put = None
         self.is_load =False
-        self.cached=[]
-        super()._init()
+        self.cache=[]
+        super().__init__(maxsize=128)
 
     def abandon(self):
-        self.cached=[]
+        self.cache=[]
 
     # def persist(self,filename):
     #     with open(filename) as f:
@@ -90,7 +90,10 @@ class CachedQueue(asyncio.Queue):
     #
     # def load(self):
     #     pass
-
+    def load_cache(self,cache):
+        for item in cache:
+            super().put_nowait(item)
+        self.cache=cache
     async def get(self):
         return await super().get()
 
@@ -100,4 +103,4 @@ class CachedQueue(asyncio.Queue):
         # do nothing
         self.last_put = item
         await super().put(item)
-        self.cached.append(item)
+        self.cache.append(item)
