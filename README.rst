@@ -2,9 +2,9 @@
 Databot
 ===========================
 
-* data driven programming framework with asyncio.
-* it hided complex async programming detail .every processor unit will act like a bot .
-* The framework also provider type and content base route function.
+* Data driven programming framework .
+* Paralleled in coroutines .
+* Type and content based route function.
 
 
 Installing
