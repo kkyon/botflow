@@ -13,6 +13,7 @@ class Config(object):
         self.exception_policy=self.Exception_default
         self.joined_network=True
         self.execute_mode=self.stream
+        self.replay_mode=False
 
 
 

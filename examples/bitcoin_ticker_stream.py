@@ -49,7 +49,7 @@ def main():
     Pipe(
 
         flow.Timer(delay=3,max_time=5),
-        BlockedJoin(
+        Join(
             Return("https://api.kraken.com/0/public/Ticker?pair=XBTUSD", hget, parse_kraken),
             Return("https://bittrex.com/api/v1.1/public/getticker?market=USD-BTC", hget, parse_bittrex),
 

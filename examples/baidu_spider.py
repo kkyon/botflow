@@ -59,9 +59,11 @@ def main():
     urls = [baidu_url % (word) for word in words]
 
 
+
+
     outputfile=aiofile('baidu.txt')
     Pipe(
-        Loop(urls),
+        urls,
         HttpLoader(),
         Branch(get_all_items,outputfile),
         Branch(get_all_page_url, HttpLoader(), get_all_items, outputfile),

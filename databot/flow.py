@@ -3,7 +3,7 @@ import logging
 from databot.botframe import BotFrame,call_wrap,BotControl
 import collections
 from databot.config import config
-import queue
+import  databot.queue  as queue
 
 
 class RouteRule(object):
@@ -120,10 +120,6 @@ class Route(object):
     def make_route_bot(self, iq, oq):
         raise NotImplementedError()
 
-    def create_queue(self) -> asyncio.Queue:
-        q=asyncio.Queue(maxsize=128)
-
-        return q
 
     @classmethod
     def type_match(cls, msg, type_list):
@@ -145,21 +141,29 @@ class Pipe(Route):
     # |
 
     def __init__(self, *args):
-        q_o = GodQueue()
+        q_o = queue.GodQueue()
 
         # get this pip own inside bot
         self.start_index = len(BotFrame.bots)
         self.q_start = q_o
         self.joined = False
+
         for func in args:
             q_i = q_o
             if func == args[-1]:
-                q_o = NullQueue()
+                q_o = queue.NullQueue()
 
             else:
-                q_o = self.create_queue()
+                if config.replay_mode:
+                    q_o=queue.CachedQueue()
+                else:
+                    q_o = queue.DataQueue()
 
-            BotFrame.make_bot(q_i, q_o, func)
+            bis=BotFrame.make_bot(q_i, q_o, func)
+            for b in bis:
+                b.flow='main'
+
+
             if isinstance(func, Route):
                 if hasattr(func, 'joined') and func.joined:
                     self.joined = True
@@ -172,7 +176,95 @@ class Pipe(Route):
         if self.joined or config.joined_network:
             self.check_joined_node()
 
+    @classmethod
+    def get_reader_id_by_q(cls,q):
+        ids=[]
+        for b in BotFrame.bots:
+            if cls.included(q,b.iq):
+                ids.append(b.id)
 
+        return ids
+
+    import sys
+    pickle_name = sys.modules['__main__'].__file__ + 'palyback.pk'
+    @classmethod
+    def  save_for_replay(cls):
+        '''it will save cached data for pay back'''
+
+        #1. get output queue of the nearest closed node in main pipe
+        #2.save the data
+        max_id=-1
+        bot=None
+        for b in BotFrame.bots:
+            if b.flow=='main' and b.stoped==True:
+                if b.id > max_id:
+                    bot=b
+                    max_id=b.id
+        if bot is None:
+            pass
+
+        obj={}
+        obj['botid']=max_id
+
+        to_dump=[]
+        for q in bot.oq:
+            #iid=get_writor_botid(q)
+            iid=[max_id]
+            oid=cls.get_reader_id_by_q(q)
+            to_dump.append((iid,oid,q.cache))
+
+        obj['data'] =to_dump
+
+        import pickle
+        with open(cls.pickle_name,'wb') as f:
+            pickle.dump(obj,f)
+
+    @classmethod
+    def get_q_by_bot_id_list(cls, iid, oid):
+        q_of_writer=set()
+        q_of_reader=set()
+
+        for i in iid:
+            for q in BotFrame.get_botinfo_by_id(i).oq:
+                q_of_writer.add(q)
+        for i in oid:
+            for q in BotFrame.get_botinfo_by_id(i).iq:
+                q_of_reader.add(q)
+
+
+        r=q_of_writer&q_of_reader
+        return r.pop()
+
+    @classmethod
+    def restore_for_replay(cls):
+        ''''''
+        #1. load data to queue
+        #2. set all pre-node to closed
+
+        import os.path
+        if not os.path.isfile(cls.pickle_name):
+            return
+
+        import pickle
+        with open(cls.pickle_name,'rb') as f:
+            obj=pickle.load(f)
+
+        botid=obj['botid']
+        for b in BotFrame.bots:
+            if b.id<=botid:
+                b.stoped=True
+        for data in obj['data']:
+            (iid,oid,cache)=data
+            q=cls.get_q_by_bot_id_list(iid, oid)
+            q.load_cache(cache)
+
+        return
+
+
+
+
+
+    @classmethod
     def included(self,iq,oq):
         if not isinstance(iq,list):
             iq=[iq]
@@ -260,12 +352,7 @@ class Timer(Route):
 
 
 
-def raw_value_wrap(raw_value):
 
-    def _raw_value_wrap(data):
-        return raw_value
-
-    return _raw_value_wrap
 
 
 class Branch(Route):
@@ -280,7 +367,7 @@ class Branch(Route):
 
 
         self.output_q = oq
-        q_o = self.create_queue()
+        q_o = queue.DataQueue()
         self.start_q=[q_o]
         for func in self.args:
             q_i = q_o
@@ -288,12 +375,11 @@ class Branch(Route):
                 if self.joined:
                     q_o = oq
                 else:
-                    q_o = NullQueue()
+                    q_o = queue.NullQueue()
             else:
-                q_o = self.create_queue()
+                q_o = queue.DataQueue()
 
-            if isinstance(func,(str,bytes,int,float))  :
-                func=raw_value_wrap(func)
+
 
             BotFrame.make_bot(q_i, q_o, func)
 
@@ -324,7 +410,7 @@ class Fork(Route):
         if self.joined:
             q_o = oq
         else:
-            q_o = NullQueue()
+            q_o = queue.NullQueue()
 
         self.start_q = []
         self.output_q = oq
@@ -371,7 +457,7 @@ class BlockedJoin(Route):
         for func in self.args:
 
             i_q = asyncio.Queue(maxsize=1)
-            o_q = self.create_queue()
+            o_q = queue.DataQueue()
             self.start_q.append(i_q)
             self.tmp_output_q.append(o_q)
             BotFrame.make_bot(i_q, o_q, func)
@@ -426,60 +512,7 @@ class BlockedJoin(Route):
             await self.put_batch_q(data,self.start_q)
             r=await self.gut_batch_q(self.tmp_output_q)
             await self.output_q.put(r)
-            # await self.compeleted()
-            # for q in  self.start_q:
-            #     await q.put(data)
-            #
-            # await self.compeleted()
-            # result=[]
-            # for q in self.tmp_output_q:
-            #     if q.empty():
-            #         continue
-            #     if q.qsize()==1:
-            #         i=await q.get()
-            #         result.append(i)
-            #
-            #     else:
-            #         one_result=[]
-            #         while q.empty():
-            #             i=await q.get()
-            #             one_result.append(i)
-            #         result.append(tuple(one_result))
-            #
-            # await self.output_q.put(tuple(result))
 
-
-
-
-
-
-        #unable to paralle in network
-        # async def joined_network(data):
-        #     tasks=[]
-        # #parallel in sub network not in node
-        #     o_q = self.create_queue()
-        #     in_q_list=[]
-        #     for func in self.args:
-        #         i_q = self.create_queue()
-        #         in_q_list.append(i_q)
-        #         # BotFrame.make_bot(i_q, o_q, func)
-        #         task=asyncio.ensure_future(call_wrap(func, data, data, o_q))
-        #         tasks.append(task)
-        #
-        #     for q in in_q_list:
-        #         await q.put(data)
-        #     await asyncio.gather(*tasks)
-        #
-        #     results=[]
-        #     while not o_q.empty():
-        #         results.append(o_q.get_nowait())
-        #
-        #
-        #     return tuple(results)
-
-
-
-        #bi=BotFrame.make_bot(self.start_q, oq, joined_network)
 
 
 
@@ -498,69 +531,5 @@ B = Branch
 T = Timer
 L = Loop
 
-
-class ListQueue(asyncio.Queue):
-    def __init__(self, it):
-        self.it = it
-        super().__init__()
-
-    def _init(self, maxsize):
-        self._queue = collections.deque(self.it)
-
-
-class GodQueue(asyncio.Queue):
-
-    # |
-    # X
-    def __init__(self):
-        self.last_put = None
-        self._data=[0]
-        pass
-
-    def qsize(self):
-        return len(self._data)
-    def empty(self):
-        return len(self._data)==0
-
-    def put_nowait(self, item):
-        raise NotImplementedError()
-
-    async def put(self, item):
-        raise NotImplementedError()
-
-    async def get(self):
-        return self.get_nowait()
-
-
-    def get_nowait(self):
-        d=self._data[0]
-        self._data=[]
-        return d
-
-
-class NullQueue(asyncio.Queue):
-
-    # |
-    # X
-    def __init__(self):
-        self.last_put = None
-        pass
-
-    def empty(self):
-        return False
-
-    def put_nowait(self, item):
-        raise NotImplementedError()
-
-    async def put(self, item):
-        # do nothing
-        self.last_put = item
-        await asyncio.sleep(0)
-
-    async def get(self):
-        await asyncio.sleep(0, )
-
-    def get_nowait(self):
-        raise NotImplementedError()
 
 
