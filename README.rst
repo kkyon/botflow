@@ -73,8 +73,9 @@ It has an active, friendly community you can talk to for support,
 Here's one of the simple applications you can make
 
 
-   
 .. code-block:: python
+
+
     from databot.flow import Pipe, Loop, Fork,Join,Branch,BlockedJoin,Return
     from databot import flow
     from databot.botframe import BotFrame
@@ -119,9 +120,7 @@ Here's one of the simple applications you can make
 
     config.exception_policy=config.Exception_ignore
     def main():
-
-
-        hget=HttpLoader(timeout=2)
+         hget=HttpLoader(timeout=2)
 
         Pipe(
 
