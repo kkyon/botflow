@@ -1,0 +1,13 @@
+// /Users/liguojian/PycharmProjects/databot/databot/botframe.py
+digraph {
+	node [shape=circle]
+	4738703888 [label="Timer object "]
+	4738704040 [label="_raw_value_wrap "]
+	4738703888 -> 4738704040
+	4738704192 [label="HttpLoader object "]
+	4738704040 -> 4738704192
+	4738704344 [label="lambda "]
+	4738704192 -> 4738704344
+	4738704496 [label="built-in function print"]
+	4738704344 -> 4738704496
+}
