@@ -22,10 +22,10 @@ What's a Data-driven programming
 
 All Functions are connected by pipe(queue) and communidate by data.  
 When data come in ,the function will be called and return the result.
-Think about pipeline operation in unix : ls|grep|sed
-Benefits : 
-   # decouple data and functionality
-   # easy to reuse 
+Think about pipeline operation in unix. ``ls|grep|sed``.
+Benefits
+#. decouple data and functionality
+#. easy to reuse 
    
 
 Databot provides pipe and  route. It  makes data-drivend programming more easy,and powerfull data flow process.
