@@ -151,6 +151,12 @@ when processing stream data.
 
 
 - **Visualliztion**
+with render function . **BotFrame.render('bitcoin_arbitrage')**. databot will render the data flow network  into a graphiz image.
+
+- **Replay-able**
+with replay mode enable  **config.replay_mode=True** . when raise excpeiton raise in step N ,you no need to run again from setup 1 to N .databot will replay the
+data from nearest completed node ,usally step N-1 . it will save a lot time in development phase .
+
 
 
 

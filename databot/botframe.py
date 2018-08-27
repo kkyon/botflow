@@ -138,7 +138,7 @@ class BotFrame(object):
     @classmethod
     def run(cls):
 
-        if config.palyback_mode:
+        if config.replay_mode:
             try:
                 flow.Pipe.restore_for_replay()
             except:
@@ -154,7 +154,7 @@ class BotFrame(object):
         try:
             asyncio.get_event_loop().run_until_complete(asyncio.gather(*bot_nodes))
         except Exception as e:
-            if config.palyback_mode:
+            if config.replay_mode:
                 flow.Pipe.save_for_replay()
                 raise e
 
@@ -335,7 +335,7 @@ class BotFrame(object):
         async def _join_merged(i_q, o_q, route):
 
             bi = cls.get_botinfo()
-            bi.iq = i_q
+
             while True:
                 if bi.stoped:
                     break
@@ -446,15 +446,15 @@ class BotFrame(object):
             BotFrame.bots.append(bi)
 
             fu = asyncio.ensure_future(_join_merged(f.tmp_output_q, o, f))
-            bi2 = BotInfo()
-            bi2.iq = f.tmp_output_q
-            bi2.oq = [o]
-            bi2.func = _join_merged
-            bi2.futr = fu
-            bi.id = cls.new_bot_id()
+            bi_o = BotInfo()
+            bi_o.iq = f.tmp_output_q
+            bi_o.oq = [o]
+            bi_o.func = _join_merged
+            bi_o.futr = fu
+            bi_o.id = cls.new_bot_id()
 
-            BotFrame.bots.append(bi)
-            return [bi,bi2]
+            BotFrame.bots.append(bi_o)
+            return [bi,bi_o]
 
 
 

@@ -154,7 +154,7 @@ class Pipe(Route):
                 q_o = queue.NullQueue()
 
             else:
-                if config.palyback_mode:
+                if config.replay_mode:
                     q_o=queue.CachedQueue()
                 else:
                     q_o = queue.DataQueue()
