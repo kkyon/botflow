@@ -1,6 +1,4 @@
 import asyncio
-import logging
-from collections import namedtuple
 from databot import flow
 from databot import node
 import types
@@ -132,24 +130,7 @@ class BotFrame(object):
                 f.edge(pid,bid)
 
         f.render(filename,view=True)
-        # for b in BotFrame.bots:
-        #     name=str(b.func).replace('>','').replace('<','')
-        #     name=name.split('.')[-1]
-        #     name = name.split('at')[0]
-        #     f.node(str(id(b)),name)
-        #     for q in b.iq:
-        #         if q not in pipes:
-        #             pipes[q]=['0','0']
-        #         pipes[q][1]=str(id(b))
-        #     for q in b.oq:
-        #         if q not in pipes:
-        #             pipes[q]=['0','0']
-        #         pipes[q][0] = str(id(b))
-        #
-        # for k,v in pipes.items():
-        #     if v[0]!='0' and v[1]!='0':
-        #         f.edge(v[0],v[1])
-        # f.render(filename,view=True)
+
 
     @classmethod
     def run(cls):
@@ -369,12 +350,19 @@ class BotFrame(object):
                 bi.idle = True
 
 
+        def raw_value_wrap(raw_value):
 
+            def _raw_value_wrap(data):
+                return raw_value
 
+            return _raw_value_wrap
 
         async def _make_bot(i_q, o_q, func):
             if isinstance(func, node.Node):
                 await func.node_init()
+
+
+
             bi = cls.get_botinfo()
 
             while True:
@@ -399,6 +387,8 @@ class BotFrame(object):
                     break
                 bi.idle = True
 
+        if isinstance(f, (list,str, bytes, int, float)):
+            f = raw_value_wrap(f)
 
         if isinstance(f,flow.BlockedJoin):
             f.make_route_bot(i,o)
@@ -482,33 +472,7 @@ class BotFrame(object):
             BotFrame.bots.append(bi)
             return bi
 
-    @classmethod
-    def q_one_to_two_type(self, input_q, main_o_q, inside_q_list, type_list=[object], share=True):
-        async def wrap():
-            bi = BotFrame.get_botinfo()
-            is_stop = False
-            while True:
-                item = await input_q.get()
 
-                matched = flow.Route.type_match(item, type_list)
-                if matched:
-                    for q in inside_q_list:
-                        await q.put(item)
-
-                if share == True:
-                    await main_o_q.put(item)
-                else:
-                    if not matched:
-                        await main_o_q.put(item)
-                    else:
-                        pass
-                if self.ready_to_stop(bi):
-                    bi.stoped = True
-                    for q in inside_q_list + [main_o_q]:
-                        await q.put(Retire())
-                    break
-
-        BotFrame.make_bot_raw(input_q, inside_q_list + [main_o_q], wrap())
 
 
 class BotControl(object):

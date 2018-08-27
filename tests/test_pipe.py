@@ -188,30 +188,4 @@ class TestPipe(TestCase):
         config.exception_policy = config.Exception_default
 
 
-    def test_blockedjoin_exception(self):
 
-        from databot.flow import BlockedJoin
-
-        from databot.config import config
-        config.exception_policy=config.Exception_ignore
-
-
-        def raise_exception(a):
-            raise Exception()
-        def check(r):
-            self.assertEqual(len(r),2)
-            self.assertTrue(isinstance(r[0],Exception))
-            self.assertTrue(isinstance(r[1],B))
-
-        p = Pipe(
-            Loop([A()]),
-            BlockedJoin(raise_exception,
-                        self.a_to_b
-
-                        ),
-
-            check
-        )
-
-        BotFrame.run()
-        config.exception_policy = config.Exception_default
