@@ -21,9 +21,13 @@ What's a Data-driven programming
 ====================
 
 All Functions are connected by pipe(queue) and communidate by data.  
+
 When data come in ,the function will be called and return the result.
+
 Think about pipeline operation in unix. ``ls|grep|sed``.
-Benefits
+
+Benefits:
+
 #. decouple data and functionality
 #. easy to reuse 
    
