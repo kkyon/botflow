@@ -15,46 +15,21 @@ Install and update using `pip`_:
 
 **pip install -U databot**
 
+
+
 What's a Data-driven programming
 ====================
 
+All Functions are connected by pipe(queue) and communidate by data.  
+When data come in ,the function will be called and return the result.
+Think about pipeline operation in unix : ls|grep|sed
+Benefits : 
+   # decouple data and functionality
+   # easy to reuse 
+   
 
-Data-driven programming is a programming paradigm  which  describe the data to be matched and the processing required rather than defining a sequence of steps to be taken.
-Standard examples of data-driven languages are the text-processing languages sed and AWK,where the data is a sequence of lines in an input stream.
-Data-driven programming is typically applied to streams of structured data, for filtering, transforming, aggregating (such as computing statistics), or calling other programs
+Databot provides pipe and  route. It  makes data-drivend programming more easy,and powerfull data flow process.
 
-Databot have few basic concept to impelement DDP.
-
-- **Pipe**
-   it is the main stream process of the programe . all unit will work inside.
-- **Node**
-        it is the process logic node . it will driven by data. custom function work as Node .
-        There are some built-in node  :
-   * **Loop**:work as **for**
-   * **Timer**: it will send message in the pipe by timer param . **delay**, **max_time**
-   * **HttpLoader**: get a url and return Httpresponse
-   * **Mysql query or insert**: for mysql querying and insert
-   * **File read write**: for file write.
-- **Route**
-        It will be used to create complex data flow network,not just only one main process. Databot can nest Route in side a Route.
-        it would very powerfull.
-        There are some pre built-in Route:
-    * **Branch** : will duplicte data from parent pipe to a branch .
-    * **Return** : will duplicate data from parent pipe, and return finally result to parent pipe.
-    * **Filter** : drop out data from pipe by some condition
-    * **Fork** : will duplicate data to many branch.
-    * **Join** : duplicate data to many branches ,and return result to pipe.
-
-
-All unit(Pipe,Node,Route) communicates via queue and paralle in coroutine . but User of the databot not care too much the detail of asyncio .
-
-Below some graphes will get you some basic concept for the Route:
-      branch:https://github.com/kkyon/databot/blob/master/docs/databot_branch.jpg
-      fork:https://github.com/kkyon/databot/blob/master/docs/databot_fork.jpg
-      join:https://github.com/kkyon/databot/blob/master/docs/databot_join.jpg
-      return:https://github.com/kkyon/databot/blob/master/docs/databot_return.jpg
-      
- 
 
 
 
@@ -122,6 +97,51 @@ config.replay_mode=True
 
 when   excpeiton is raised at step N ,you no need to run  from setup 1 to N .databot will replay the
 data from nearest completed node ,usally step N-1 . it will save a lot time in development phase .
+
+
+
+More about Databot and Data-driven programming
+===============
+Data-driven programming is a programming paradigm  which  describe the data to be matched and the processing required rather than defining a sequence of steps to be taken.
+Standard examples of data-driven languages are the text-processing languages sed and AWK,where the data is a sequence of lines in an input stream.
+Data-driven programming is typically applied to streams of structured data, for filtering, transforming, aggregating (such as computing statistics), or calling other programs
+
+Databot have few basic concept to impelement DDP.
+
+- **Pipe**
+   it is the main stream process of the programe . all unit will work inside.
+- **Node**
+        it is the process logic node . it will driven by data. custom function work as Node .
+        There are some built-in node  :
+   * **Loop**:work as **for**
+   * **Timer**: it will send message in the pipe by timer param . **delay**, **max_time**
+   * **HttpLoader**: get a url and return Httpresponse
+   * **Mysql query or insert**: for mysql querying and insert
+   * **File read write**: for file write.
+- **Route**
+        It will be used to create complex data flow network,not just only one main process. Databot can nest Route in side a Route.
+        it would very powerfull.
+        There are some pre built-in Route:
+    * **Branch** : will duplicte data from parent pipe to a branch .
+    * **Return** : will duplicate data from parent pipe, and return finally result to parent pipe.
+    * **Filter** : drop out data from pipe by some condition
+    * **Fork** : will duplicate data to many branch.
+    * **Join** : duplicate data to many branches ,and return result to pipe.
+
+
+All unit(Pipe,Node,Route) communicates via queue and paralle in coroutine . but User of the databot not care too much the detail of asyncio .
+
+Below some graphes will get you some basic concept for the Route:
+      branch:https://github.com/kkyon/databot/blob/master/docs/databot_branch.jpg
+      fork:https://github.com/kkyon/databot/blob/master/docs/databot_fork.jpg
+      join:https://github.com/kkyon/databot/blob/master/docs/databot_join.jpg
+      return:https://github.com/kkyon/databot/blob/master/docs/databot_return.jpg
+      
+ 
+
+
+
+
 
 
 
