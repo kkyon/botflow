@@ -70,7 +70,7 @@ Databot is easy to use and maintain, and does *not need configuration files* and
 
 It has an active, friendly community you can talk to for support,
 
-Here's one of the simplest applications you can make
+Here's one of the simple applications you can make
 
 
    
