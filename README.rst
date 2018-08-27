@@ -64,23 +64,6 @@ Below some graphes will get you some basic concept for the Route:
 Databot is...
 =============
 
-- **Fast**
-Node will be run in parallel ,and it will get high performance
-when processing stream data.
-
-
-
-- **Visualliztion**
-with render function . **BotFrame.render('bitcoin_arbitrage')**. databot will render the data flow network  into a graphiz image.
-
-- **Replay-able**
-with replay mode enable  **config.replay_mode=True** . when raise excpeiton raise in step N ,you no need to run again from setup 1 to N .databot will replay the
-data from nearest completed node ,usally step N-1 . it will save a lot time in development phase .
-
-
-
-
-
 - **Simple**
 
 Databot is easy to use and maintain, and does *not need configuration files* and know about asynckio .
@@ -91,7 +74,6 @@ Here's one of the simplest applications you can make
 
 
    
-
 .. code-block:: python
     from databot.flow import Pipe, Loop, Fork,Join,Branch,BlockedJoin,Return
     from databot import flow
@@ -159,6 +141,21 @@ Here's one of the simplest applications you can make
 
 
     main()
+
+
+- **Fast**
+Node will be run in parallel ,and it will get high performance
+when processing stream data.
+
+
+
+- **Visualliztion**
+with render function . **BotFrame.render('bitcoin_arbitrage')**. databot will render the data flow network  into a graphiz image. 
+
+- **Replay-able**
+with replay mode enable  **config.replay_mode=True** . when raise excpeiton raise in step N ,you no need to run again from setup 1 to N .databot will replay the
+data from nearest completed node ,usally step N-1 . it will save a lot time in development phase .
+
 
 
 
