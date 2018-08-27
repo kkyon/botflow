@@ -2,9 +2,9 @@
 Databot
 ===========================
 
-* data driven programming framework with asyncio.
-* it hided complex async programming detail .every processor unit will act like a bot .
-* The framework also provider type and content base route function.
+* Data driven programming framework .
+* Paralleled in coroutines .
+* Type and content based route function.
 
 
 Installing
@@ -70,11 +70,12 @@ Databot is easy to use and maintain, and does *not need configuration files* and
 
 It has an active, friendly community you can talk to for support,
 
-Here's one of the simplest applications you can make
+Here's one of the simple applications you can make
 
 
-   
 .. code-block:: python
+
+
     from databot.flow import Pipe, Loop, Fork,Join,Branch,BlockedJoin,Return
     from databot import flow
     from databot.botframe import BotFrame
@@ -119,14 +120,12 @@ Here's one of the simplest applications you can make
 
     config.exception_policy=config.Exception_ignore
     def main():
-
-
-        hget=HttpLoader(timeout=2)
+         hget=HttpLoader(timeout=2)
 
         Pipe(
 
             flow.Timer(delay=3,max_time=5),
-            BlockedJoin(
+            Join(
                 Return("https://api.kraken.com/0/public/Ticker?pair=XBTUSD", hget, parse_kraken),
                 Return("https://bittrex.com/api/v1.1/public/getticker?market=USD-BTC", hget, parse_bittrex),
 
