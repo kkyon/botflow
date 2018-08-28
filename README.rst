@@ -41,7 +41,7 @@ Databot is easy to use and maintain, *does not need configuration files*, and kn
 
 Here's one of the simple applications you can make:
 
-_Load the price of Bitoin every 2 senconds. Advantage price aggregator sample can be found `here <https://github.com/kkyon/databot/tree/master/examples>`_.
+_Load the price of Bitoin every 2 seconds. Advantage price aggregator sample can be found `here <https://github.com/kkyon/databot/tree/master/examples>`_.
 
 
 .. code-block:: python
