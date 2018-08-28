@@ -19,6 +19,11 @@ Documentation
 
 http://databot.readthedocs.io
 
+Discuss:
+-------
+https://groups.google.com/forum/#!forum/databotpy
+
+
 What's data-driven programming?
 ===============================
 
