@@ -7,11 +7,22 @@ class A:
 class B:
     pass
 
+class C:
+    pass
+
+
+
+
+def only_b(self,i):
+        self.b_count += 1
+        self.assertTrue(isinstance(i, B))
+        return i
 
 
 class TestPipe(TestCase):
     a_count=0
     b_count = 0
+    c_count = 0
     def only_a(self,i):
         self.a_count+=1
         self.assertTrue(isinstance(i, A))
@@ -20,6 +31,11 @@ class TestPipe(TestCase):
     def only_b(self,i):
         self.b_count += 1
         self.assertTrue(isinstance(i, B))
+        return i
+
+    def only_c(self,i):
+        self.c_count += 1
+        self.assertTrue(isinstance(i, C))
         return i
 
 
@@ -70,6 +86,27 @@ class TestPipe(TestCase):
         self.assertEqual(self.b_count,5)
         self.assertEqual(self.a_count, 2)
         self.assertTrue(p.finished())
+
+    def test_routetype_count3(self):
+        self.a_count = 0
+        self.b_count = 0
+        self.c_count = 0
+        p = Pipe(
+            [A(), B(), A(),C(),C()],
+
+            Branch(lambda i:isinstance(i,(A,C)),self.assertTrue,
+                   route_type=[A,C]),
+
+            Branch(
+                    Branch( self.only_c,route_type=C),
+
+                   share=False,
+                   route_type=[A, C]),
+
+        )
+
+        BotFrame.run()
+        self.assertEqual(self.c_count,2)
 
     def test_fork(self):
         self.a_count=0
