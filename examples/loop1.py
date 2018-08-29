@@ -1,4 +1,4 @@
-from databot.flow import Pipe, Loop, Fork
+from databot.flow import Pipe, Fork
 from databot.botframe import BotFrame
 
 
@@ -21,7 +21,7 @@ op_sum = Sum()
 def main():
     Pipe(
 
-        Loop(range(1000000)),
+        range(1000000),
         Fork(op_sum),
         print
 

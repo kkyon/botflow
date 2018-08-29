@@ -12,7 +12,7 @@ setup(name='databot',
       description='data flow programming framework with asyncio'
                   ' ',
       long_description=read("README.rst"),
-      version='0.1.7',
+      version='0.1.8',
       url='https://github.com/kkyx/databot',
       author='Guojian Li',
       author_email='guojianlee@gmail.com',

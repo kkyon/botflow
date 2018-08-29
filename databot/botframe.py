@@ -2,8 +2,10 @@ import asyncio
 from databot import flow
 from databot import node
 import types
+import typing
 from databot.config import config
 import logging
+from collections.abc import Iterable
 from graphviz import Graph
 
 logging.basicConfig(format='%(asctime)s %(name)-12s %(levelname)s:%(message)s', level=logging.INFO)
@@ -78,8 +80,11 @@ async def call_wrap(func, param, iq, oq):
 
         await asyncio.get_event_loop().create_task(sync_two_source())
 
+    elif isinstance(r_or_c,(str,typing.Tuple)):
+        await oq.put(r_or_c)
 
-    elif isinstance(r_or_c, types.GeneratorType) or isinstance(r_or_c, list):
+   # elif isinstance(r_or_c, types.GeneratorType) or isinstance(r_or_c, list):
+    elif isinstance(r_or_c, typing.Iterable) :
         r = r_or_c
         for i in r:
             await oq.put(i)
@@ -429,7 +434,8 @@ class BotFrame(object):
                     break
                 bi.idle = True
 
-        if isinstance(f, (list,str, bytes, int, float)):
+        #if not isinstance(f, (list,str, bytes, int, float,types.GeneratorType,Iterable)):
+        if not isinstance(f, typing.Callable):
             f = raw_value_wrap(f)
 
         if isinstance(f,flow.BlockedJoin):

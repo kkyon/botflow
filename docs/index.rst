@@ -79,6 +79,7 @@ up two code block look like fake code. but they are true sample.
    pipe/index
    node/index
    route/index
+   change/index
 
 .. toctree::
     :maxdepth: 1
