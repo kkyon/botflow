@@ -1,5 +1,5 @@
 from unittest import TestCase
-from databot.flow import Pipe, Branch, Loop,Join,Fork,Filter
+from databot.flow import Pipe, Branch, Loop,Join,Fork,Filter,Timer
 from databot.botframe import BotFrame
 
 class A:
@@ -250,5 +250,22 @@ class TestPipe(TestCase):
             [A(),B(),C()],
             Filter(route_type=[A,B],route_func=lambda r:isinstance(r,(A,C))),
             self.only_a
+
+        )
+
+
+    def test_boost(self):
+        import time
+
+
+        def very_slow(a):
+            time.sleep(10)
+
+
+        Pipe(
+            Timer(delay=1),
+            Branch(very_slow),
+            print,
+
 
         )

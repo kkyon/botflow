@@ -60,11 +60,21 @@ async def handle_exception(e, param, iq,oq):
 
 async def call_wrap(func, param, iq, oq):
     logging.debug('call_wrap' + str(type(func)) + str(func))
-    try:
-        r_or_c = func(param)
-    except Exception as e:
-        await handle_exception(e, param, iq,oq)
-        return
+
+    if hasattr(func,'boost_type'):
+        loop = asyncio.get_event_loop()
+        r_or_c=await loop.run_in_executor(None,func,param)
+
+    else:
+        try:
+            r_or_c = func(param)
+        except Exception as e:
+            await handle_exception(e, param, iq,oq)
+            return
+
+
+
+
     if isinstance(r_or_c, types.AsyncGeneratorType):
         async def sync_two_source():
             async for i in r_or_c:
