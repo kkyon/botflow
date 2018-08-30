@@ -101,6 +101,20 @@ main()
 # got len item 9614 speed:51.967568 per second,total cost: 185s
 
 
+#best test data
+
+#25 pages per seconde.
+# got len item 1540 speed:102.666667 per second,total cost: 15s
+# got len item 2549 speed:127.450000 per second,total cost: 20s
+# got len item 3450 speed:138.000000 per second,total cost: 25s
+# got len item 4843 speed:161.433333 per second,total cost: 30s
+# got len item 6070 speed:173.428571 per second,total cost: 35s
+# got len item 6826 speed:170.650000 per second,total cost: 40s
+# got len item 7773 speed:172.733333 per second,total cost: 45s
+# got len item 8681 speed:173.620000 per second,total cost: 50s
+# got len item 9700 speed:176.363636 per second,total cost: 55s
+
+
 
 
 

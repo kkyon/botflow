@@ -12,7 +12,7 @@ def triple(a):
     global  count
     count+=1
     if count>6:
-        #raise Exception()
+        raise Exception()
         pass
     return 3*a
 

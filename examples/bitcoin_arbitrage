@@ -1,13 +1,26 @@
 // /Users/liguojian/PycharmProjects/databot/databot/botframe.py
 digraph {
 	node [shape=circle]
-	4738703888 [label="Timer object "]
-	4738704040 [label="_raw_value_wrap "]
-	4738703888 -> 4738704040
-	4738704192 [label="HttpLoader object "]
-	4738704040 -> 4738704192
-	4738704344 [label="lambda "]
-	4738704192 -> 4738704344
-	4738704496 [label="built-in function print"]
-	4738704344 -> 4738704496
+	4542026256 [label="Timer object "]
+	4542026408 [label="_raw_value_wrap "]
+	4542026864 -> 4542026408
+	4542026560 [label="HttpLoader object "]
+	4542026408 -> 4542026560
+	4542026712 [label="function parse_kraken "]
+	4542026560 -> 4542026712
+	4542026864 [label="Return object "]
+	4542027624 -> 4542026864
+	4542027016 [label="_raw_value_wrap "]
+	4542027472 -> 4542027016
+	4542027168 [label="HttpLoader object "]
+	4542027016 -> 4542027168
+	4542027320 [label="function parse_bittrex "]
+	4542027168 -> 4542027320
+	4542027472 [label="Return object "]
+	4542027624 -> 4542027472
+	4542027624 [label="Join object "]
+	4542026256 -> 4542027624
+	4542027776 [label="built-in function print"]
+	4542026712 -> 4542027776
+	4542027320 -> 4542027776
 }

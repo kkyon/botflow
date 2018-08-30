@@ -1,0 +1,32 @@
+Version 0.1.8
+=============
+
+
+
+
+
+#. Loop Node  is  deprecated .Basic value will work as Node.for Iterable (list, generator ,range, except tuple) will be looped like Loop node.for int,str,dict,will be put into queue directly.
+
+#. New Filter Node support.add route_func support to All Route. it will support by route with funct.
+
+    .. code-block:: python
+
+            Pipe(
+
+                [A(),B(),C()],
+                Filter(route_type=[A,B],route_func=lambda r:isinstance(r,(A,C))),
+                self.only_a
+
+            )
+
+
+#. Add Httprequest support for post,put option,
+
+#. Add Node.boost decorators. it will parallel function in thread pool .it is good option for some slow funciton.
+
+    .. code-block:: python
+
+        @Node.boost
+        def very_slow(a):
+            import time
+            time.sleep(10)
