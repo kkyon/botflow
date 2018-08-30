@@ -3,7 +3,7 @@ Databot
 =======
 
 * Data-driven programming framework
-* Paralleled in coroutines
+* Paralleled in coroutines and ThreadPool
 * Type- and content-based route function
 
 
