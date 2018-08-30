@@ -4,6 +4,7 @@ from databot.botframe import BotFrame,call_wrap,BotControl
 import collections
 from databot.config import config
 import  databot.queue  as queue
+import typing
 
 
 class RouteRule(object):
@@ -58,33 +59,43 @@ class RouteTable(object):
     pass
 
 
+def ensure_list(v):
+    '''make sure all ways return a list'''
+    #? None >> [] ?
+    if not isinstance(v,list):
+        return [v]
+    else:
+        return v
 class Route(object):
 
-    def __init__(self, *args, route_type=object, share=True, join=False):
+    def __init__(self, *args, route_type=object,route_func=None, share=True, join=False):
 
         self.in_table = RouteTable()
         self.out_table = RouteTable()
         self.args = args
-        if isinstance(route_type, list):
-            self.route_type = route_type
-        else:
-            self.route_type = [route_type]
+        self.route_type=ensure_list(route_type)
 
         self.share = share
         self.joined = join
         self.start_q=None
         self.output_q=None
+        self.route_func=route_func
+        if self.route_func is not None and not isinstance(self.route_func,typing.Callable):
+            raise Exception('route_func not callable')
+
 
 
         if hasattr(self, 'route_type') and not isinstance(self.route_type, list):
             self.route_type = [self.route_type]
 
-    async def start_q_put(self,data):
+    async def _route_data(self,data):
 
 
         is_signal= isinstance(data,BotControl)
 
-        matched = self.type_match(data, self.route_type)
+        matched = self.type_match(data, self.route_type) and (self.route_func is None or self.route_func(data))
+
+
 
 
         if self.share == True or is_signal:
@@ -109,9 +120,9 @@ class Route(object):
 
         if isinstance(data,list):
             for d in data:
-                await self.start_q_put(data)
+                await self._route_data(data)
         else:
-            await self.start_q_put(data)
+            await self._route_data(data)
 
         return
 
@@ -351,8 +362,11 @@ class Timer(Route):
 
 
 
+class Filter(Route):
 
-
+    def make_route_bot(self, iq, oq):
+        self.start_q=[oq]
+        self.output_q=queue.NullQueue()
 
 
 class Branch(Route):
@@ -525,11 +539,12 @@ class BlockedJoin(Route):
 ###########short name ############
 
 F = Fork
+Fi=Filter
 J = Join
 P = Pipe
 B = Branch
 T = Timer
-L = Loop
+
 
 
 

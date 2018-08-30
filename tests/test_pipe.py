@@ -1,5 +1,5 @@
 from unittest import TestCase
-from databot.flow import Pipe, Branch, Loop,Join,Fork
+from databot.flow import Pipe, Branch, Loop,Join,Fork,Filter
 from databot.botframe import BotFrame
 
 class A:
@@ -224,5 +224,31 @@ class TestPipe(TestCase):
         BotFrame.run()
         config.exception_policy = config.Exception_default
 
+    def test_filter(self):
+
+        Pipe(
+            [A(),B(),C()],
+            Filter(route_type=A),
+            self.only_a
+
+        )
 
 
+    def test_filter2(self):
+
+        Pipe(
+            [A(),B(),C()],
+            Filter(route_func=lambda r:isinstance(r,A)),
+            self.only_a
+
+        )
+
+    def test_filter3(self):
+
+        Pipe(
+
+            [A(),B(),C()],
+            Filter(route_type=[A,B],route_func=lambda r:isinstance(r,(A,C))),
+            self.only_a
+
+        )
