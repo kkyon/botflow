@@ -104,6 +104,17 @@ when an exception is raised at step N, you don't need to run from setup 1 to N.
 Databot will replay the data from nearest completed node, usually step N-1.
 It will save a lot of time in the development phase.
 
+Release
+=======
+
+:**0.1.8**: http://docs.botflow.org/en/latest/change/0.1.8.html .:
+            #. Support parallel in ThreadPool for slow function.
+            #. Loop Node  is  deprecated. raw value and Iterable value can be used directly.
+            
+:**0.1.7**: 
+
+
+
 
 More about Databot and data-driven programming
 ===============
@@ -119,7 +130,9 @@ Databot has a few basic concepts to implement DDP.
 - **Node**
         It is the process logic node. It is driven by data. Custom functions work as Nodes.
         There are some built-in nodes:
-   * **Loop**: Works as a **for** loop
+   .. role:: strike
+       * **Loop**: Works as a **for** loop
+   
    * **Timer**: It will send a message in the pipe by timer param. **delay**, **max_time**
    * **HttpLoader**: Get a url and return the HTTP response
    * **MySQL query or insert**: For mysql querying and insert
