@@ -94,7 +94,7 @@ def main():
         print,
     )
 
-    BotFrame.render('bitcoin_arbitrage')
+    BotFrame.render('ex_output/bitcoin_arbitrage')
     BotFrame.run()
 
 

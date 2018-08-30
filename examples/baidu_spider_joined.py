@@ -88,7 +88,7 @@ def main():
 
     Pipe(Timer(delay=2,until=p.finished), show_info)
 
-    BotFrame.render('baiduspider')
+    BotFrame.render('ex_output/baiduspider')
     BotFrame.run()
 
 main()

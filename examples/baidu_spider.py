@@ -61,7 +61,7 @@ def main():
 
 
 
-    outputfile=aiofile('baidu.txt')
+    outputfile=aiofile('ex_output/baidu.txt')
     Pipe(
         urls,
         HttpLoader(),
@@ -70,7 +70,7 @@ def main():
 
     )
     #生成流程图
-    BotFrame.render('baiduspider')
+    BotFrame.render('ex_output/baiduspider')
     BotFrame.run()
 
 
