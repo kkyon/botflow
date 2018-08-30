@@ -105,3 +105,5 @@ venv.bak/
 
 #pickle file
 .pk
+
+.idea/*
