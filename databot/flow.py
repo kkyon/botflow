@@ -159,9 +159,9 @@ class Pipe(Route):
         self.q_start = q_o
         self.joined = False
 
-        for func in args:
+        for idx,func in enumerate(args):
             q_i = q_o
-            if func == args[-1]:
+            if idx == len(args)-1:
                 q_o = queue.NullQueue()
 
             else:
@@ -383,9 +383,9 @@ class Branch(Route):
         self.output_q = oq
         q_o = queue.DataQueue()
         self.start_q=[q_o]
-        for func in self.args:
+        for idx,func in enumerate(self.args):
             q_i = q_o
-            if self.is_last_one(self.args, func):
+            if  idx == len(self.args)-1:
                 if self.joined:
                     q_o = oq
                 else:

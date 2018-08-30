@@ -90,7 +90,7 @@ async def call_wrap(func, param, iq, oq):
 
         await asyncio.get_event_loop().create_task(sync_two_source())
 
-    elif isinstance(r_or_c,(str,typing.Tuple)):
+    elif isinstance(r_or_c,(str,typing.Tuple,typing.Dict)):
         await oq.put(r_or_c)
 
    # elif isinstance(r_or_c, types.GeneratorType) or isinstance(r_or_c, list):
@@ -407,7 +407,7 @@ class BotFrame(object):
 
         def raw_value_wrap(raw_value):
 
-            def _raw_value_wrap(data):
+            def _raw_value_wrap(v):
                 return raw_value
 
             return _raw_value_wrap

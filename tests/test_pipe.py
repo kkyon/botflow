@@ -232,7 +232,7 @@ class TestPipe(TestCase):
             self.only_a
 
         )
-
+        BotFrame.run()
 
     def test_filter2(self):
 
@@ -242,6 +242,7 @@ class TestPipe(TestCase):
             self.only_a
 
         )
+        BotFrame.run()
 
     def test_filter3(self):
 
@@ -253,19 +254,22 @@ class TestPipe(TestCase):
 
         )
 
+        BotFrame.run()
 
-    def test_boost(self):
-        import time
+    # def test_boost(self):
+    #     import time
+    #
+    #
+    #     def very_slow(a):
+    #         time.sleep(10)
+    #
+    #
+    #     Pipe(
+    #         Timer(delay=1),
+    #         Branch(very_slow),
+    #         print,
+    #
+    #
+    #     )
+    #     BotFrame.run()
 
-
-        def very_slow(a):
-            time.sleep(10)
-
-
-        Pipe(
-            Timer(delay=1),
-            Branch(very_slow),
-            print,
-
-
-        )
