@@ -19,7 +19,7 @@ def main():
 
     )
 
-    BotFrame.render('abc')
+    BotFrame.render('ex_output/abc')
     BotFrame.run()
 
 

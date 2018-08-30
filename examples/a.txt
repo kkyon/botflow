@@ -1,1 +1,0 @@
-ping 1ping 2ping 3ping 4ping 5ping 6ping 7ping 8ping 9ping 10

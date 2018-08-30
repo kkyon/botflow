@@ -13,7 +13,7 @@ def main():
         print,
     )
 
-    BotFrame.render('simple_bitcoin_price')
+    BotFrame.render('ex_output/simple_bitcoin_price')
     BotFrame.run()
 
 main()
