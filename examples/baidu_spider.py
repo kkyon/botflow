@@ -1,8 +1,5 @@
-from databot.flow import Pipe, Branch, Loop
-from databot.botframe import BotFrame
+from databot import *
 from bs4 import BeautifulSoup
-from databot.http.http import HttpLoader
-from databot.db.aiofile import aiofile
 import logging
 logging.basicConfig(level=logging.DEBUG)
 

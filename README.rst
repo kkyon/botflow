@@ -55,12 +55,9 @@ _Load the price of Bitoin every 2 seconds. Advantage price aggregator sample can
 
 .. code-block:: python
 
-    from databot.flow import Pipe, Timer
-    from databot.botframe import BotFrame
-    from databot.http.http import HttpLoader
+    from databot import Pipe,Timer,BotFrame,HttpLoader
 
-
-    def main():
+     def main():
         Pipe(
 
 
