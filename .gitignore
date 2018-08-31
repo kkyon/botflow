@@ -109,3 +109,4 @@ venv.bak/
 .idea/*
 
 ex_output/*
+!ex_output/README.rst
