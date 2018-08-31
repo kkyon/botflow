@@ -50,7 +50,7 @@ Databot is easy to use and maintain, *does not need configuration files*, and kn
 
 Here's one of the simple applications you can make:
 
-_Load the price of Bitoin every 2 seconds. Advantage price aggregator sample can be found `here <https://github.com/kkyon/databot/tree/master/examples>`_.
+_Load the price of Bitcoin every 2 seconds. Advantage price aggregator sample can be found `here <https://github.com/kkyon/databot/tree/master/examples>`_.
 
 
 .. code-block:: python
@@ -61,11 +61,11 @@ _Load the price of Bitoin every 2 seconds. Advantage price aggregator sample can
         Pipe(
 
 
-            Timer(delay=2),#send timer data to pipe every 2 sen
-            "http://api.coindesk.com/v1/bpi/currentprice.json", #send url to pipe when timer trigger
-            HttpLoader(),#read url and load http response
-            lambda r:r.json['bpi']['USD']['rate_float'], #read http response and parse as json
-            print, #print out
+            Timer(delay=2), # send timer data to pipe every 2 seconds
+            "http://api.coindesk.com/v1/bpi/currentprice.json", # send url to pipe when timer trigger
+            HttpLoader(), # read url and load http response
+            lambda r:r.json['bpi']['USD']['rate_float'], # read http response and parse as json
+            print, # print out
 
         )
 
