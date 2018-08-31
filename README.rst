@@ -92,7 +92,7 @@ Nodes will be run in parallel, and they will perform well when processing stream
 With render function:
 `BotFrame.render('bitcoin_arbitrage')` 
 databot will render the data flow network into a graphviz image. 
-https://github.com/kkyon/databot/blob/master/examples/bitcoin_arbitrage.png
+https://github.com/kkyon/databot/blob/master/docs/bitcoin_arbitrage.png
 
 - **Replay-able**
 
