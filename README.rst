@@ -114,24 +114,22 @@ Release
 
 
 
-More about Databot and data-driven programming
+More about Databot 
 ===============
 
-Data-driven programming is a programming paradigm which describes the data to be matched and the processing required rather than defining a sequence of steps to be taken.
-Standard examples of data-driven languages are the text-processing languages sed and AWK, where the data is a sequence of lines in an input stream.
 Data-driven programming is typically applied to streams of structured data for filtering, transforming, aggregating (such as computing statistics), or calling other programs.
 
-Databot has a few basic concepts to implement DDP.
+Databot has a few basic concepts to implement Data-driven programming .
 
 - **Pipe**
    It is the main stream process of the program. All units will work inside.
 - **Node**
-        It is the process logic node. It is driven by data. Custom functions work as Nodes.
+        It is callable unit.Any callable function and object can work as Node. It is driven by data. Custom functions work as Nodes.
         There are some built-in nodes:
    .. role:: strike
        * **Loop**: Works as a **for** loop
    
-   * **Timer**: It will send a message in the pipe by timer param. **delay**, **max_time**
+   * **Timer**: It will send a message in the pipe by timer param. **delay**, **max_time** **until** some finished
    * **HttpLoader**: Get a url and return the HTTP response
    * **MySQL query or insert**: For mysql querying and insert
    * **File read/write**: for file I/O.
@@ -144,6 +142,7 @@ Databot has a few basic concepts to implement DDP.
     * **Filter** : Drop data from pipe if it does not match some condition
     * **Fork** : Duplicate data to many branches.
     * **Join** : Duplicate data to many branches, and return result to pipe.
+    * **BlockedJoin** : Wait for all branched to finish and merged the result into a tuple.
 
 All units (Pipe, Node, Route) communicate via queues and perform parallel computation in coroutines.
 This is abstracted so that Databot can be used with only limited knowledge of ``asyncio``.
