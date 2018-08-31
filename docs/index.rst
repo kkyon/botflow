@@ -6,7 +6,7 @@ Welcome to databot's world!
 
 
 
-The databot applicaton are made with one or many pipes. and run by ```BorFrame.run()```.
+The databot applicaton are made with one or many pipes. and run by ```BotFrame.run()```.
 The simplest applicaton like this :
 
 .. code-block:: python
