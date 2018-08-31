@@ -6,8 +6,8 @@ Welcome to databot's world!
 
 
 
-The databot applicaton are made with one or many pipes. and run by ```BotFrame.run()```.
-The simplest applicaton like this :
+The databot applicaton is made with one or many pipes and run by ```BotFrame.run()```.
+The simplest applicaton looks like:
 
 .. code-block:: python
 
@@ -15,23 +15,23 @@ The simplest applicaton like this :
     BotFrame.run()
 
 
-Concept of the databot very simple. ```I doubt if it is good to write a guide :-)```
+Concept of the databot is very simple. ```I doubt if it is good to write a guide :-)```
 
 
-**Pipe** work at the Top level .It combine the node,Route,together.
+**Pipe** works at the Top level. It combines the Node and Route together.
 
-**Node** is callable :In python world ,we have three callable thing ,
+**Node** is callable: in python world, we have three callable things:
 
 - function
-- function object. class with override ```__call__```
+- function object. Class with ```__call__``` function overridden
 - lambada
 
 
 
-**Route** is for duplicating data for multiple purposes. for simple applicaiton ,you don't need route.
+**Route** is for duplicating data for multiple purposes. for simple applicaiton, you don't need route.
 Just a main pipe.
 
-case 1: when get a tick bitcoin price from api ,
+case 1: when get a tick bitcoin price from api,
    you want save it to file and mysql at same time.
 
 .. code-block:: python
@@ -47,7 +47,7 @@ case 1: when get a tick bitcoin price from api ,
 
 
 
-case 2: crawler get a google search result page . it maybe need to parse search result and next page link .
+case 2: crawler gets a google search result page. It may need to parse search result and next page link .
 
 
 .. code-block:: python
@@ -55,20 +55,19 @@ case 2: crawler get a google search result page . it maybe need to parse search 
       Pipe(
          "https://www.google.com/search?q=kkyon+databot",
          HttpLoader(),
-                           Branch(parse_search_result,save_to_db),
+         Branch(parse_search_result,save_to_db),
          parse_all_page_url,
          HttpLoader(),
          parse_search_result,
          save_to_db
-
       )
 
 
-up two code block look like fake code. but they are true sample.
+The above two code blocks look like pseudo code, but they are workable samples.
 
 .. warning::
 
-    In this document Data,Message ,Event are the same thing.
+    In this documentationm. Data, Message, Event are the same thing.
 
 
 .. toctree::
