@@ -157,10 +157,11 @@ class BotFrame(object):
         f.attr('node', shape='circle')
         pipes={}
 
-        for b in BotFrame.bots:
+        for idx,b in enumerate(BotFrame.bots):
             name=str(b.func).replace('>','').replace('<','')
             name=name.split('.')[-1]
             name = name.split('at')[0]
+            name="(%d)"%(idx)+name
             f.node(str(id(b)),name)
             bid=str(id(b))
             for p in b.parents:
@@ -354,38 +355,7 @@ class BotFrame(object):
                     break
                 bi.idle = True
 
-        async def _route_output(o_q, route):
 
-            bi = cls.get_botinfo()
-
-            while True:
-                if bi.stoped:
-                    break
-
-                tasks = []
-                # r=route.route_out()
-                #
-                # data=await route.route_out()
-                # await o_q.put(data)
-
-                await call_wrap(route.route_out,Bdata(None),None,o_q)
-                # all_control_signal = True
-                # for i in r:
-                #     if not i.is_BotControl():
-                #         all_control_signal = False
-                #
-                # if all_control_signal:
-                #     for i in r:
-                #         await o_q.put(i)
-
-
-
-                if BotFrame.ready_to_stop(bi):
-                    bi.stoped = True
-                    await o_q.put(Bdata.make_Retire())
-
-                    break
-                bi.idle = True
 
 
         async def _make_bot(i_q, o_q, func):
@@ -420,7 +390,7 @@ class BotFrame(object):
                     break
                 bi.idle = True
 
-        #if not isinstance(f, (list,str, bytes, int, float,types.GeneratorType,Iterable)):
+
         if not isinstance(f, typing.Callable):
             f = raw_value_wrap(f)
 
@@ -458,16 +428,7 @@ class BotFrame(object):
 
             BotFrame.bots.append(bi_in)
 
-            # if isinstance(f,flow.BlockedJoin):
-            #     bi_in = BotInfo()
-            #     bi_in.iq = f.get_route_output_q_desc()
-            #     bi_in.oq = [o]
-            #
-            #     bi_in.func = _route_input
-            #     bi_in.futr = None
-            #     bi_in.id = cls.new_bot_id()
-            #
-            #     BotFrame.bots.append(bi_in)
+
 
 
 
