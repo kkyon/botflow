@@ -55,12 +55,9 @@ _Load the price of Bitoin every 2 seconds. Advantage price aggregator sample can
 
 .. code-block:: python
 
-    from databot.flow import Pipe, Timer
-    from databot.botframe import BotFrame
-    from databot.http.http import HttpLoader
+    from databot import Pipe,Timer,BotFrame,HttpLoader
 
-
-    def main():
+     def main():
         Pipe(
 
 
@@ -94,7 +91,7 @@ Nodes will be run in parallel, and they will perform well when processing stream
 With render function:
 `BotFrame.render('bitcoin_arbitrage')` 
 databot will render the data flow network into a graphviz image. 
-https://github.com/kkyon/databot/blob/master/examples/bitcoin_arbitrage.png
+https://github.com/kkyon/databot/blob/master/docs/bitcoin_arbitrage.png
 
 - **Replay-able**
 

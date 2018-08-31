@@ -1,7 +1,4 @@
-from databot.flow import Pipe,Timer
-from databot.botframe import BotFrame
-from databot.http.http import HttpLoader
-
+from databot import Pipe,Timer,BotFrame,HttpLoader
 
 def main():
     Pipe(

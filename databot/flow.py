@@ -1,11 +1,11 @@
 import asyncio
 import logging
-from databot.botframe import BotFrame,call_wrap,BotControl
+from databot.botframe import BotFrame,call_wrap,raw_value_wrap
 import collections
 from databot.config import config
 import  databot.queue  as queue
 import typing
-
+from databot.bdata import Bdata,BotControl,Retire
 
 class RouteRule(object):
     __slots__ = ['output_q', 'type_list', 'share']
@@ -88,10 +88,28 @@ class Route(object):
         if hasattr(self, 'route_type') and not isinstance(self.route_type, list):
             self.route_type = [self.route_type]
 
-    async def _route_data(self,data):
+
+    def get_route_input_q_desc(self):
+        qs=[]
+        qs.extend(self.start_q)
+        if self.share:
+            qs.append(self.output_q)
+
+        return qs
+
+    def get_route_output_q_desc(self):
+        qs=[]
+        if not isinstance(self.output_q,queue.NullQueue):
+            qs.append(self.output_q)
 
 
-        is_signal= isinstance(data,BotControl)
+
+
+        return qs
+    async def _route_data(self,bdata):
+
+        data=bdata.data
+        is_signal= bdata.is_BotControl()
 
         matched = self.type_match(data, self.route_type) and (self.route_func is None or self.route_func(data))
 
@@ -99,22 +117,18 @@ class Route(object):
 
 
         if self.share == True or is_signal:
-                await self.output_q.put(data)
+                await self.output_q.put(bdata)
         else:
                 if not matched:
-                    await self.output_q.put(data)
+                    await self.output_q.put(bdata)
                 else:
                     pass
 
 
         if matched or is_signal:
             for q in self.start_q:
-                await q.put(data)
-            # if isinstance(self.start_q,list):
-            #     for q in self.start_q:
-            #         await q.put(data)
-            # else:
-            #     await self.start_q.put(data)
+                await q.put(bdata)
+
 
     async def __call__(self, data):
 
@@ -126,9 +140,25 @@ class Route(object):
 
         return
 
+    async def route_in(self,data):
+        if isinstance(data,list):
+            for d in data:
+                await self._route_data(data)
+        else:
+            await self._route_data(data)
+
+        return
+
+    async def route_out(self):
+
+        # for q in self.output_q:
+        if  isinstance(self.output_q,queue.NullQueue):
+            return
+        r=await self.output_q.get()
+        return r
 
 
-    def make_route_bot(self, iq, oq):
+    def make_route_bot(self,oq):
         raise NotImplementedError()
 
 
@@ -159,9 +189,9 @@ class Pipe(Route):
         self.q_start = q_o
         self.joined = False
 
-        for func in args:
+        for idx,func in enumerate(args):
             q_i = q_o
-            if func == args[-1]:
+            if idx == len(args)-1:
                 q_o = queue.NullQueue()
 
             else:
@@ -315,28 +345,7 @@ class Pipe(Route):
         return 'Pip_' + str(id(self))
 
 
-# No read inpute
-class Loop(Route):
-
-
-
-    def make_route_bot(self, iq, oq):
-        self.input = self.args[0]
-        self.joined = True
-        self.share=False
-        self.start_q=[iq]
-        self.output_q =oq
-
-
-    async def __call__(self, data):
-        if isinstance(data,BotControl):
-            await self.output_q.put(data)
-            return
-        for i in self.input:
-            await self.output_q.put(i)
-
-
-
+Loop=raw_value_wrap
 
 #note drivedn by data
 class Timer(Route):
@@ -350,12 +359,13 @@ class Timer(Route):
         self.max_time = max_time
         self.until = until
 
-    def make_route_bot(self, iq, oq):
+
+    def make_route_bot(self, oq):
         self.start_q=[None]
         self.output_q=oq
 
 
-    async def __call__(self, data):
+    async def route_in(self, data):
 
         await self.output_q.put(data)
 
@@ -364,7 +374,7 @@ class Timer(Route):
 
 class Filter(Route):
 
-    def make_route_bot(self, iq, oq):
+    def make_route_bot(self,oq):
         self.start_q=[oq]
         self.output_q=queue.NullQueue()
 
@@ -377,17 +387,20 @@ class Branch(Route):
         else:
             return False
 
-    def make_route_bot(self, iq, oq):
+    def make_route_bot(self,oq):
 
 
-        self.output_q = oq
+
         q_o = queue.DataQueue()
         self.start_q=[q_o]
-        for func in self.args:
+        self.output_q=oq
+        # if self.share:
+        #     self.start_q.append(oq)
+        for idx,func in enumerate(self.args):
             q_i = q_o
-            if self.is_last_one(self.args, func):
-                if self.joined:
-                    q_o = oq
+            if  idx == len(self.args)-1:
+                if self.joined :
+                    q_o = self.output_q
                 else:
                     q_o = queue.NullQueue()
             else:
@@ -398,19 +411,17 @@ class Branch(Route):
             BotFrame.make_bot(q_i, q_o, func)
 
 
-
 class Return(Branch):
 
 
-    def make_route_bot(self, iq, oq):
+    def make_route_bot(self,oq):
         self.share=False
         self.joined=True
 
-        super().make_route_bot(iq,oq)
+        super().make_route_bot(oq)
 
 
-# 无法知道该类是被那里使用。更复杂实现是需要控制所有route初始化的顺序，需要外层初始化结束，建in,out队列传递到内侧
-# make bot时候，对route只需要建立队列关系，而不需要，使用for循环来处理call
+
 class Fork(Route):
 
     # |
@@ -420,7 +431,7 @@ class Fork(Route):
     # | x
 
 
-    def make_route_bot(self, iq, oq):
+    def make_route_bot(self,oq):
         if self.joined:
             q_o = oq
         else:
@@ -431,24 +442,22 @@ class Fork(Route):
 
         #parallel in sub network not in node
         for func in self.args:
-            q_i = asyncio.Queue()
+            q_i = queue.DataQueue()
             self.start_q.append(q_i)
             BotFrame.make_bot(q_i, q_o, func)
 
 
 class Join(Fork):
-    def make_route_bot(self, iq, oq):
+    def make_route_bot(self,oq):
         self.share = False
         self.joined=True
         self.route_type=[object]
 
-        super().make_route_bot(iq,oq)
+        super().make_route_bot(oq)
 
 
 
 
-#方案1，放入一个等待结构，超时后需要将任务杀死
-#方案2 随机处理，在出口处，汇总合并数据，
 class BlockedJoin(Route):
 
     # |
@@ -458,74 +467,48 @@ class BlockedJoin(Route):
     # | x
 
 
-    def make_route_bot(self, iq,oq):
+    def make_route_bot(self,oq):
 
         self.start_q = []
-        self.tmp_output_q=[]
         self.output_q=oq
+        self.inner_output_q=queue.DataQueue()
         self.share = False
         self.joined=True
         self.route_type=[object]
-
+        self.joined_result={}
         self.start_index = len(BotFrame.bots)
         for func in self.args:
 
             i_q = asyncio.Queue(maxsize=1)
-            o_q = queue.DataQueue()
             self.start_q.append(i_q)
-            self.tmp_output_q.append(o_q)
-            BotFrame.make_bot(i_q, o_q, func)
+            BotFrame.make_bot(i_q, self.inner_output_q, func)
+
+        BotFrame.make_bot(self.inner_output_q,self.output_q,self.join_merge,raw_bdata=True)
 
         self.end_index = len(BotFrame.bots)
 
-
-    def check(self):
-        for i in range(self.start_index, self.end_index):
-            bot = BotFrame.bots[i]
-            if not bot.idle:
-                return False
-        for q in self.start_q:
-            if not q.empty():
-                return False
-        return True
-
-    async def compeleted(self):
-        while True:
-            s=self.check()
-
-            if s:
-                return True
-            await asyncio.sleep(2)
+    async def route_in(self,bdata):
+        self.joined_result[bdata.data]=[]
+        bdata.ori=bdata.data
+        return await super().route_in(bdata)
 
 
-    async def put_batch_q(self,data,qlist):
+    async def join_merge(self,bdata):
+            #await self.inner_output_q.get()
+            self.joined_result[bdata.ori].append(bdata.data)
+            if len(self.joined_result[bdata.ori]) == len(self.args):
+                #del self.joined_result[bdata.ori]
+                await self.output_q.put(Bdata(tuple(self.joined_result[bdata.ori]),ori=bdata.ori))
 
-        tasks=[]
-        for q in qlist:
-            task=q.put(data)
-            tasks.append(task)
 
-        await asyncio.gather(*tasks)
+    def get_route_output_q_desc(self):
 
-    async def gut_batch_q(self, qlist):
-
-        tasks = []
-        for q in qlist:
-            #TODO need get all extension
-            task = q.get()
-            tasks.append(task)
-
-        r=await asyncio.gather(*tasks)
-        return tuple(r)
+        return  [self.inner_output_q]
 
 
 
-    async def __call__(self, data):
 
 
-            await self.put_batch_q(data,self.start_q)
-            r=await self.gut_batch_q(self.tmp_output_q)
-            await self.output_q.put(r)
 
 
 

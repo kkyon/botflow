@@ -77,7 +77,7 @@ def main():
     insert=Insert("insert into test.baidu (id,name ,url,page_rank,page_no)values('{id}','{name}' ,'{url}',{page_rank},{page_no})",**dbconf)
 
     p=Pipe(
-        Loop(urls),
+        urls,
         HttpLoader(),
         Branch(get_all_items,join=True),
 

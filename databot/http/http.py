@@ -89,11 +89,15 @@ class HttpLoader(Node):
             req.url=v
             req.method='GET'
 
-        if isinstance(v,dict):
+        elif isinstance(v,dict):
             req = HttpRequest()
             for k in dir(req):
                 if k in v:
                     req[k]=v[k]
+
+        else:
+
+            req=v
 
 
 
