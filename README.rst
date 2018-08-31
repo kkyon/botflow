@@ -102,8 +102,12 @@ Release
 =======
 
 :**0.1.8**: http://docs.botflow.org/en/latest/change/0.1.8.html .:
+            
             #. Support parallel in ThreadPool for slow function.
+            
             #. Loop Node  is  deprecated. raw value and Iterable value can be used directly.
+            
+            #. improve performance of BlockedJoin
             
 :**0.1.7**: 
 
