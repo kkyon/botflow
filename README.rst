@@ -55,7 +55,7 @@ _Load the price of Bitcoin every 2 seconds. Advantage price aggregator sample ca
 
 .. code-block:: python
 
-    from databot import Pipe,Timer,BotFrame,HttpLoader
+    from databot import Pipe,Timer,BotFrame,HttpLoader,Bot
 
      def main():
         Pipe(
@@ -69,8 +69,8 @@ _Load the price of Bitcoin every 2 seconds. Advantage price aggregator sample ca
 
         )
 
-        BotFrame.render('simple_bitcoin_price')
-        BotFrame.run()
+        Bot.render('simple_bitcoin_price')
+        Bot.run()
 
     main()
 
