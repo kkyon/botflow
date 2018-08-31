@@ -62,8 +62,8 @@ def main():
     Pipe(
         urls,
         HttpLoader(),
-        Branch(get_all_items,outputfile),
-        Branch(get_all_page_url, HttpLoader(), get_all_items, outputfile),
+       Branch(get_all_items,outputfile),
+       Branch(get_all_page_url, HttpLoader(), get_all_items, outputfile),
 
     )
     #生成流程图

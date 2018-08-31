@@ -13,13 +13,13 @@ def triple(i):
 def main():
     Pipe(
 
-        Loop(range(10)),
+        range(10),
         BlockedJoin(double,triple),
         print
 
     )
 
-    BotFrame.render('ex_output/abc')
+    BotFrame.render('ex_output/blockedjoin')
     BotFrame.run()
 
 

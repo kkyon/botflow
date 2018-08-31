@@ -77,7 +77,7 @@ def main():
 
     # make data flow net
     p1=Pipe(
-        Loop(urls),
+        urls,
         HttpLoader(),
         Branch(get_all_items, collect),
         Branch(get_all_page_url, HttpLoader(), get_all_items, collect),

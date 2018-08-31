@@ -2,11 +2,27 @@ import asyncio
 import collections
 import pickle
 from asyncio.queues import PriorityQueue
-
+from databot.bdata import Bdata
+import functools
 
 class DataQueue(asyncio.Queue):
     def __init__(self):
+        self.put_callback=None
         super().__init__(maxsize=128)
+
+    def set_put_callback(self,f):
+        self.put_callback=f
+
+    async def put(self, item):
+        if not isinstance(item,Bdata):
+            raise Exception('not right data'+str(type(item)))
+
+        r= await super().put(item)
+        if self.put_callback is not None:
+             asyncio.ensure_future(self.put_callback(item))
+        return r
+
+
 class ListQueue(asyncio.Queue):
     def __init__(self, it):
         self.it = it
@@ -22,7 +38,8 @@ class GodQueue(asyncio.Queue):
     # X
     def __init__(self):
         self.last_put = None
-        self._data =[0]
+        self.ori=0
+        self._data =[Bdata(0,ori=self.ori)]
         pass
 
     def qsize(self):
