@@ -148,10 +148,10 @@ All units (Pipe, Node, Route) communicate via queues and perform parallel comput
 This is abstracted so that Databot can be used with only limited knowledge of ``asyncio``.
 
 Below some graphs will get you some basic concept for the Route:
-      branch:https://github.com/kkyon/databot/blob/master/docs/databot_branch.jpg
-      fork:https://github.com/kkyon/databot/blob/master/docs/databot_fork.jpg
-      join:https://github.com/kkyon/databot/blob/master/docs/databot_join.jpg
-      return:https://github.com/kkyon/databot/blob/master/docs/databot_return.jpg
+      branch:https://github.com/kkyon/databot/blob/master/docs/route/databot_branch.jpg
+      fork:https://github.com/kkyon/databot/blob/master/docs/route/databot_fork.jpg
+      join:https://github.com/kkyon/databot/blob/master/docs/route/databot_join.jpg
+      return:https://github.com/kkyon/databot/blob/master/docs/route/databot_return.jpg
       
 
 Contributing
