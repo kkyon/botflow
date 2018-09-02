@@ -16,10 +16,16 @@ class DataQueue(asyncio.Queue):
     async def put(self, item):
         if not isinstance(item,Bdata):
             raise Exception('not right data'+str(type(item)))
-
+        # item.incr()
         r= await super().put(item)
         if self.put_callback is not None:
              asyncio.ensure_future(self.put_callback(item))
+        return r
+
+    async def get(self):
+
+        r=await super().get()
+        #r.destroy()
         return r
 
 
@@ -79,6 +85,7 @@ class NullQueue(asyncio.Queue):
 
     async def put(self, item):
         # do nothing
+        item.destroy()
         self.last_put = item
         await asyncio.sleep(0)
 

@@ -5,11 +5,12 @@ class dotdict(dict):
     __delattr__ = dict.__delitem__
 
 class CountRef(object):
+    __slots__ = ['count']
     def __init__(self):
         self.count=0
 
-    def incr(self):
-        self.count=self.count+1
+    def incr(self,n=1):
+        self.count=self.count+n
         return self.count
 
     def decr(self):
@@ -28,12 +29,18 @@ class Node(CountRef):
 
         self.inited = False
         self.closed = False
+        self.raw_bdata=False
         self.init_param()
         super().__init__()
 
     def init_param(self):
         pass
 
+    async def init(self):
+        return
+
+    async def close(self):
+        return
 
 
     async def node_init(self):
@@ -53,17 +60,17 @@ class Node(CountRef):
 
         return f
 
-
-    @classmethod
-    def boost_type(cls,type=boost_by_thread):
-
-        def wrap(f):
-            f.boost_type=type
-
-            return f
-
-
-        return wrap
+    #
+    # @classmethod
+    # def boost_type(cls,type=boost_by_thread):
+    #
+    #     def wrap(f):
+    #         f.boost_type=type
+    #
+    #         return f
+    #
+    #
+    #     return wrap
 
 
 

@@ -6,6 +6,7 @@ from databot.config import config
 import  databot.queue  as queue
 import typing
 from databot.bdata import Bdata,BotControl,Retire
+from databot.node import Node
 
 class RouteRule(object):
     __slots__ = ['output_q', 'type_list', 'share']
@@ -117,15 +118,18 @@ class Route(object):
 
 
         if self.share == True or is_signal:
+                bdata.incr()
                 await self.output_q.put(bdata)
         else:
                 if not matched:
+                    bdata.incr()
                     await self.output_q.put(bdata)
                 else:
                     pass
 
 
         if matched or is_signal:
+            bdata.incr(n=len(self.start_q))
             for q in self.start_q:
                 await q.put(bdata)
 
@@ -483,7 +487,7 @@ class BlockedJoin(Route):
             self.start_q.append(i_q)
             BotFrame.make_bot(i_q, self.inner_output_q, func)
 
-        BotFrame.make_bot(self.inner_output_q,self.output_q,self.join_merge,raw_bdata=True)
+        BotFrame.make_bot(self.inner_output_q,self.output_q,self.JoinMerge(parent=self))
 
         self.end_index = len(BotFrame.bots)
 
@@ -492,13 +496,17 @@ class BlockedJoin(Route):
         bdata.ori=bdata.data
         return await super().route_in(bdata)
 
+    class JoinMerge(Node):
 
-    async def join_merge(self,bdata):
-            #await self.inner_output_q.get()
-            self.joined_result[bdata.ori].append(bdata.data)
-            if len(self.joined_result[bdata.ori]) == len(self.args):
-                #del self.joined_result[bdata.ori]
-                await self.output_q.put(Bdata(tuple(self.joined_result[bdata.ori]),ori=bdata.ori))
+        def init_param(self):
+            self.raw_bdata=True
+        async def __call__(self,bdata):
+                #await self.inner_output_q.get()
+                parent=self.kwargs['parent']
+                parent.joined_result[bdata.ori].append(bdata.data)
+                if len(parent.joined_result[bdata.ori]) == len(parent.args):
+                    #del self.joined_result[bdata.ori]
+                    await parent.output_q.put(Bdata(parent.joined_result[bdata.ori],ori=bdata.ori))
 
 
     def get_route_output_q_desc(self):

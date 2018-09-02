@@ -5,7 +5,8 @@ import types
 import typing
 from databot.config import config
 import logging
-from databot.bdata import Bdata,BotControl,Retire
+from databot.bdata import Bdata,BotControl,Retire,BdataFrame
+
 from collections.abc import Iterable
 from graphviz import Graph
 
@@ -59,6 +60,10 @@ async def handle_exception(e, bdata, iq,oq):
     else:
         raise Exception('undefined exception policy')
 
+def filter_out(data):
+    if data is None or data == []:
+        return True
+    return False
 
 async def call_wrap(func, bdata, iq, oq,raw_bdata=False):
     logging.debug('call_wrap' + str(type(func)) + str(func))
@@ -68,6 +73,7 @@ async def call_wrap(func, bdata, iq, oq,raw_bdata=False):
 
     else:
         param=bdata.data
+
     ori=bdata.ori
 
     if hasattr(func,'boost_type'):
@@ -77,33 +83,18 @@ async def call_wrap(func, bdata, iq, oq,raw_bdata=False):
     else:
         try:
             r_or_c = func(param)
-            if r_or_c is None:
+            if filter_out(r_or_c):
+
                 return
         except Exception as e:
             await handle_exception(e, bdata, iq,oq)
+
             return
 
 
 
 
-    if isinstance(r_or_c, types.AsyncGeneratorType):
-        async for i in r_or_c:
-            await oq.put(Bdata(i, ori=ori))
-        #async def sync_two_source():
-        #     async for i in r_or_c:
-        #         await oq.put(Bdata(i,ori=ori))
-        #
-        # await asyncio.get_event_loop().create_task(sync_two_source())
-
-    elif isinstance(r_or_c, asyncio.Queue):
-        async def sync_two_source():
-            while True:
-                i = await r_or_c.get()
-                await oq.put(Bdata(i,ori))
-
-        await asyncio.get_event_loop().create_task(sync_two_source())
-
-    elif isinstance(r_or_c,(str,typing.Tuple,typing.Dict)):
+    if isinstance(r_or_c,(str,typing.Tuple,typing.Dict)):
         await oq.put(Bdata(r_or_c,ori=ori))
 
    # elif isinstance(r_or_c, types.GeneratorType) or isinstance(r_or_c, list):
@@ -120,17 +111,22 @@ async def call_wrap(func, bdata, iq, oq,raw_bdata=False):
                 for i in r:
                     await oq.put(Bdata(i,ori=ori))
             else:
-                if r is None:
+                if filter_out(r):
+
                     return
+
                 await oq.put(Bdata(r,ori=ori))
         except Exception as e:
 
             await handle_exception(e, bdata, iq,oq)
 
+
         # TODO
 
     else:
         await oq.put(Bdata(r_or_c,ori=ori))
+
+
 
 
 class PerfMetric(object):
@@ -304,7 +300,7 @@ class BotFrame(object):
         return cls.bot_id
 
     @classmethod
-    def make_bot(cls, i, o, f,raw_bdata=False):
+    def make_bot(cls, i, o, f):
 
 
         async def _make_timer_bot(i_q,o_q,timer):
@@ -347,7 +343,9 @@ class BotFrame(object):
                 if route is None:
                     raise Exception()
 
+
                 await route.route_in(data)
+                data.destroy()
                 if BotFrame.ready_to_stop(bi):
                     bi.stoped = True
                     await   route.route_in(Bdata.make_Retire())
@@ -356,15 +354,24 @@ class BotFrame(object):
                 bi.idle = True
 
 
+        async def wrap_sync_async_call(f,data):
+            r=f(data)
+            if isinstance(r,typing.Coroutine):
+                r=await r
 
+            return r
 
         async def _make_bot(i_q, o_q, func):
+
             if isinstance(func, node.Node):
                 await func.node_init()
+                raw_bdata=func.raw_bdata
 
-
+            else:
+                raw_bdata=False
 
             bi = cls.get_botinfo()
+
 
             while True:
                 if bi.stoped:
@@ -380,6 +387,8 @@ class BotFrame(object):
                 if len(tasks) != 0:
                     await asyncio.gather(*tasks)
 
+                for data in data_list:
+                    data.destroy()
                 if BotFrame.ready_to_stop(bi):
                     if isinstance(func, node.Node):
                         await func.node_close()
