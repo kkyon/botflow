@@ -117,8 +117,9 @@ Release
 
 RoadMap
 =======
-- Will add Httpserver support(REST,Websocket). It wouldbe used in serverd machine learning modele online. and distrubute stream 
-- 
+- Will add Httpserver support(REST,Websocket).  
+- Will support server machine learning Model online.
+- Finshe the api reference doc.
 
 More about Databot 
 ===============
