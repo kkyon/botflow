@@ -115,7 +115,10 @@ Release
 :**0.1.7**: 
 
 
-
+RoadMap
+=======
+- Will add Httpserver support(REST,Websocket). It wouldbe used in serverd machine learning modele online. and distrubute stream 
+- 
 
 More about Databot 
 ===============
