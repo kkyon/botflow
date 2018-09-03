@@ -10,10 +10,13 @@ def parse_search(response):
     result = []
     for rank, item in enumerate(items):
         if len(item['href'])>10 and 'http' in item['href']:
-            result.append({'title':item.get_text(),'href':item['href']})
-    return result
+            r={'title':item.get_text(),'href':item['href']}
+            yield r
+
 
 config.exception_policy=config.Exception_ignore
+
+
 Pipe(
     HttpServer(),
     Join(
@@ -21,6 +24,7 @@ Pipe(
     lambda r:"https://www.google.com/search?q={}".format(r.query['q']),
     lambda r:"https://www.baidu.com/s?wd={}".format(r.query['q']),
     ),
+
     Branch(print), #for debug ,show url
 
     HttpLoader(timeout=3),
@@ -28,7 +32,7 @@ Pipe(
 
 
     HttpAck(),
-    Branch(print),
+    print,
 
 
 )

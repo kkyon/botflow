@@ -1,9 +1,7 @@
 import asyncio
 import collections
-import pickle
-from asyncio.queues import PriorityQueue
-from databot.bdata import Bdata
-import functools
+from databot.bdata import Bdata,ZERO_DATA
+
 
 class DataQueue(asyncio.Queue):
     def __init__(self):
@@ -44,7 +42,7 @@ class GodQueue(asyncio.Queue):
     # X
     def __init__(self):
         self.last_put = None
-        self.ori=0
+        self.ori=ZERO_DATA
         self._data =[Bdata(0,ori=self.ori)]
         pass
 

@@ -10,7 +10,7 @@ from aiohttp import web
 from databot.botframe import BotFrame
 import random
 from databot import queue
-from databot.bdata import Bdata,BdataFrame
+from databot.bdata import Bdata,Databoard
 headers = {
 
     'user-agent': "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36",
@@ -153,6 +153,7 @@ class HttpServer(Route):
         self.bind_address=bind_address
         self.timeout=timeout
 
+
     async def response_stream(self, request: web.Request):
         breq = HttpRequest()
         breq.headers = request.headers
@@ -206,16 +207,17 @@ class HttpServer(Route):
         breq.payload=await request.text()
         breq.query=request.query
         future = self._loop.create_future()
-        bdata=Bdata(breq,breq)
+        ori=Bdata(breq,0)
+        bdata=Bdata(breq,ori)
 
         await self.output_q.put(bdata)
 
         try:
-            r=await asyncio.wait_for(BdataFrame.wait(breq),5)
-            BdataFrame.drop_ori(breq)
+            r=await asyncio.wait_for(self.databoard.wait_ori(ori),5)
+            self.databoard.drop_ori(breq)
             return web.json_response(r)
         except:
-            BdataFrame.drop_ori(breq)
+            self.databoard.drop_ori(breq)
             raise
 
 
@@ -253,7 +255,7 @@ class HttpAck(Route):
     async def route_in(self,bdata):
 
         import copy
-        BdataFrame.set_ack(bdata)
+        self.databoard.set_ack(bdata)
         cp_bdata=  Bdata(bdata.data,ori=0)
         await self.output_q.put(cp_bdata)
 

@@ -39,7 +39,7 @@ dbconf['db']= 'test'
 def get_all_items(response):
     soup = BeautifulSoup(response.text, "lxml")
     items = soup.select('div.result.c-container')
-    result = []
+
     for rank, item in enumerate(items):
         import uuid
         id = uuid.uuid4()
@@ -47,8 +47,8 @@ def get_all_items(response):
         r.id = id
         r.page_rank = rank
         r.name = item.h3.get_text()
-        result.append(r)
-    return result
+        yield r
+
 
 
 # 解析 分页 链接
@@ -61,9 +61,10 @@ def get_all_page_url(response):
         no = item.get_text()
         if '下一页' in no:
             break
-        itemList.append('https://www.baidu.com' + href)
+        r='https://www.baidu.com' + href
+        yield r
 
-    return itemList
+
 
 
 def show_info(i):

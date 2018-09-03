@@ -5,7 +5,7 @@ import collections
 from databot.config import config
 import  databot.queue  as queue
 import typing
-from databot.bdata import Bdata,BotControl,Retire
+from databot.bdata import Bdata,Databoard
 from databot.node import Node
 
 class RouteRule(object):
@@ -41,7 +41,7 @@ class RouteTable(object):
     __slots__ = ['rules']
 
     def __init__(self):
-        self.rules = queue.PriorityQueue()
+        self.rules = queue.DataQueue()
 
     def add_rules(self, r):
         self.rules.put(r)
@@ -75,7 +75,7 @@ class Route(object):
         self.out_table = RouteTable()
         self.args = args
         self.route_type=ensure_list(route_type)
-
+        self.databoard = Databoard()
         self.share = share
         self.joined = join
         self.start_q=None
@@ -451,67 +451,224 @@ class Fork(Route):
             BotFrame.make_bot(q_i, q_o, func)
 
 
-class Join(Fork):
+class Join(Route):
+
+    def __init__(self, *args, merge_node=None):
+
+        super(Route, self).__init__()
+
+        self.route_type = [object]
+        self.route_func = None
+        self.merge_node = merge_node
+        self.args = args
+        self.databoard = Databoard()
+
+
+
     def make_route_bot(self,oq):
+        if self.merge_node is None:
+            self.make_route_bot_join(oq)
+        else:
+            self.make_route_bot_joinmerge(oq)
+
+
+    async def route_in(self,data):
+        if self.merge_node is None:
+            await super().route_in(data)
+        else:
+            await self.route_in_joinmerge(data)
+
+
+    def make_route_bot_join(self,oq):
         self.share = False
         self.joined=True
         self.route_type=[object]
 
-        super().make_route_bot(oq)
+        if self.joined:
+            q_o = oq
+        else:
+            q_o = queue.NullQueue()
 
+        self.start_q = []
+        self.output_q = oq
+
+
+        for func in self.args:
+            q_i = queue.DataQueue()
+            self.start_q.append(q_i)
+            BotFrame.make_bot(q_i, q_o, func)
+
+    def make_route_bot_joinmerge(self, oq):
+
+        self.start_q = []
+        self.output_q = oq
+        self.merge_q = queue.DataQueue()
+        self.inner_output_q = queue.DataQueue()
+
+        self.share = False
+        self.joined = True
+        self.raw_bdata = True
+        self.count = 0
+
+        for func in self.args:
+            i_q = queue.DataQueue()
+            self.start_q.append(i_q)
+            BotFrame.make_bot(i_q, self.output_q, func)
+
+
+
+
+
+
+    async def route_in_joinmerge(self, bdata):
+
+        if bdata.is_BotControl():
+            await super().route_in(bdata)
+
+        else:
+
+            data = Bdata(bdata.data, bdata)
+            data.count = 0
+            await super().route_in(data)
+
+            r = await self.databoard.wait_ori(bdata)
+            await self.merge_node.put_result(r)
+            self.databoard.drop_ori(bdata)
+
+
+
+
+class Merge(Route):
+
+    def __init__(self,pair=None):
+        super().__init__()
+        self.pair=pair
+        self.future_list=[]
+        self.join_node=None
+
+    def make_route_bot(self,oq):
+        self.start_q=[oq]
+        self.output_q=oq
+        self.share=False
+        self.joined=False
+
+
+    def get_output_q(self):
+        return self.output_q
+    async def route_in(self, bdata):
+
+        bdata.incr()
+        self.databoard.set_ack(bdata)
+        if bdata.is_BotControl():
+            await self.output_q.put(bdata)
+
+
+
+    async def put_result(self,result):
+
+        await self.output_q.put(Bdata.make_Bdata_zori(result))
 
 
 
 class BlockedJoin(Route):
 
-    # |
-    # | x
-    # |/
-    # |\
-    # | x
+
+
+
+    def __init__(self,*args,merge_node=None):
+
+
+        super(Route, self).__init__()
+
+        self.route_type=[object]
+        self.route_func=None
+        self.merge_node=merge_node
+        self.args=args
+        self.databoard=Databoard()
 
 
     def make_route_bot(self,oq):
 
         self.start_q = []
         self.output_q=oq
+        self.merge_q=queue.DataQueue()
         self.inner_output_q=queue.DataQueue()
+        null=queue.DataQueue()
         self.share = False
         self.joined=True
-        self.route_type=[object]
-        self.joined_result={}
+        self.raw_bdata = True
+        self.count=0
+
+
         self.start_index = len(BotFrame.bots)
         for func in self.args:
 
-            i_q = asyncio.Queue(maxsize=1)
+            i_q = queue.DataQueue()
             self.start_q.append(i_q)
-            BotFrame.make_bot(i_q, self.inner_output_q, func)
+            BotFrame.make_bot(i_q, self.output_q, func)
 
-        BotFrame.make_bot(self.inner_output_q,self.output_q,self.JoinMerge(parent=self))
+        #self.merge_route=Merge(pair=self)
+        #BotFrame.make_bot(self.inner_output_q,self.output_q,self.merge_route)
+
+
 
         self.end_index = len(BotFrame.bots)
 
+
+
+    def callback(self,fut):
+        print(fut._result)
+        self.merge_route.put_result(fut._result)
+
+
     async def route_in(self,bdata):
-        self.joined_result[bdata.data]=[]
-        bdata.ori=bdata.data
-        return await super().route_in(bdata)
-
-    class JoinMerge(Node):
-
-        def init_param(self):
-            self.raw_bdata=True
-        async def __call__(self,bdata):
-                #await self.inner_output_q.get()
-                parent=self.kwargs['parent']
-                parent.joined_result[bdata.ori].append(bdata.data)
-                if len(parent.joined_result[bdata.ori]) == len(parent.args):
-                    #del self.joined_result[bdata.ori]
-                    await parent.output_q.put(Bdata(parent.joined_result[bdata.ori],ori=bdata.ori))
 
 
-    def get_route_output_q_desc(self):
 
-        return  [self.inner_output_q]
+        if bdata.is_BotControl():
+            await super().route_in(bdata)
+
+        else:
+
+            data=Bdata(bdata.data,bdata)
+            data.count=0
+            await super().route_in(data)
+            # f=asyncio.ensure_future(self.databoard.wait_ori(bdata))
+            # self.merge_route.future_list.append(f)
+           #f=self.databoard.create_future(data.ori,self.callback)
+            #self.merge_route.future_list.append(f)
+            r = await self.databoard.wait_ori(bdata)
+            await self.merge_node.put_result(r)
+            self.databoard.drop_ori(bdata)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        # def init_param(self):
+        #     self.raw_bdata=True
+        # async def __call__(self,bdata):
+        #         #await self.inner_output_q.get()
+        #         parent=self.kwargs['parent']
+        #         parent.joined_result[bdata.ori].append(bdata.data)
+        #         if len(parent.joined_result[bdata.ori]) == len(parent.args):
+        #             #del self.joined_result[bdata.ori]
+        #             await parent.output_q.put(Bdata(parent.joined_result[bdata.ori],ori=bdata.ori))
+
+
+    # def get_route_output_q_desc(self):
+    #
+    #     return  [self.inner_output_q]
 
 
 

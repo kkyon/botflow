@@ -5,7 +5,7 @@ import types
 import typing
 from databot.config import config
 import logging
-from databot.bdata import Bdata,BotControl,Retire,BdataFrame
+from databot.bdata import Bdata
 
 from collections.abc import Iterable
 from graphviz import Graph
@@ -94,11 +94,11 @@ async def call_wrap(func, bdata, iq, oq,raw_bdata=False):
 
 
 
-    if isinstance(r_or_c,(str,typing.Tuple,typing.Dict)):
-        await oq.put(Bdata(r_or_c,ori=ori))
+    # if isinstance(r_or_c,(str,typing.Tuple,typing.Dict)):
+    #     await oq.put(Bdata(r_or_c,ori=ori))
 
    # elif isinstance(r_or_c, types.GeneratorType) or isinstance(r_or_c, list):
-    elif isinstance(r_or_c, typing.Iterable) :
+    if isinstance(r_or_c, types.GeneratorType) :
         r = r_or_c
         for i in r:
             await oq.put(Bdata(i,ori=ori))
@@ -106,7 +106,7 @@ async def call_wrap(func, bdata, iq, oq,raw_bdata=False):
 
         try:
             r = await r_or_c
-            if isinstance(r, types.GeneratorType) or isinstance(r, list):
+            if isinstance(r, types.GeneratorType):
 
                 for i in r:
                     await oq.put(Bdata(i,ori=ori))
@@ -136,10 +136,22 @@ class PerfMetric(object):
     def __init__(self):
         pass
 
-def raw_value_wrap(raw_value):
+def raw_value_wrap(message):
 
             def _raw_value_wrap(v):
-                return raw_value
+
+
+
+                # elif isinstance(r_or_c, types.GeneratorType) or isinstance(r_or_c, list):
+                if isinstance(message,typing.Iterable) and (not isinstance(message, (str,dict,tuple))):
+
+                    for i in message:
+                        yield i
+
+                else:
+
+                    yield message
+
 
             return _raw_value_wrap
 class BotFrame(object):
@@ -315,7 +327,7 @@ class BotFrame(object):
                     if timer.max_time and timer.max_time < count:
                         break
 
-                    await o_q.put(Bdata(count))
+                    await o_q.put(Bdata.make_Bdata_zori(count))
 
                     if timer.until is not None and timer.until():
                         break
@@ -338,14 +350,26 @@ class BotFrame(object):
                 if bi.stoped:
                     break
 
-                data = await i_q.get()
+                bdata_list = await cls.copy_size(i_q)
+                #data = await i_q.get()
                 bi.idle = False
                 if route is None:
                     raise Exception()
 
+                tasks=[]
+                for bdata in bdata_list:
+                    task=asyncio.ensure_future(route.route_in(bdata))
+                    tasks.append(task)
 
-                await route.route_in(data)
-                data.destroy()
+                if len(tasks) != 0:
+                    await asyncio.gather(*tasks)
+
+                for bdata in bdata_list:
+                    bdata.destroy()
+
+
+                # await route.route_in(data)
+                # data.destroy()
                 if BotFrame.ready_to_stop(bi):
                     bi.stoped = True
                     await   route.route_in(Bdata.make_Retire())
@@ -361,6 +385,7 @@ class BotFrame(object):
 
             return r
 
+
         async def _make_bot(i_q, o_q, func):
 
             if isinstance(func, node.Node):
@@ -374,30 +399,31 @@ class BotFrame(object):
 
 
             while True:
-                if bi.stoped:
-                    break
-                tasks = []
 
-                data_list = await cls.copy_size(i_q)
-                bi.idle=False
-                for data in data_list:
-                    if not data.is_BotControl():
-                        task = asyncio.ensure_future(call_wrap(func, data, i_q, o_q,raw_bdata=raw_bdata))
-                        tasks.append(task)
-                if len(tasks) != 0:
-                    await asyncio.gather(*tasks)
+                    if bi.stoped:
+                        break
+                    tasks = []
 
-                for data in data_list:
-                    data.destroy()
-                if BotFrame.ready_to_stop(bi):
-                    if isinstance(func, node.Node):
-                        await func.node_close()
-                    bi.stoped = True
+                    data_list = await cls.copy_size(i_q)
+                    bi.idle=False
+                    for data in data_list:
+                        if not data.is_BotControl():
+                            task = asyncio.ensure_future(call_wrap(func, data, i_q, o_q,raw_bdata=raw_bdata))
+                            tasks.append(task)
+                    if len(tasks) != 0:
+                        await asyncio.gather(*tasks)
 
-                    await o_q.put(Bdata.make_Retire())
+                    for data in data_list:
+                        data.destroy()
+                    if BotFrame.ready_to_stop(bi):
+                        if isinstance(func, node.Node):
+                            await func.node_close()
+                        bi.stoped = True
 
-                    break
-                bi.idle = True
+                        await o_q.put(Bdata.make_Retire())
+
+                        break
+                    bi.idle = True
 
 
         if not isinstance(f, typing.Callable):
@@ -417,7 +443,56 @@ class BotFrame(object):
             BotFrame.bots.append(bi)
             return [bi]
 
+        # elif isinstance(f,flow.BlockedJoin):
+        #     f.make_route_bot(o)
+        #     bi_in = BotInfo()
+        #     bi_in.iq = [i]
+        #     bi_in.oq = f.get_route_input_q_desc()
+        #
+        #     bi_in.func = flow.BlockedJoin.route_in
+        #     bi_in.futr = None
+        #     bi_in.id = cls.new_bot_id()
+        #
+        #     BotFrame.bots.append(bi_in)
+        #
+        #
+        #     fu = asyncio.ensure_future(_make_bot(i, f.merge_node.get_output_q(), f))
+        #     bi = BotInfo()
+        #     bi.iq = [i]
+        #     bi.oq = [o]
+        #     bi.func = f
+        #     bi.futr = fu
+        #     bi.id = cls.new_bot_id()
+        #     BotFrame.bots.append(bi)
+        #     return [bi]
 
+        # elif isinstance(f,flow.Merge):
+        #     f.make_route_bot(o)
+        #
+        #     #for input
+        #
+        #     fu = asyncio.ensure_future(_route_input(i, f))
+        #     bi_in = BotInfo()
+        #     bi_in.iq = [i]
+        #     bi_in.oq = f.get_route_input_q_desc()
+        #
+        #     bi_in.func = _route_input
+        #     bi_in.futr = fu
+        #     bi_in.id = cls.new_bot_id()
+        #
+        #     BotFrame.bots.append(bi_in)
+        #
+        #
+        #
+        #     fu = asyncio.ensure_future(_make_bot(i, f.get_output_q(), f.join_node))
+        #     bi = BotInfo()
+        #     bi.iq = [i]
+        #     bi.oq = [o]
+        #     bi.func = f
+        #     bi.futr = fu
+        #     bi.id = cls.new_bot_id()
+        #     BotFrame.bots.append(bi)
+        #     return [bi]
         elif isinstance(f, flow.Route):
             # deligate with route make_bot func
             #for output
@@ -431,7 +506,7 @@ class BotFrame(object):
             bi_in.iq = [i]
             bi_in.oq = f.get_route_input_q_desc()
 
-            bi_in.func = _route_input
+            bi_in.func = f.route_in
             bi_in.futr = fu
             bi_in.id = cls.new_bot_id()
 
