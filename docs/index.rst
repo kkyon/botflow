@@ -24,7 +24,7 @@ Concept of the databot is very simple. ```I doubt if it is good to write a guide
 
 - function
 - function object. Class with ```__call__``` function overridden
-- lambada
+- lambda
 
 
 
