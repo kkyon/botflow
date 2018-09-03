@@ -206,7 +206,7 @@ class HttpServer(Route):
         breq.method=request.method
         breq.payload=await request.text()
         breq.query=request.query
-        future = self._loop.create_future()
+
         ori=Bdata(breq,0)
         bdata=Bdata(breq,ori)
 
