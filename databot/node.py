@@ -1,78 +1,56 @@
-class dotdict(dict):
-    """dot.notation access to dictionary attributes"""
-    __getattr__ = dict.get
-    __setattr__ = dict.__setitem__
-    __delattr__ = dict.__delitem__
+from .nodebase import Node
+from .botframe import BotFrame
 
-class CountRef(object):
-    __slots__ = ['count']
-    def __init__(self):
-        self.count=0
 
-    def incr(self,n=1):
-        self.count=self.count+n
-        return self.count
 
-    def decr(self):
 
-        self.count=self.count-1
+import typing
 
-        return self.count
+class Flat(Node):
 
-class Node(CountRef):
-    boost_by_thread=1
-    boost_by_process=2
-    #boost_by_cluster=3
-    def __init__(self, *args, **kwargs):
-        self.args = args
-        self.kwargs = dotdict(kwargs)
 
-        self.inited = False
-        self.closed = False
-        self.raw_bdata=False
-        self.init_param()
+    def __call__(self, message):
+        if isinstance(message, typing.Iterable) and (not isinstance(message, (str, dict, tuple))):
+
+            for i in message:
+                yield i
+
+        else:
+
+            yield message
+
+
+
+
+class SendTo(Node):
+
+    def __init__(self,node):
         super().__init__()
+        self.node=node
+        self.target_q=None
+        self.raw_bdata=True
 
-    def init_param(self):
-        pass
+    def init(self):
 
-    async def init(self):
-        return
+        b=BotFrame.bots[self.node_id]
+        # self.target_q=b.iq[0]
+        # return b.iq[0]
 
-    async def close(self):
-        return
+    def get_target_q(self):
+        if self.target_q is not None:
+            return self.target_q
 
+        self.target_q=self.node.outer_iq
+        return self.target_q
+        # b=BotFrame.bots[self.node_id]
+        # self.target_q=b.iq[0]
+        # return b.iq[0]
 
-    async def node_init(self):
-        if self.incr() == 1:
-            await self.init()
+    async def __call__(self, message,route_type=object):
 
-
-    async def node_close(self):
-        if self.decr() == 0:
-            await self.close()
-
-    @classmethod
-    def boost(cls,f):
-
-
-        f.boost_type=type
-
-        return f
-
-    #
-    # @classmethod
-    # def boost_type(cls,type=boost_by_thread):
-    #
-    #     def wrap(f):
-    #         f.boost_type=type
-    #
-    #         return f
-    #
-    #
-    #     return wrap
+        #get input q of node
+        q=self.get_target_q()
+        await q.put(message)
 
 
 
-def node_debug(input):
-    return input

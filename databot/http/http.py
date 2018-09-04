@@ -3,14 +3,15 @@ from aiohttp import ClientSession
 import aiohttp
 import asyncio
 from functools import partial
-from databot.node import Node,CountRef
-from databot.flow import Route
+from ..nodebase import Node
+from ..routebase import Route
 import json
 from aiohttp import web
-from databot.botframe import BotFrame
+from ..botbase import BotManager
 import random
-from databot import queue
-from databot.bdata import Bdata,Databoard
+from .. import queue
+from ..bdata import Bdata
+from bs4 import BeautifulSoup
 headers = {
 
     'user-agent': "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36",
@@ -54,24 +55,40 @@ class HttpResponse(object):
         self._encoding=encoding
         self._cookies = Node
         self._status=Node
+        self._json=None
+        self._soup=None
+        self._text=None
 
     @property
     def text(self,encoding=None,errors='strict'):
 
-
+        if self._text is not None:
+            return self._text
         if encoding is None:
             encoding = self._encoding
 
-        return self._body.decode(encoding, errors=errors)
+        self._text=self._body.decode(encoding, errors=errors)
+        return self._text
 
     @property
     def json(self,encoding=None):
+        if self._json is not None:
+            return self._json
 
 
         if encoding is None:
             encoding = self._encoding
 
-        return json.loads(self._body.decode(encoding))
+        self._json=json.loads(self._body.decode(encoding))
+        return self._json
+
+
+    @property
+    def soup(self):
+        if self._soup is not None:
+            return self._soup
+        self._soup = BeautifulSoup(self.text, "lxml")
+        return self._soup
 
     def __repr__(self):
         return 'httpresponse %s'%(id(self))
@@ -152,6 +169,7 @@ class HttpServer(Route):
         self.port=port
         self.bind_address=bind_address
         self.timeout=timeout
+        self.bm=BotManager()
 
 
     async def response_stream(self, request: web.Request):
@@ -222,9 +240,11 @@ class HttpServer(Route):
 
 
 
-    def make_route_bot(self,oq):
+    def make_route_bot(self,iq,oq):
         self.share=False
         self.joined=True
+        self.outer_iq=iq
+        self.outer_oq=oq
         self._loop=asyncio.get_event_loop()
 
         self.start_q=[queue.NullQueue()]
@@ -235,7 +255,7 @@ class HttpServer(Route):
 
 
 
-        BotFrame.make_bot_raw(self.start_q,self.output_q,fs)
+        self.bm.make_bot_raw(self.start_q,self.output_q,HttpServer,fs)
 
 class HttpAck(Route):
 
@@ -246,9 +266,15 @@ class HttpAck(Route):
         self.buffer={}
         self.raw_bdata = True
 
+    def get_route_output_q_desc(self):
 
-    def make_route_bot(self,oq):
+        return super().get_route_output_q_desc()+[]
+
+    def make_route_bot(self,iq,oq):
         self.init_param()
+        self.outer_iq=iq
+        self.outer_oq=oq
+
         self.output_q=oq
         self.start_q=[oq]
 

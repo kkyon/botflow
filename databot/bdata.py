@@ -1,4 +1,4 @@
-from databot.node import CountRef
+from .base import CountRef,Singleton
 
 import asyncio
 import logging
@@ -26,12 +26,6 @@ class ChangeIq(BotControl):
     def __init__(self, iq_num=128):
         self.iq_num = iq_num
 
-class Singleton(type):
-    _instances = {}
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-        return cls._instances[cls]
 
 DATA_ADD=1
 DATA_REMOVE=2
@@ -45,10 +39,18 @@ class Databoard(object,metaclass=Singleton):
     def __init__(self):
         self._datatrack = {}
         self._futures = {}
+        self.debug=True
         #self.buffer=[]
 
         # self.buffer=[]
-
+    def debug_print(self):
+        for k,v in self._datatrack.items():
+            if type(k) == int:
+                print("Databoard datatrack {},len:{}".format(k))
+            else:
+                print("Databoard datatrack {},len:{}".format(k,len(v)))
+        for k,v in self._futures.items():
+            print("Databoard future {},len:{}".format(k,len(v)))
     def check_compeleted(self,ori):
         for k, v in self._datatrack[ori].items():
             if v == DATA_ADD:
@@ -81,7 +83,7 @@ class Databoard(object,metaclass=Singleton):
     def add(self, bdata):
 
 
-        if bdata.ori == 0 or bdata.is_BotControl():
+        if bdata.ori == 0 or bdata.ori.ori == 0 or bdata.is_BotControl():
             return
         #self.buffer.append(bdata)
         ori = bdata.ori
@@ -181,7 +183,10 @@ class Bdata(CountRef):
         self._databoard.add(self)
 
     def __repr__(self):
-        return "data:{},count:{},ori:{}".format(self.uid,self.count,self.ori.uid)
+        if type(self.ori) == int:
+            return "uid:{},count:{},ori:int({}):data:".format(self.uid, self.count, self.ori, self._data)
+        else:
+            return "uid:{},count:{},ori:{}:data:".format(self.uid,self.count,self.ori.uid,self._data)
 
     def __hash__(self):
 

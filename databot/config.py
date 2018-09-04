@@ -14,6 +14,9 @@ class Config(object):
         self.joined_network=True
         self.execute_mode=self.stream
         self.replay_mode=False
+        self.graph_optimize=True
+        self.coroutine_batch_size=128
+        self.debug=False
 
 
 

@@ -1,27 +1,34 @@
-from databot.botframe import BotFrame
 
-from databot.flow import Pipe,Timer,Branch,Join,Filter,Fork
-from databot.node import Node
-from databot.db.aiofile import aiofile
-from databot.botframe import BotFrame
-from databot.http.http import HttpRequest,HttpLoader,HttpResponse
-
+from .botframe import BotFrame
+from .botbase import BotManager
+from .config import config
+from .queue import QueueManager
+from .bdata import Databoard
 
 class Bot(object):
 
     @classmethod
+    def stop_forece(cls):
+        exit(-1)
 
+    @classmethod
     def run(cls):
         BotFrame.run()
 
-
     @classmethod
-
-    def render(cls,filename):
+    def render(cls, filename):
         BotFrame.render(filename)
 
+    @classmethod
+    def debug_print(cls):
+        BotManager().debug_print()
+        QueueManager().debug_print()
+        Databoard().debug_print()
+
 
     @classmethod
 
-    def debug(cls):
-        BotFrame.debug()
+    def enable_debug(cls):
+        config.debug=True
+
+

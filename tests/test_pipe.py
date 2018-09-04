@@ -1,5 +1,5 @@
 from unittest import TestCase
-from databot.flow import Pipe, Branch, Loop,Join,Fork,Filter,Timer
+from databot import Pipe, Branch, Loop,Join,Fork,Filter,Timer
 from databot.botframe import BotFrame
 
 class A:

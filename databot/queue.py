@@ -1,12 +1,41 @@
 import asyncio
-import collections
-from databot.bdata import Bdata,ZERO_DATA
+from .bdata import Bdata
+from .base import Singleton
+
+class QueueManager(object,metaclass=Singleton):
+
+    def __init__(self):
+        self.q_list=[]
+        self.debug=False
+
+    def add(self,q):
+        self.q_list.append(q)
+
+    def debug_print(self):
+
+        print("*"*20,"QueueManager")
+
+        for q in self.q_list:
+            if  isinstance(q,DataQueue):
+                print("qid :{},size:{},high water:{},data:".format(id(q),q.qsize(),q.high_water,q))
+            else:
+                print("qid :{},type:{}".format(id(q),type(q)))
+        print("*"*20,"QueueManager")
 
 
 class DataQueue(asyncio.Queue):
-    def __init__(self):
+    def __init__(self,maxsize=0):
+        qm=QueueManager()
+        self.debug = False
+        if qm.debug:
+            qm.add(self)
+            self.debug=True
+            self.high_water=0
+
         self.put_callback=None
-        super().__init__(maxsize=128)
+        super().__init__(maxsize=maxsize)
+
+
 
     def set_put_callback(self,f):
         self.put_callback=f
@@ -14,8 +43,13 @@ class DataQueue(asyncio.Queue):
     async def put(self, item):
         if not isinstance(item,Bdata):
             raise Exception('not right data'+str(type(item)))
-        # item.incr()
+
         r= await super().put(item)
+
+        if self.debug:
+            if self.qsize()>self.high_water:
+                self.high_water=self.qsize()
+
         if self.put_callback is not None:
              asyncio.ensure_future(self.put_callback(item))
         return r
@@ -26,54 +60,13 @@ class DataQueue(asyncio.Queue):
         #r.destroy()
         return r
 
-
-class ListQueue(asyncio.Queue):
-    def __init__(self, it):
-        self.it = it
-        super().__init__()
-
-    def _init(self, maxsize):
-        self._queue = collections.deque(self.it)
-
-
-class GodQueue(asyncio.Queue):
-
-    # |
-    # X
-    def __init__(self):
-        self.last_put = None
-        self.ori=ZERO_DATA
-        self._data =[Bdata(0,ori=self.ori)]
-        pass
-
-    def qsize(self):
-        return len(self._data)
-    def empty(self):
-        return len(self._data )==0
-
-    def put_nowait(self, item):
-        raise NotImplementedError()
-
-    async def put(self, item):
-        raise NotImplementedError()
-
-    async def get(self):
-        return self.get_nowait()
-
-
-    def get_nowait(self):
-        d=self._data[0]
-        self._data=[]
-        return d
-
-
 class NullQueue(asyncio.Queue):
 
     # |
     # X
     def __init__(self):
         self.last_put = None
-        pass
+        QueueManager().add(self)
 
     def empty(self):
         return False
@@ -84,6 +77,7 @@ class NullQueue(asyncio.Queue):
     async def put(self, item):
         # do nothing
         item.destroy()
+        del self.last_put
         self.last_put = item
         await asyncio.sleep(0)
 
@@ -102,6 +96,8 @@ class CachedQueue(asyncio.Queue):
         self.is_load =False
         self.cache=[]
         super().__init__(maxsize=128)
+        QueueManager().add(self)
+
 
     def abandon(self):
         self.cache=[]
