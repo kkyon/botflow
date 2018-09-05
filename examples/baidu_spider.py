@@ -1,4 +1,4 @@
-from databot import Bot,Pipe,HttpLoader,Branch,aiofile
+from databot import BotFlow,Pipe,HttpLoader,Branch,aiofile
 from bs4 import BeautifulSoup
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -68,8 +68,8 @@ def main():
 
     )
     #生成流程图
-    Bot.render('ex_output/baiduspider')
-    Bot.run()
+    BotFlow.render('ex_output/baiduspider')
+    BotFlow.run()
 
 
 main()

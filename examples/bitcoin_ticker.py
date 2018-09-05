@@ -1,4 +1,4 @@
-from databot.flow import Pipe, Loop, Fork,Join,Branch,BlockedJoin,Return,Timer,Merge
+from databot import Pipe, Loop, Fork,Join,Branch,Return,Timer,Zip
 from databot.botframe import BotFrame
 from databot.http.http import HttpLoader
 import time
@@ -77,7 +77,7 @@ def parse_coindesk(response):
     return t
 
 config.exception_policy=config.Exception_pipein
-merge=Merge()
+
 def main():
 
     httpload=HttpLoader(timeout=2)
@@ -91,11 +91,11 @@ def main():
             Return("https://api.bitfinex.com/v1/ticker/btcusd", httpload, parse_bitfinex),
             Return("https://bitpay.com/api/rates", httpload, parse_bitpay),
             Return("http://api.coindesk.com/v1/bpi/currentprice.json", httpload, parse_coindesk),
-            merge_node=merge
+
 
 
         ),
-        merge,
+        Zip(n_stream=6),
         print,
     )
 

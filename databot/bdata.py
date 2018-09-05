@@ -157,7 +157,7 @@ class Databoard(object,metaclass=Singleton):
 
 
 
-class Bdata(CountRef):
+class Bdata(object):
 
 
     qid=0
@@ -167,7 +167,7 @@ class Bdata(CountRef):
         return cls.qid
 
 
-    __slots__ = ['_ori', '_data', '_meta', '_databoard','uid']
+    __slots__ = ['_ori', '_data','uid','count']
 
     def __init__(self, data, ori=None):
         super().__init__()
@@ -175,12 +175,13 @@ class Bdata(CountRef):
             raise Exception('not right data ' + str(data))
         self.uid=self.get_uid()
         self._data = data
-        self._meta = None
+        #self._meta = None
         self._ori = ori
-        self._databoard = Databoard()
-
-        self.incr()
-        self._databoard.add(self)
+        self.count=0
+        # self._databoard = Databoard()
+        #
+        # self.incr()
+        # self._databoard.add(self)
 
     def __repr__(self):
         if type(self.ori) == int:
@@ -203,15 +204,19 @@ class Bdata(CountRef):
             return True
         return not(self.uid == other.uid)
 
+    def incr(self,n=1):
+        pass
 
+    def decr(self):
+        pass
     def destroy(self):
+        pass
 
-
-        if self.decr() == 0:
-            try:
-                self._databoard.remove(self)
-            except:
-                raise
+        # if self.decr() == 0:
+        #     try:
+        #         self._databoard.remove(self)
+        #     except:
+        #         raise
 
 
     @property

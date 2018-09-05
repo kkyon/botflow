@@ -1,7 +1,7 @@
 import asyncio
 import logging
-from databot.botframe import BotFrame
-from databot.config import config
+from .botframe import BotFrame
+from .config import config
 import  databot.queue  as queue
 from databot.bdata import Bdata,Databoard
 from .botbase import BotManager
@@ -49,9 +49,18 @@ class Pipe(Route):
 
         bots=self.bm.get_bots()
 
+        self.all_q = set()
         for i in range(self.start_index, self.end_index):
-                bots[i].pipeline = self
+                bot=bots[i]
+                bot.pipeline = self
+                for q in bot.iq:
+                    self.all_q.add(q)
+                for q in bot.oq:
+                    self.all_q.add(q)
+
+
         self.q_end = q_o
+
 
 
         self.bm.make_bot_flowgraph(self)
@@ -66,6 +75,30 @@ class Pipe(Route):
 
 
 
+    @classmethod
+    def empty(cls):
+        bm=BotManager()
+        bi=bm.get_botinfo_current_task()
+        for q in bi.pipeline.all_q:
+            if isinstance(q,queue.NullQueue):
+                continue
+            if q.empty() == False:
+                print("id:{}".format(id(q)))
+                return False
+
+
+        for bot in bm.get_bots_bypipe(bi.pipeline):
+            fu = bot.futr
+            if bi == bot:
+                continue
+            if bot.idle ==False and not(bot.stoped):
+                print(bot.func)
+                return False
+
+
+
+
+        return True
 
     def  save_for_replay(self):
         '''it will save cached data for pay back'''
@@ -151,7 +184,7 @@ class Pipe(Route):
         bm=BotManager()
         for bot in bm.get_bots_bypipe(self):
             fu = bot.futr
-            if not fu.done() and not fu.cancelled():
+            if not (fu.done() or  fu.cancelled()) and bot.idle == False:
                 return False
         return True
 
@@ -287,7 +320,7 @@ class Loop(Route):
 
 
     def get_route_output_q_desc(self):
-        return [self.outer_oq]+[self.outer_iq]
+        return [self.outer_oq]+[self.outer_iq]+[self.output_q]
 
     async def route_in(self,data):
         await self.start_q[0].put(data)
@@ -411,11 +444,12 @@ class Join(Route):
             self.make_route_bot_joinmerge(oq)
 
 
-    async def route_in(self,data):
+    async def route_in(self,bdata):
         if self.merge_node is None:
-            await super().route_in(data)
+            new_data=Bdata(bdata.data, bdata)
+            await super().route_in(new_data)
         else:
-            await self.route_in_joinmerge(data)
+            await self.route_in_joinmerge(bdata)
 
 
     def make_route_bot_join(self,oq):

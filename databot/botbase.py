@@ -4,6 +4,12 @@ import logging
 from .base import Singleton,list_included
 
 
+
+from .base import copy_size
+from .nodebase import Node
+from .bdata import Bdata
+import typing,types
+
 class BotPerf(object):
     __slots__ = ['processed_number', 'func_avr_time', 'func_max_time', 'func_min_time']
 
@@ -23,7 +29,7 @@ class BotInfo(object):
         self.iq = []
         self.oq = []
         self.futr = None
-        self.task = None
+        self.task = set()
         self.func = None
         self.route_zone = None
         self.pipeline = None
@@ -47,6 +53,22 @@ class BotManager(object,metaclass= Singleton):
         self._bots=[]
         self_pipes=[]
         self.bot_id=0
+
+    @classmethod
+    def ready_to_stop(cls, bi):
+        if bi.iq is not None:
+            if not isinstance(bi.iq, list):
+                raise Exception('')
+            for q in bi.iq:
+                if not q.empty():
+                    return False
+
+        for p in bi.parents:
+            if p.stoped == False:
+                return False
+        b = bi
+        logging.info('ready_to_stop botid %s' % (b))
+        return True
 
     def new_bot_id(self):
         self.bot_id+=1
@@ -101,7 +123,7 @@ class BotManager(object,metaclass= Singleton):
     def get_botinfo_current_task(self) -> BotInfo:
             task = asyncio.Task.current_task()
             for b in self._bots:
-                if b.futr is task:
+                if b.futr is task or task._coro in b.task:
                     return b
 
     def make_bot_raw(self, iq, oq, f,fu):
@@ -144,3 +166,179 @@ class PerfMetric(object):
 
     def __init__(self):
         pass
+
+
+async def handle_exception(e, bdata, iq, oq):
+    if config.exception_policy == config.Exception_raise:
+        raise e
+    elif config.exception_policy == config.Exception_ignore:
+        return
+    elif config.exception_policy == config.Exception_pipein:
+        await oq.put(Bdata(e, ori=bdata.ori))
+    elif config.exception_policy == config.Exception_retry:
+        await iq.put(bdata)
+    else:
+        raise Exception('undefined exception policy')
+
+
+def filter_out(data):
+    if data is None or data == []:
+        return True
+    return False
+
+
+async def call_wrap(func, bdata, iq, oq, raw_bdata=False):
+    logging.debug('call_wrap' + str(type(func)) + str(func))
+
+    if raw_bdata:
+        param = bdata
+
+    else:
+        param = bdata.data
+
+    ori = bdata.ori
+
+    if hasattr(func, 'boost_type'):
+        loop = asyncio.get_event_loop()
+        r_or_c = await loop.run_in_executor(None, func, param)
+
+    else:
+        try:
+            r_or_c = func(param)
+            if filter_out(r_or_c):
+                return
+        except Exception as e:
+            await handle_exception(e, bdata, iq, oq)
+
+            return
+
+    # if isinstance(r_or_c,(str,typing.Tuple,typing.Dict)):
+    #     await oq.put(Bdata(r_or_c,ori=ori))
+
+    # elif isinstance(r_or_c, types.GeneratorType) or isinstance(r_or_c, list):
+    if isinstance(r_or_c, types.GeneratorType):
+        r = r_or_c
+        for i in r:
+            await oq.put(Bdata(i, ori=ori))
+    elif isinstance(r_or_c, types.CoroutineType):
+
+        try:
+            r = await r_or_c
+            if isinstance(r, types.GeneratorType):
+
+                for i in r:
+                    await oq.put(Bdata(i, ori=ori))
+            else:
+                if filter_out(r):
+                    return
+
+                await oq.put(Bdata(r, ori=ori))
+        except Exception as e:
+
+            await handle_exception(e, bdata, iq, oq)
+
+        # TODO
+
+    else:
+        await oq.put(Bdata(r_or_c, ori=ori))
+
+
+def raw_value_wrap(message):
+    def _raw_value_wrap(v):
+
+        # elif isinstance(r_or_c, types.GeneratorType) or isinstance(r_or_c, list):
+        if isinstance(message, typing.Iterable) and (not isinstance(message, (str, dict, tuple))):
+
+            for i in message:
+                yield i
+
+        else:
+
+            yield message
+
+    return _raw_value_wrap
+
+
+async def wrap_sync_async_call(f, data):
+    r = f(data)
+    if isinstance(r, typing.Coroutine):
+        r = await r
+
+    return r
+
+
+
+
+class Bot(object):
+
+    def __init__(self):
+
+        self.bi=None
+        self.coro_list=set()
+        self.tasks=[]
+        self.input_q=None
+        self.output_q=None
+
+
+    # def pre_hook(self):
+    # def post_hook(self):
+    # def stop(self):
+
+
+
+    async def pre_hook(self):
+        pass
+    async def post_hook(self):
+        pass
+    async def main_loop(self):
+        await self.pre_hook()
+        while True:
+
+            if self.bi.stoped:
+                break
+
+
+            self.bi.idle = True
+            await self.main_logic()
+            if BotManager.ready_to_stop(self.bi):
+
+
+
+                self.bi.stoped = True
+
+
+
+                break
+        if self.output_q is not None:
+            await self.output_q.put(Bdata.make_Retire())
+        self.bi.idle = True
+        self.bi.stoped=True
+
+        await self.post_hook()
+
+
+    async def get_data_list(self):
+        return await copy_size(self.input_q)
+
+    async def main_logic(self):
+
+            data_list = await self.get_data_list()
+
+            self.bi.idle = False
+
+            tasks = []
+            for data in data_list:
+                if not data.is_BotControl():
+                    coro = self.create_coro(data)
+                    self.coro_list.add(coro)
+                    task = asyncio.ensure_future(coro)
+                    tasks.append(task)
+
+            if len(tasks) != 0:
+                await asyncio.gather(*tasks)
+
+
+
+
+
+

@@ -1,4 +1,5 @@
-from databot.flow import Pipe, Loop, Fork,BlockedJoin,Merge,Join
+from databot import Pipe,Join
+from databot.node import Zip
 from databot.botframe import BotFrame
 
 
@@ -12,18 +13,22 @@ def triple(i):
 def plus_one(i):
     return i+1
 
-merge=Merge()
+def print_out(m):
+    print(m)
+
 def main():
     Pipe(
 
         range(100),
         Join(
                     double,
-                    triple,merge_node=merge),
+                    triple),
             plus_one,
             plus_one,
-        merge,
-        print
+
+
+        Zip(n_stream=2),
+        print_out
 
     )
 

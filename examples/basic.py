@@ -1,7 +1,8 @@
-from databot import *
+
 from databot.botbase import BotManager
 from databot.node import Flat
-
+from databot.route import Return,Pipe,Loop,Branch
+from databot.botframe import BotFlow
 
 def plus_one(i):
     print(i)
@@ -30,7 +31,8 @@ Pipe(
 
 
 )
-Bot.render('ex_output/crawler')
-
-BotManager().debug_print()
-Bot.run()
+BotFlow.render('ex_output/crawler')
+try:
+    BotFlow.run()
+except:
+    BotFlow.debug_print()

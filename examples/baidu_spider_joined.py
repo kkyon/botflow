@@ -1,4 +1,4 @@
-from databot import Pipe, Branch, Loop,Join,Fork,Timer,Bot
+from databot import Pipe, Branch, Loop,Join,Fork,Timer,BotFlow
 
 from bs4 import BeautifulSoup
 from databot.http.http import HttpLoader,HttpResponse
@@ -68,7 +68,7 @@ def get_all_page_url(response):
 
 
 def show_info(i):
-    Bot.debug()
+    BotFlow.debug_print()
 def main():
     words = ['贸易战']
     baidu_url = 'https://www.baidu.com/s?wd=%s'
@@ -89,8 +89,8 @@ def main():
 
     Pipe(Timer(delay=2,until=p.finished), show_info)
 
-    Bot.render('ex_output/baiduspider')
-    Bot.run()
+    BotFlow.render('ex_output/baiduspider')
+    BotFlow.run()
 
 main()
 

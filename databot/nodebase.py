@@ -45,7 +45,7 @@ class Node(CountRef):
     def boost(cls,f):
 
 
-        f.boost_type=type
+        f.boost_type=cls.boost_by_thread
 
         return f
 

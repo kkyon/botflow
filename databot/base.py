@@ -1,6 +1,7 @@
 import types
 import typing
-
+import asyncio
+from .config import config
 class Singleton(type):
     _instances = {}
     def __call__(cls, *args, **kwargs):
@@ -35,3 +36,26 @@ class CountRef(object):
         self.count=self.count-1
 
         return self.count
+
+
+async def copy_size( q):
+        data_list = []
+        t = await q.get()
+        data_list.append(t)
+
+        qsize = q.qsize()
+        # get branch size without wait.
+
+        count = 0
+        while qsize > 0:
+            try:
+                t = q.get_nowait()
+            except asyncio.queues.QueueEmpty:
+
+                break
+
+            data_list.append(t)
+            count += 1
+            if count >= qsize or count >= config.coroutine_batch_size:
+                break
+        return data_list

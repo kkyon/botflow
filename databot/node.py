@@ -1,5 +1,6 @@
 from .nodebase import Node
 from .botframe import BotFrame
+from .bdata import Bdata
 
 
 
@@ -51,6 +52,35 @@ class SendTo(Node):
         #get input q of node
         q=self.get_target_q()
         await q.put(message)
+
+
+class Zip(Node):
+    def __init__(self,n_stream=0):
+        if  n_stream == 0:
+            raise Exception('for Zip node ,need to set join_ref or n_stream')
+
+        super().__init__()
+        #self.join_ref=join_ref
+        self.n_stream=n_stream
+        self.buffer={}
+        self.raw_bdata=True
+
+
+    # def init(self):
+    #self.n_stream=self.join_ref.n_stream
+    #     return
+
+    async def __call__(self, bdata):
+        if bdata.ori not in self.buffer:
+            self.buffer[bdata.ori] = []
+
+        self.buffer[bdata.ori].append(bdata.data)
+
+        if len(self.buffer[bdata.ori]) == self.n_stream:
+            return self.buffer[bdata.ori]
+
+
+
 
 
 

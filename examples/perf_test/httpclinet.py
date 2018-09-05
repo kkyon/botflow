@@ -19,7 +19,7 @@ Pipe(
 )
 
 start = datetime.datetime.now()
-Bot.run()
+BotFlow.run()
 
 end = datetime.datetime.now()
 

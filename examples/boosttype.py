@@ -1,4 +1,4 @@
-from databot.flow import Pipe, Fork,Timer,Branch
+from databot import Pipe, Fork,Timer,Branch
 from databot.botframe import BotFrame
 from databot.node import Node
 import time

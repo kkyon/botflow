@@ -98,6 +98,7 @@ class HttpLoader(Node):
     def __init__(self,delay=0,proxy=None,header=None,session_policy=None,timeout=20):
         self.delay=delay
         self.timeout=timeout
+
         super().__init__()
 
     async def init(self):
@@ -109,6 +110,7 @@ class HttpLoader(Node):
     async def close(self):
 
         await self.session.close()
+
 
 
     async def __call__(self, v):
@@ -132,10 +134,10 @@ class HttpLoader(Node):
 
 
 
-        if self.delay==0:
-            await asyncio.sleep(random.choice([0,0.1,0.2]))
-        else:
+        if self.delay!=0:
             await asyncio.sleep(self.delay)
+
+
 
         to_call=getattr(self.session,req.method.lower())
         response = await  to_call(req.url,headers=req.headers,data=req.payload)
@@ -146,7 +148,7 @@ class HttpLoader(Node):
         html = await    response.read()
 
         resp= HttpResponse(html,response.get_encoding())
-        resp.url=response.url
+        resp.url=str(response.url)
         return resp
 
 
@@ -247,7 +249,7 @@ class HttpServer(Route):
         self.outer_oq=oq
         self._loop=asyncio.get_event_loop()
 
-        self.start_q=[queue.NullQueue()]
+        self.start_q=[queue.DataQueue()]
         self.output_q=oq
         server = web.Server(self.put_input_queue)
 
@@ -256,6 +258,8 @@ class HttpServer(Route):
 
 
         self.bm.make_bot_raw(self.start_q,self.output_q,HttpServer,fs)
+
+
 
 class HttpAck(Route):
 

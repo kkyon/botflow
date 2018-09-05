@@ -1,4 +1,4 @@
-from databot.flow import Pipe, Branch, Loop, Timer
+from databot import Pipe, Branch, Loop, Timer
 from databot.botframe import BotFrame
 from bs4 import BeautifulSoup
 from dataclasses import dataclass
@@ -43,6 +43,8 @@ def get_all_items(response):
 # 解析 分页 链接
 def get_all_page_url(response):
     itemList = []
+    #BD_URL='https://180.97.33.108' #
+    BD_URL='https://www.baidu.com'
     soup = BeautifulSoup(response.text, "lxml")
     page = soup.select('div#page')
     for item in page[0].find_all('a'):
@@ -50,7 +52,7 @@ def get_all_page_url(response):
         no = item.get_text()
         if '下一页' in no:
             break
-        yield 'https://www.baidu.com' + href
+        yield BD_URL + href
 
 
 

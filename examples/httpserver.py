@@ -41,5 +41,5 @@ Pipe(
 #      HttpLoader(),
 #      parse_google,
 #      print)
-Bot.render('ex_output/httpserver')
-Bot.run()
+BotFlow.render('ex_output/httpserver')
+BotFlow.run()

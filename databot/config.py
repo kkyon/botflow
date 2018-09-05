@@ -15,7 +15,7 @@ class Config(object):
         self.execute_mode=self.stream
         self.replay_mode=False
         self.graph_optimize=True
-        self.coroutine_batch_size=128
+        self.coroutine_batch_size=16  #for http loader the batch size don't effect time effort too much
         self.debug=False
 
 

@@ -24,7 +24,7 @@ try:
     from pympler.tracker import SummaryTracker
 
     tracker = SummaryTracker()
-    Bot.run()
+    BotFlow.run()
 except:
     tracker.print_diff()
     raise
