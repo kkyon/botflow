@@ -2,8 +2,8 @@ import asyncio
 import logging
 from .botframe import BotFrame
 from .config import config
-import  databot.queue  as queue
-from databot.bdata import Bdata,Databoard
+import  botflow.queue  as queue
+from botflow.bdata import Bdata,Databoard
 from .botbase import BotManager
 from .routebase import Route
 

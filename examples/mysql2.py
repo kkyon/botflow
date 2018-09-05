@@ -1,7 +1,7 @@
 
-from databot.flow import Pipe,Loop,Fork
-from databot.botframe import BotFrame
-from databot.db.mysql import Query,Insert
+from botflow.flow import Pipe,Loop,Fork
+from botflow.botframe import BotFrame
+from botflow.db.mysql import Query,Insert
 
 
 

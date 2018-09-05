@@ -1,6 +1,6 @@
-from databot.flow import Pipe, Loop, Fork
-from databot.botframe import BotFrame
-from databot.config import config
+from botflow.flow import Pipe, Loop, Fork
+from botflow.botframe import BotFrame
+from botflow.config import config
 import time
 
 def double(a):

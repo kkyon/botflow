@@ -1,4 +1,4 @@
-from databot import BotFlow,Pipe,HttpLoader,Branch,aiofile
+from botflow import BotFlow,Pipe,HttpLoader,Branch,aiofile
 from bs4 import BeautifulSoup
 import logging
 logging.basicConfig(level=logging.DEBUG)

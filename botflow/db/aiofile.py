@@ -1,4 +1,4 @@
-from databot.node import Node
+from botflow.node import Node
 from functools import partial
 import asyncio
 

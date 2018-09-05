@@ -1,4 +1,4 @@
-from databot import *
+from botflow import *
 
 Pipe(
     {'a':1,'b':2},

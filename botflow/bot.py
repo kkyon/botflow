@@ -8,7 +8,7 @@ from .bdata import Bdata
 from .config import config
 
 from .botbase import BotBase,BotManager,call_wrap,BotInfo
-
+from .base import BotExit
 class CallableBot(BotBase):
 
     def __init__(self,input_q,output_q,func):
@@ -155,8 +155,9 @@ class TimerBot(BotBase):
     async def main_logic(self):
 
         if self.check_stop():
+            raise BotExit()
             config.main_lock.release()
-            await asyncio.sleep(10000)
+
 
         self.count += 1
 

@@ -1,8 +1,8 @@
 
-from databot.botbase import BotManager
-from databot.node import Flat
-from databot.route import Return,Pipe,Loop,Branch
-from databot.botframe import BotFlow
+from botflow.botbase import BotManager
+from botflow.node import Flat
+from botflow.route import Return,Pipe,Loop,Branch
+from botflow import BotFlow
 
 def plus_one(i):
     print(i)

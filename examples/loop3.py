@@ -1,5 +1,5 @@
-from databot.flow import Pipe,Branch,Loop
-from databot.botframe import BotFrame
+from botflow.flow import Pipe,Branch,Loop
+from botflow.botframe import BotFrame
 class Sum(object):
     def __init__(self):
         self.sum=0

@@ -1,9 +1,9 @@
-from databot import Pipe, Branch, Loop, Timer
-from databot.botframe import BotFrame
+from botflow import Pipe, Branch, Loop, Timer
+from botflow import BotFlow
 from bs4 import BeautifulSoup
 from dataclasses import dataclass
-from databot.http.http import HttpLoader
-from databot.config import config
+from botflow.http.http import HttpLoader
+from botflow.config import config
 
 
 @dataclass
@@ -86,7 +86,7 @@ def main():
 
     )
     Pipe(Timer(delay=delay), show_progress)
-    BotFrame.run()
+    BotFlow.run()
 
 
 main()

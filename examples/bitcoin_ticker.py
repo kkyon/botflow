@@ -1,9 +1,9 @@
-from databot import Pipe, Loop, Fork,Join,Branch,Return,Timer,Zip
-from databot.botframe import BotFrame
-from databot.http.http import HttpLoader
+from botflow import Pipe, Loop, Fork,Join,Branch,Return,Timer,Zip
+from botflow import BotFlow
+from botflow.http.http import HttpLoader
 import time
 import datetime
-from databot.config import config
+from botflow.config import config
 class Tick(object):
 
 
@@ -99,8 +99,8 @@ def main():
         print,
     )
 
-    BotFrame.render('ex_output/bitcoin_arbitrage')
-    BotFrame.run()
+    BotFlow.render('ex_output/bitcoin_arbitrage')
+    BotFlow.run()
 
 
 

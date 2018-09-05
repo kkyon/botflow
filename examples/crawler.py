@@ -1,8 +1,8 @@
-from databot import *
-from databot.node import Flat
-from databot.route import SendTo
-from databot.queue import QueueManager
-from databot.bdata import Databoard
+from botflow import *
+from botflow.node import Flat
+from botflow.route import SendTo
+from botflow.queue import QueueManager
+from botflow.bdata import Databoard
 
 QueueManager().debug = True
 

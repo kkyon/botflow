@@ -1,11 +1,11 @@
-from databot import Pipe, Loop, Fork,Join,Branch,Return
-from databot import flow
-from databot.botframe import BotFrame
-from databot.http.http import HttpLoader
+from botflow import Pipe, Loop, Fork,Join,Branch,Return
+from botflow import flow
+from botflow.botframe import BotFrame
+from botflow.http.http import HttpLoader
 
 import time
 import datetime
-from databot.config import config
+from botflow.config import config
 
 
 class Tick(object):

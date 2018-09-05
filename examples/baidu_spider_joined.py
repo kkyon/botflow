@@ -1,8 +1,8 @@
-from databot import Pipe, Branch, Loop,Join,Fork,Timer,BotFlow
+from botflow import Pipe, Branch, Loop,Join,Fork,Timer,BotFlow
 
 from bs4 import BeautifulSoup
-from databot.http.http import HttpLoader,HttpResponse
-from databot.db.mysql import Insert
+from botflow.http.http import HttpLoader,HttpResponse
+from botflow.db.mysql import Insert
 import logging
 logging.basicConfig(level=logging.DEBUG)
 

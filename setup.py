@@ -8,12 +8,12 @@ def read(fname):
     return codecs.open(os.path.join(os.path.dirname(__file__), fname),encoding="utf-8").read()
 
 
-setup(name='databot',
-      description='Data-driven programming framework'
+setup(name='botflow',
+      description='Data-driven and Reactive  programming framework'
                   ' ',
       long_description=read("README.rst"),
       version='0.1.9',
-      url='https://github.com/kkyx/databot',
+      url='https://github.com/kkyx/botflow',
       author='Guojian Li',
       author_email='guojianlee@gmail.com',
       license='BSD',

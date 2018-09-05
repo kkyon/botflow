@@ -1,4 +1,4 @@
-import databot.queue  as queue
+import botflow.queue  as queue
 import typing
 from .bdata import Databoard
 
