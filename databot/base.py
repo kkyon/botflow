@@ -1,7 +1,10 @@
-import types
-import typing
+
 import asyncio
 from .config import config
+import asyncio
+# import uvloop
+# asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+
 class Singleton(type):
     _instances = {}
     def __call__(cls, *args, **kwargs):
@@ -59,3 +62,7 @@ async def copy_size( q):
             if count >= qsize or count >= config.coroutine_batch_size:
                 break
         return data_list
+
+
+class BotExit(Exception):
+    pass

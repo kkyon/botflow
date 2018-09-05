@@ -14,7 +14,7 @@ seen = set()
 to_do = set()
 
 count = 1
-config.coroutine_batch_size = 32
+config.coroutine_batch_size = 16
 
 
 def fitler(url):
@@ -27,40 +27,11 @@ def fitler(url):
 
     count += 1
 
-    #if count % 10000 == 0:
-    print(count)
+    if count % 10000 == 0:
+        print(count)
 
     seen.add(url)
     return url
-
-
-def complete(res):
-    global count
-
-    print(Pipe.empty())
-    if Pipe.empty() :
-
-        end = datetime.datetime.now()
-        print(end - start)
-        print(count)
-        BotFlow.stop()
-
-    return res
-
-
-def check_if_done(url):
-    global to_do, start
-
-    if 'http' not in url:
-        url = "http://127.0.0.1:8080{}".format(url)
-
-    if url in processed or url in to_do:
-
-        return None
-    else:
-        to_do.add(url)
-
-        return url
 
 
 def perf_parse(r):
@@ -73,7 +44,6 @@ b = Return(
 
     fitler,
     HttpLoader(),
-    complete,
     lambda r: r.soup.find_all('a', href=True),
     Flat(),
     lambda r: r.get('href'),
@@ -102,11 +72,16 @@ try:
     # from pympler.tracker import SummaryTracker
     #
     # tracker = SummaryTracker()
-
+    BotFlow.debug_print()
     BotFlow.run()
+
 except KeyboardInterrupt:
 
     BotFlow.debug_print()
 
 except:
     raise
+end = datetime.datetime.now()
+print(end - start)
+print(count)
+BotFlow.stop()

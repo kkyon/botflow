@@ -88,34 +88,38 @@ class Route(object):
             self.route_type = [self.route_type]
 
 
-    def get_route_input_q_desc(self):
-        qs=[]
-        qs.extend(self.start_q)
-        if self.share:
-            qs.append(self.output_q)
+    def routeout_out_q(self):
+        return [self.outer_oq]
 
-        return qs
-
-    def get_route_output_q_desc(self):
+    def routeout_in_q(self):
         qs=[]
         if not isinstance(self.output_q,queue.NullQueue):
             qs.append(self.output_q)
 
-
-
-
         return qs
+
+    def routein_out_q(self):
+        if self.share and not isinstance(self.outer_oq,queue.NullQueue):
+            return self.start_q+[self.outer_oq]
+        else:
+            return self.start_q
+
+    def routein_in_q(self):
+        return [self.outer_iq]
+
+
+
     async def _route_data(self,bdata):
 
         data=bdata.data
-        is_signal= bdata.is_BotControl()
+        # is_signal= bdata.is_BotControl()
 
         matched = self.type_match(data, self.route_type) and (self.route_func is None or self.route_func(data))
 
 
 
 
-        if self.share == True or is_signal:
+        if self.share == True:
                 bdata.incr()
                 await self.outer_oq.put(bdata)
         else:
@@ -126,7 +130,7 @@ class Route(object):
                     pass
 
 
-        if matched or is_signal:
+        if matched:
             bdata.incr(n=len(self.start_q))
             for q in self.start_q:
                 await q.put(bdata)

@@ -87,7 +87,7 @@ def main():
         insert,
     )
 
-    Pipe(Timer(delay=2,until=p.finished), show_info)
+    Pipe(Timer(delay=2), Branch(print),show_info)
 
     BotFlow.render('ex_output/baiduspider')
     BotFlow.run()

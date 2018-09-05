@@ -83,7 +83,7 @@ class Databoard(object,metaclass=Singleton):
     def add(self, bdata):
 
 
-        if bdata.ori == 0 or bdata.ori.ori == 0 or bdata.is_BotControl():
+        if bdata.ori == 0 or bdata.ori.ori == 0 :  #or bdata.is_BotControl():
             return
         #self.buffer.append(bdata)
         ori = bdata.ori
@@ -111,7 +111,7 @@ class Databoard(object,metaclass=Singleton):
         return self._datatrack[ori][bdata]
 
     def set_ack(self, bdata):
-        if bdata.ori == 0 or bdata.is_BotControl():
+        if bdata.ori == 0 : #or bdata.is_BotControl():
             return
 
         ori = bdata.ori
@@ -227,13 +227,13 @@ class Bdata(object):
     def data(self):
         return self._data
 
-    def is_BotControl(self):
+    # def is_BotControl(self):
+    #
+    #     return isinstance(self._data, BotControl)
 
-        return isinstance(self._data, BotControl)
-
-    @classmethod
-    def make_Retire(cls):
-        return Bdata(Retire(),ZERO_DATA)
+    # @classmethod
+    # def make_Retire(cls):
+    #     return Bdata(Retire(),ZERO_DATA)
 
     @classmethod
     def make_Bdata_zori(cls,data):

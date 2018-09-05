@@ -199,8 +199,8 @@ class HttpServer(Route):
         while True:
             try:
                 r:Bdata= await asyncio.wait_for(bdata.ori.get(),10)
-                if r.is_BotControl():
-                    break
+                # if r.is_BotControl():
+                #     break
                 import json
                 json=json.dumps(r.data)
                 await resp.write(bytes(json,encoding='utf-8'))

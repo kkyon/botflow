@@ -1,15 +1,15 @@
 import asyncio
 from .config import config
 import logging
-from .base import Singleton,list_included
-
-
+from .base import Singleton, list_included
 
 from .base import copy_size
 from .nodebase import Node
 from .bdata import Bdata
-import typing,types
+from .queue import NullQueue
+import typing, types
 
+from .base import BotExit
 class BotPerf(object):
     __slots__ = ['processed_number', 'func_avr_time', 'func_max_time', 'func_min_time']
 
@@ -21,38 +21,41 @@ class BotPerf(object):
 
 
 class BotInfo(object):
-    __slots__ = ['id','iq', 'oq', 'futr', 'task', 'func', 'route_zone', 'pipeline', 'stoped', 'perf', 'ep','idle',
-                  'parents','flow']
+    __slots__ = ['id', 'iq', 'oq', 'func', 'route_zone', 'pipeline', 'stoped', 'perf', 'ep', 'idle',
+                 'parents', 'flow', "main_coro", "main_task", "sub_task", "sub_coro"]
 
     def __init__(self):
-        self.id=0
+        self.id = 0
         self.iq = []
         self.oq = []
-        self.futr = None
-        self.task = set()
+        self.main_coro = None
+        self.main_task = None
+        self.sub_task = set()
+        self.sub_coro = set()
         self.func = None
         self.route_zone = None
         self.pipeline = None
         self.stoped = False
-        self.idle=True
-        self.flow=''
+        self.idle = True
+        self.flow = ''
         self.perf = BotPerf()
-        self.ep=config.Exception_default
+        self.ep = config.Exception_default
         self.parents = []
 
     def __repr__(self):
-        return str(id(self))
+        return " id {} ,func {} stoped {} idle {} tasks{}".format(str(id(self)),self.func,self.stoped,self.idle,len(self.sub_task))
 
 
-
-
-class BotManager(object,metaclass= Singleton):
-
+class BotManager(object, metaclass=Singleton):
 
     def __init__(self):
-        self._bots=[]
-        self_pipes=[]
-        self.bot_id=0
+        self._bots = []
+        self._pipes = set()
+        self.bot_id = 0
+
+
+    def get_pipes(self):
+        return self._pipes
 
     @classmethod
     def ready_to_stop(cls, bi):
@@ -71,23 +74,28 @@ class BotManager(object,metaclass= Singleton):
         return True
 
     def new_bot_id(self):
-        self.bot_id+=1
+        self.bot_id += 1
         return self.bot_id
 
-    def add_bot(self,bi):
-        if bi.id==0:
-            bi.id=self.new_bot_id()
+    def add_pipes(self,pipe):
+        self._pipes.add(pipe)
+
+
+    def add_bot(self, bi):
+        if bi.id == 0:
+            bi.id = self.new_bot_id()
         self._bots.append(bi)
 
-    def get_bots_bypipe(self,pipe):
-        result=[]
+
+    def get_bots_bypipe(self, pipe):
+        result = []
         for b in self._bots:
-            if b.pipeline==pipe:
+            if b.pipeline == pipe:
                 result.append(b)
 
         return result
 
-    def make_bot_flowgraph(self,pipe):
+    def make_bot_flowgraph(self, pipe):
         for bot in self.get_bots_bypipe(pipe):
 
             count = 0
@@ -95,10 +103,7 @@ class BotManager(object,metaclass= Singleton):
 
                 for q in bot_o.oq:
                     if list_included(bot.iq, q):
-
                         bot.parents.append(bot_o)
-
-
 
     def bots_size(self):
         return len(self._bots)
@@ -106,59 +111,76 @@ class BotManager(object,metaclass= Singleton):
     def get_bots(self):
         return self._bots
 
-    def get_reader_id_by_q(self,q):
-        ids=[]
+    def get_reader_id_by_q(self, q):
+        ids = []
         for b in self._bots:
-            if list_included(q,b.iq):
+            if list_included(q, b.iq):
                 ids.append(b.id)
 
         return ids
+
     def get_botinfo_by_id(self, id):
-            for b in self._bots:
-                if b.id == id:
-                    return b
-            return None
+        for b in self._bots:
+            if b.id == id:
+                return b
+        return None
+
+    def get_all_q(self):
+        qs=set()
+        for b in self._bots:
+            for q in b.iq+b.oq:
+                if not isinstance(q,NullQueue):
+                    qs.add(q)
+
+        return qs
+
 
 
     def get_botinfo_current_task(self) -> BotInfo:
-            task = asyncio.Task.current_task()
-            for b in self._bots:
-                if b.futr is task or task._coro in b.task:
-                    return b
+        task = asyncio.Task.current_task()
+        for b in self._bots:
+            if b.main_task is task or task in b.sub_task:
+                return b
 
-    def make_bot_raw(self, iq, oq, f,fu):
+    # def make_bot_raw(self, iq, oq, f, fu):
+    #
+    #     bi = BotInfo()
+    #     bi.iq = iq
+    #     if not isinstance(oq, list):
+    #         oq = [oq]
+    #     bi.oq = oq
+    #     bi.futr = fu
+    #     bi.func = f
 
-        bi = BotInfo()
-        bi.iq = iq
-        if not isinstance(oq, list):
-            oq = [oq]
-        bi.oq = oq
-        bi.futr = fu
-        bi.func = f
+        # self._bots.append(bi)
 
-        self._bots.append(bi)
     def debug_print(self):
         logging.info('-' * 50)
         for b in self._bots:
 
-            if not isinstance(b.iq,list):
-                b.iq=[b.iq]
+            if not isinstance(b.iq, list):
+                b.iq = [b.iq]
             plist = ''
             for p in b.parents:
-                plist += 'b_'+str(id(p)) + ','
+                plist += 'b_' + str(id(p)) + ','
 
-            oq=''
+            oq = ''
             for q in b.oq:
-                oq += 'q_'+str(id(q)) + ','
+                oq += 'q_' + str(id(q)) + ','
 
-            iq=''
+            iq = ''
             for q in b.iq:
                 iq += 'q_' + str(id(q)) + ','
 
+            logging.info('%s,botid %s,pipe:%s,func:%s stoped:%s,parents:%s  ,iq:%s, oq:%s' % (
+            b.id, b, b.pipeline, b.func, b.stoped, plist, iq, oq))
 
-            logging.info('%s,botid %s,pipe:%s,func:%s stoped:%s,parents:%s  ,iq:%s, oq:%s'% (b.id,b, b.pipeline, b.func, b.stoped,plist,iq,oq))
+        logging.info('-' * 50)
+        for b in self._bots:
+            logging.info(b)
             #
             #
+
 
 class PerfMetric(object):
     batch_size = 128
@@ -267,29 +289,29 @@ async def wrap_sync_async_call(f, data):
     return r
 
 
-
-
-class Bot(object):
+class BotBase(object):
 
     def __init__(self):
 
-        self.bi=None
-        self.coro_list=set()
-        self.tasks=[]
-        self.input_q=None
-        self.output_q=None
-
+        self.bi = None
+        self.coro_list = set()
+        self.tasks = []
+        self.input_q = None
+        self.output_q = None
 
     # def pre_hook(self):
     # def post_hook(self):
     # def stop(self):
 
-
-
     async def pre_hook(self):
         pass
+
     async def post_hook(self):
         pass
+
+    def check_stop(self):
+        return BotManager.ready_to_stop(self.bi)
+
     async def main_loop(self):
         await self.pre_hook()
         while True:
@@ -297,48 +319,47 @@ class Bot(object):
             if self.bi.stoped:
                 break
 
+            try:
 
-            self.bi.idle = True
-            await self.main_logic()
-            if BotManager.ready_to_stop(self.bi):
-
-
-
-                self.bi.stoped = True
-
-
-
+                await self.main_logic()
+            except BotExit:
                 break
-        if self.output_q is not None:
-            await self.output_q.put(Bdata.make_Retire())
+            except:
+                raise
+            self.bi.idle = True
+            # if self.check_stop():
+            #     self.bi.stoped = True
+            #
+            #     break
+        # if self.output_q is not None:
+        #     await self.output_q.put(Bdata.make_Retire())
+
         self.bi.idle = True
-        self.bi.stoped=True
+        self.bi.stoped = True
 
         await self.post_hook()
-
 
     async def get_data_list(self):
         return await copy_size(self.input_q)
 
     async def main_logic(self):
 
-            data_list = await self.get_data_list()
+        data_list = await self.get_data_list()
 
-            self.bi.idle = False
+        self.bi.idle = False
 
-            tasks = []
-            for data in data_list:
-                if not data.is_BotControl():
-                    coro = self.create_coro(data)
-                    self.coro_list.add(coro)
-                    task = asyncio.ensure_future(coro)
-                    tasks.append(task)
+        tasks = []
+        for data in data_list:
+            #if not data.is_BotControl():
+            coro = self.create_coro(data)
+            self.bi.sub_coro.add(coro)
+            task = asyncio.ensure_future(coro)
+            self.bi.sub_task.add(task)
+            tasks.append(task)
 
-            if len(tasks) != 0:
-                await asyncio.gather(*tasks)
+        if len(tasks) != 0:
+            await asyncio.gather(*tasks)
 
-
-
-
-
-
+        for t in tasks:
+            self.bi.sub_coro.remove(t._coro)
+            self.bi.sub_task.remove(t)

@@ -85,7 +85,7 @@ def main():
         Branch(get_all_page_url, HttpLoader(), get_all_items, collect),
 
     )
-    Pipe(Timer(delay=delay, until=p1.finished), show_progress)
+    Pipe(Timer(delay=delay), show_progress)
     BotFrame.run()
 
 

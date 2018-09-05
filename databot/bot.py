@@ -5,11 +5,11 @@ import asyncio
 from .base import copy_size
 from .nodebase import Node
 from .bdata import Bdata
+from .config import config
 
+from .botbase import BotBase,BotManager,call_wrap,BotInfo
 
-from .botbase import Bot,BotManager,call_wrap,BotInfo
-
-class CallableBot(Bot):
+class CallableBot(BotBase):
 
     def __init__(self,input_q,output_q,func):
         super().__init__()
@@ -46,14 +46,16 @@ class CallableBot(Bot):
         bi.iq = [self.input_q]
         bi.oq = [self.output_q]
         bi.func = self.func
-        bi.futr = self.main_loop()
+        bi.main_coro = self.main_loop()
 
         BotManager().add_bot(bi)
         self.bi=bi
         return bi
 
+class RouteMixin(object):
+        pass
 
-class RoutInBot(Bot):
+class RouteInBot(BotBase):
     def __init__(self,input_q,func):
         super().__init__()
         self.input_q=input_q
@@ -66,23 +68,20 @@ class RoutInBot(Bot):
 
     def make_botinfo(self):
 
-        bi_in = BotInfo()
-        bi_in.iq = [self.input_q]
-        bi_in.oq = self.func.get_route_input_q_desc()
-        if self.func.share:
-            bi_in.oq = self.func.start_q + [self.func.output_q]
+        bi = BotInfo()
+        bi.iq = self.func.routein_in_q()
+        bi.oq = self.func.routein_out_q()
+        bi.func = self.func
+        bi.main_coro = self.main_loop()
 
-        bi_in.func = self.func
-        bi_in.futr = self.main_loop()
-
-        BotManager().add_bot(bi_in)
-        self.bi=bi_in
-        return bi_in
+        BotManager().add_bot(bi)
+        self.bi=bi
+        return bi
 
 
 
 
-class RoutOutBot(Bot):
+class RouteOutBot(BotBase):
     def __init__(self, input_q, func):
         super().__init__()
         self.output_q = input_q
@@ -91,17 +90,15 @@ class RoutOutBot(Bot):
 
     def make_botinfo(self):
 
-        bi_in = BotInfo()
-        bi_in.iq = [self.func.output_q]
-        bi_in.oq = [self.output_q]
-        # if isinstance(self.func, Loop):
-        #     bi_in.oq = [self.output_q] + self.func.start_q
+        bi = BotInfo()
+        bi.iq = self.func.routeout_in_q()
+        bi.oq = self.func.routeout_out_q()
+        bi.func = self.func
+        bi.main_coro = self.main_loop()
 
-        bi_in.func = self.func
-        bi_in.futr = self.main_loop()
-        BotManager().add_bot(bi_in)
-        self.bi = bi_in
-        return bi_in
+        BotManager().add_bot(bi)
+        self.bi=bi
+        return bi
 
 
     async def get_data_list(self):
@@ -117,40 +114,57 @@ class RoutOutBot(Bot):
 
 
 
-class TimerBot(Bot):
+class TimerBot(BotBase):
 
     def __init__(self,iq,oq,timer_route):
-        super().__init__(iq,oq)
+        super().__init__()
         self.count=0
         self.timer_route=timer_route
+        self.output_q=oq
+        self.input_q=None
+
+
+
 
     def make_botinfo(self):
+
+
         bi = BotInfo()
 
         bi.iq = []
 
         bi.oq = [self.output_q]
         bi.func = self.timer_route
-        bi.futr = self.main_loop()
+        bi.main_coro = self.main_loop()
         self.bi = bi
         BotManager().add_bot(bi)
 
         return bi
 
-
-    async def main_logic(self):
-
-        self.count += 1
+    def check_stop(self):
 
         if self.timer_route.max_time and self.timer_route.max_time < self.count:
                 self.bi.stoped=True
-                return False
+                return True
+        # if self.timer_route.until is not None and self.timer_route.until():
+        #         self.bi.stoped = True
+        #         return True
+        return False
+
+
+    async def main_logic(self):
+
+        if self.check_stop():
+            config.main_lock.release()
+            await asyncio.sleep(10000)
+
+        self.count += 1
+
+
 
         await self.output_q.put(Bdata.make_Bdata_zori(self.count))
 
-        if self.timer_route.until is not None and self.timer_route.until():
-                self.bi.stoped = True
-                return False
+
 
         await asyncio.sleep(self.timer_route.delay)
 

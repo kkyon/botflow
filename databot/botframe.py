@@ -7,10 +7,10 @@ from .config import config
 import logging
 from databot.bdata import Bdata
 from .botbase import BotManager, BotInfo,raw_value_wrap
-from .bot import CallableBot,RoutOutBot,RoutInBot,TimerBot
-
+from .bot import CallableBot,RouteOutBot,RouteInBot,TimerBot
+from .queue import NullQueue,QueueManager
 logging.basicConfig(format='%(asctime)s %(name)-12s %(levelname)s:%(message)s', level=logging.INFO)
-
+from .base import BotExit
 
 
 #
@@ -135,6 +135,27 @@ logging.basicConfig(format='%(asctime)s %(name)-12s %(levelname)s:%(message)s', 
 #
 
 
+def cmp_q_list(aql,bql):
+    a=set()
+    b=set()
+
+    for aq in aql:
+        if not isinstance(aq,NullQueue):
+            a.add(aq)
+
+    for bq in bql:
+        if not isinstance(bq, NullQueue):
+            b.add(bq)
+
+    if len(a) !=len(b):
+        return False
+
+    if a == b:
+        return True
+
+    return False
+
+
 class BotFrame(object):
 
     @classmethod
@@ -158,6 +179,43 @@ class BotFrame(object):
         f.render(filename, view=True)
 
     @classmethod
+    async def check_stop(cls):
+        bm = BotManager()
+        all_q=bm.get_all_q()
+        while True:
+
+            #await  config.main_lock.acquire()
+            stop=True
+            for bot in bm.get_bots():
+                if len(bot.sub_task) != 0:
+                    #print("{} {}".format(id(bot),len(bot.sub_task)))
+                    stop = False
+                    break
+
+
+            for q in all_q:
+                if isinstance(q, NullQueue):
+                        continue
+                if q.empty() == False:
+                    #print("id:{} size:{}".format(id(q),q.qsize()))
+                    stop=False
+                    break
+
+
+
+            if stop:
+                break
+
+            await asyncio.sleep(2)
+
+        for bot in bm.get_bots():
+            bot.stoped=True
+        logging.info("ready to exit")
+        for q in all_q:
+            for get in q._getters:
+                get.set_exception(BotExit("Bot exit now"))
+
+    @classmethod
     def run(cls):
 
         if config.replay_mode:
@@ -166,16 +224,30 @@ class BotFrame(object):
             except:
                 raise
 
+
+
         bot_nodes = []
         bots = BotManager().get_bots()
         for b in bots:
             # if not b.stoped:
-            if b.futr is not None:
-                bot_nodes.append(b.futr)
+            if b.main_coro is not None:
+                task=asyncio.ensure_future(b.main_coro)
+                b.main_task=task
+                bot_nodes.append(task)
 
+        if len(bot_nodes) !=len(set(bot_nodes)):
+            raise Exception("")
         logging.info('bot number %s', len(bots))
         try:
-            asyncio.get_event_loop().run_until_complete(asyncio.gather(*bot_nodes))
+            #asyncio.get_event_loop().run_forever()
+            pipe_loop = asyncio.ensure_future(cls.check_stop())
+            bot_nodes.append(pipe_loop)
+            f=asyncio.gather(*bot_nodes)
+
+
+            asyncio.get_event_loop().run_until_complete(f)
+
+
         except Exception as e:
             if config.replay_mode:
                 route.Pipe.save_for_replay()
@@ -216,7 +288,7 @@ class BotFrame(object):
 
             tb=TimerBot(i,o,f)
             bi=tb.make_botinfo()
-            BotManager().add_bot(bi)
+
             #fu = asyncio.ensure_future(_make_timer_bot(i, o, f))
 
             # bi = BotInfo()
@@ -238,9 +310,9 @@ class BotFrame(object):
             # for input
             bis = []
 
-            if len(f.start_q) != 1 or i != f.start_q[0]:
+            if not cmp_q_list(f.routein_in_q(),f.routein_out_q()):
 
-                rib= RoutInBot(i,f)
+                rib= RouteInBot(i,f)
                 bi=rib.make_botinfo()
                 bis.append(bi)
 
@@ -258,8 +330,8 @@ class BotFrame(object):
                 #
                 # bis.append(bi_in)
 
-            if f.joined and (o != f.output_q):
-                rob=RoutOutBot(o,f)
+            if f.joined and not cmp_q_list(f.routeout_in_q(),f.routeout_out_q()):
+                rob=RouteOutBot(o,f)
                 bi=rob.make_botinfo()
                 bis.append(bi)
                 # fu = asyncio.ensure_future(_route_output(o, f))

@@ -1,4 +1,4 @@
-
+import asyncio
 class Config(object):
 
     Exception_default = 0
@@ -17,6 +17,9 @@ class Config(object):
         self.graph_optimize=True
         self.coroutine_batch_size=16  #for http loader the batch size don't effect time effort too much
         self.debug=False
+        self.nerver_stop=False
+        self.main_lock=asyncio.Lock()
+        self.main_lock._locked=True
 
 
 

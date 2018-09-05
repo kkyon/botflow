@@ -69,6 +69,7 @@ class Pipe(Route):
 
         #start to work
         self.q_start.put_nowait(Bdata.make_Bdata_zori(0))
+        BotManager().add_pipes(self)
 
 
 
@@ -88,11 +89,11 @@ class Pipe(Route):
 
 
         for bot in bm.get_bots_bypipe(bi.pipeline):
-            fu = bot.futr
+
             if bi == bot:
                 continue
-            if bot.idle ==False and not(bot.stoped):
-                print(bot.func)
+            if len(bot.sub_task) !=0:
+                print(bot.func,bot,len(bot.sub_task))
                 return False
 
 
@@ -183,8 +184,8 @@ class Pipe(Route):
     def finished(self):
         bm=BotManager()
         for bot in bm.get_bots_bypipe(self):
-            fu = bot.futr
-            if not (fu.done() or  fu.cancelled()) and bot.idle == False:
+            task = bot.main_task
+            if not (task.done() or  task.cancelled()) and bot.idle == False:
                 return False
         return True
 
@@ -267,6 +268,8 @@ class Branch(Route):
 
     async def route_out(self):
         return await self.output_q.get()
+
+
 class Return(Route):
 
 
@@ -380,6 +383,8 @@ class SendTo(Route):
         self.output_q=oq
 
 
+    def routein_out_q(self):
+        return [self.route_target_q]
     def get_route_input_q_desc(self):
         return [self.outer_oq]+[self.route_target_q]+self.start_q
     flag=0
@@ -495,10 +500,10 @@ class Join(Route):
 
     async def route_in_joinmerge(self, bdata):
 
-        if bdata.is_BotControl():
-            await super().route_in(bdata)
-
-        else:
+        # if bdata.is_BotControl():
+        #     await super().route_in(bdata)
+        #
+        # else:
 
             data = Bdata(bdata.data, bdata)
             data.count = 0
@@ -534,8 +539,8 @@ class Merge(Route):
 
         bdata.incr()
         self.databoard.set_ack(bdata)
-        if bdata.is_BotControl():
-            await self.output_q.put(bdata)
+        # if bdata.is_BotControl():
+        #     await self.output_q.put(bdata)
 
 
 
