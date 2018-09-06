@@ -1,5 +1,6 @@
 from botflow import  *
-from botflow.http.http import HttpServer,HttpAck
+from botflow import config
+from botflow.ex.http import HttpServer
 from bs4 import BeautifulSoup
 import logging
 
@@ -16,9 +17,11 @@ def parse_search(response):
 
 config.exception_policy=config.Exception_ignore
 
+hs=HttpServer()
+
 
 Pipe(
-    HttpServer(),
+    hs,
     Join(
     lambda r:"https://www.bing.com/search?q={}".format(r.query['q']),
     lambda r:"https://www.google.com/search?q={}".format(r.query['q']),
@@ -31,7 +34,9 @@ Pipe(
     parse_search,
 
 
-    HttpAck(),
+    Zip(n_stream=3),
+    Branch(print),
+    SendTo(hs),
     print,
 
 

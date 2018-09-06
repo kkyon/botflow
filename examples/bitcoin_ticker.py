@@ -1,9 +1,10 @@
-from botflow import Pipe, Loop, Fork,Join,Branch,Return,Timer,Zip
+from botflow import Pipe, Join, Return,Timer,Zip
 from botflow import BotFlow
-from botflow.http.http import HttpLoader
+from botflow.ex.http import HttpLoader
 import time
 import datetime
 from botflow.config import config
+from botflow.node import print_list
 class Tick(object):
 
 
@@ -95,8 +96,10 @@ def main():
 
 
         ),
+
         Zip(n_stream=6),
-        print,
+        print_list
+
     )
 
     BotFlow.render('ex_output/bitcoin_arbitrage')

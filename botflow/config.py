@@ -17,9 +17,11 @@ class Config(object):
         self.graph_optimize=True
         self.coroutine_batch_size=16  #for http loader the batch size don't effect time effort too much
         self.debug=False
-        self.nerver_stop=False
+        self.never_stop=False
         self.main_lock=asyncio.Lock()
         self.main_lock._locked=True
+        self.check_stoping=True
+        self.queue_max_size=128
 
 
 

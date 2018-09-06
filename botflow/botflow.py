@@ -1,13 +1,15 @@
 import asyncio
-from . import route
 from .config import config
 import logging
 from .botbase import BotManager
 from .queue import NullQueue, QueueManager
 from .base import BotExit
-
+from aiohttp.web import AppRunner,TCPSite
+from .route import Pipe
 
 class BotFlow(object):
+
+
 
     @classmethod
     def render(cls, filename):
@@ -30,16 +32,29 @@ class BotFlow(object):
         f.render(filename, view=True)
 
     @classmethod
+    def stop(cls,force=False):
+        bm = BotManager()
+        all_q = bm.get_all_q()
+        for bot in bm.get_bots():
+            bot.stoped = True
+
+        for q in all_q:
+            for get in q._getters:
+                get.set_exception(BotExit("Bot exit now"))
+        cls.stopped=True
+
+    @classmethod
     async def check_stop(cls):
         bm = BotManager()
         all_q = bm.get_all_q()
+
         while True:
 
             # await  config.main_lock.acquire()
-            stop = True
+            stop=True
             for bot in bm.get_bots():
                 if len(bot.sub_task) != 0:
-                    # print("{} {}".format(id(bot),len(bot.sub_task)))
+                    logging.debug("{} {}".format(id(bot),len(bot.sub_task)))
                     stop = False
                     break
 
@@ -47,31 +62,31 @@ class BotFlow(object):
                 if isinstance(q, NullQueue):
                     continue
                 if q.empty() == False:
-                    # print("id:{} size:{}".format(id(q),q.qsize()))
+                    print("id:{} size:{}".format(id(q),q.qsize()))
+                    logging.debug("id:{} size:{}".format(id(q),q.qsize()))
                     stop = False
                     break
 
-            if stop:
+            if stop and config.check_stoping :
                 break
 
             await asyncio.sleep(2)
 
-        for bot in bm.get_bots():
-            bot.stoped = True
         logging.info("ready to exit")
-        for q in all_q:
-            for get in q._getters:
-                get.set_exception(BotExit("Bot exit now"))
+        cls.stop()
 
     @classmethod
-    def run(cls):
+    async def run_web_app(cls,app,host,port):
+        runner = AppRunner(app)
+        await runner.setup()
+        site = TCPSite(runner, host,port)
+        await site.start()
 
-        if config.replay_mode:
-            try:
-                route.Pipe.restore_for_replay()
-            except:
-                raise
 
+
+
+    @classmethod
+    def start(cls):
         bot_nodes = []
         bots = BotManager().get_bots()
         for b in bots:
@@ -80,14 +95,54 @@ class BotFlow(object):
                 task = asyncio.ensure_future(b.main_coro)
                 b.main_task = task
                 bot_nodes.append(task)
+        return bot_nodes
+
+
+    @classmethod
+    def run_app(cls,app,host='0.0.0.0', port=8080):
+
+        config.never_stop = True
+
+        bot_nodes=cls.start()
+        bm = BotManager()
+
+        app_task = asyncio.ensure_future(cls.run_web_app(app,host,port))
+        bot_nodes.append(app_task)
+
+        f = asyncio.gather(*bot_nodes)
+
+        asyncio.get_event_loop().run_until_complete(f)
+
+
+
+    @classmethod
+    def run(cls):
+
+        if config.replay_mode:
+            try:
+                Pipe.restore_for_replay()
+            except:
+                raise
+
+        bot_nodes=cls.start()
+        bm = BotManager()
+
+
+
+
+
 
         if len(bot_nodes) != len(set(bot_nodes)):
             raise Exception("")
-        logging.info('bot number %s', len(bots))
+
         try:
-            # asyncio.get_event_loop().run_forever()
-            pipe_loop = asyncio.ensure_future(cls.check_stop())
-            bot_nodes.append(pipe_loop)
+
+            for p in bm.get_pipes():
+                p.start()
+
+            if not config.never_stop :
+                pipe_loop = asyncio.ensure_future(cls.check_stop())
+                bot_nodes.append(pipe_loop)
             f = asyncio.gather(*bot_nodes)
 
             asyncio.get_event_loop().run_until_complete(f)
@@ -95,11 +150,16 @@ class BotFlow(object):
 
         except Exception as e:
             if config.replay_mode:
-                route.Pipe.save_for_replay()
+                Pipe.save_for_replay()
                 raise e
 
             else:
                 raise e
+
+    @classmethod
+    def reset(cls):
+
+        BotManager().rest()
 
     @classmethod
     def debug_print(cls):

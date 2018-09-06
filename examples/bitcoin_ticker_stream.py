@@ -1,7 +1,6 @@
-from botflow import Pipe, Loop, Fork,Join,Branch,Return
-from botflow import flow
-from botflow.botframe import BotFrame
-from botflow.http.http import HttpLoader
+from botflow import Pipe, Join, Return,Timer,Branch
+from botflow import BotFlow
+from botflow.ex.http import HttpLoader
 
 import time
 import datetime
@@ -41,6 +40,11 @@ def parse_bittrex(response):
 
 
 config.exception_policy=config.Exception_ignore
+
+def print_list(d:list):
+    print(d)
+    return d
+
 def main():
 
 
@@ -48,7 +52,8 @@ def main():
 
     Pipe(
 
-        flow.Timer(delay=3,max_time=5),
+        Timer(delay=3,max_time=5),
+
         Join(
             Return("https://api.kraken.com/0/public/Ticker?pair=XBTUSD", hget, parse_kraken),
             Return("https://bittrex.com/api/v1.1/public/getticker?market=USD-BTC", hget, parse_bittrex),
@@ -58,8 +63,8 @@ def main():
 
     )
 
-    BotFrame.render('ex_output/bitcoin_arbitrage')
-    BotFrame.run()
+    BotFlow.render('ex_output/bitcoin_arbitrage')
+    BotFlow.run()
 
 
 

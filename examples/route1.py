@@ -1,5 +1,5 @@
 
-from botflow.flow import Pipe,Loop,Fork,Branch,Join
+from botflow import Pipe,Loop,Fork,Branch,Join,BotFlow
 from botflow.botframe import BotFrame
 
 
@@ -25,21 +25,13 @@ def process_B(i):
 def main():
 
     Pipe(
-            Loop([A(),B(),A(),A(),B()]),
+            [A(),B(),A(),A(),B()],
             Branch(process_A,share=False,route_type=A),
             process_B
         )
-    BotFrame.run()
+    BotFlow.run()
 
-    print('----ex2')
-
-    Pipe(
-            Loop([A(),B(),A(),A(),B()]),
-            Fork(process_A, route_type=A,share=False),
-            process_B,
-            print
-        )
-    BotFrame.run()
+   
 
 
 main()

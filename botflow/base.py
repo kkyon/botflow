@@ -2,6 +2,7 @@
 import asyncio
 from .config import config
 import asyncio
+import types
 # import uvloop
 # asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
@@ -62,6 +63,16 @@ async def copy_size( q):
             if count >= qsize or count >= config.coroutine_batch_size:
                 break
         return data_list
+
+
+def flatten(d):
+    for x in d:
+        if hasattr(x, '__iter__') and  isinstance(x, (list,types.GeneratorType)):
+            for y in flatten(x):
+                yield y
+        else:
+            yield x
+
 
 
 class BotExit(Exception):

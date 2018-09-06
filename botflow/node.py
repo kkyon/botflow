@@ -1,7 +1,8 @@
 from .nodebase import Node
 from .botframe import BotFrame
 from .bdata import Bdata
-
+from .base import flatten
+import asyncio
 
 
 
@@ -11,7 +12,7 @@ class Flat(Node):
 
 
     def __call__(self, message):
-        if isinstance(message, typing.Iterable) and (not isinstance(message, (str, dict, tuple))):
+        if isinstance(message, (list,typing.Generator)):
 
             for i in message:
                 yield i
@@ -81,6 +82,46 @@ class Zip(Node):
 
 
 
+class Filter(Node):
+
+
+    def __init__(self, filter_types=None,filter_func=None):
+        super().__init__()
+        if not isinstance(filter_types,list) and filter_types is not None:
+            filter_types=[filter_types]
+
+        self.filter_types=filter_types
+        self.filter_func=filter_func
+
+    async def __call__(self, data):
+
+        matched=False
+        if self.filter_types:
+            for t in self.filter_types:
+                if isinstance(data,t):
+                    matched=True
+                    break
+        else:
+            matched=True
+
+        if matched and (self.filter_func == None or self.filter_func(data)):
+            return data
+
+
+class Delay(Node):
+    def __init__(self,delay_time=1):
+        super().__init__()
+        self.delay_time=delay_time
+        self.lock=asyncio.Lock()
+
+    async def __call__(self,data):
+        await self.lock.acquire()
+        await asyncio.sleep(self.delay_time)
+        self.lock.release()
+        return data
 
 
 
+def print_list(d:list):
+    print(d)
+    return d

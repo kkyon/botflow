@@ -3,15 +3,16 @@ from aiohttp import ClientSession
 import aiohttp
 import asyncio
 from functools import partial
-from ..nodebase import Node
-from ..routebase import Route
+from botflow.nodebase import Node
+from botflow.routebase import Route
 import json
 from aiohttp import web
-from ..botbase import BotManager
-import random
-from .. import queue
-from ..bdata import Bdata
+from botflow.botbase import BotManager
+from botflow.botframe import BotFrame
+from botflow import queue
+from botflow.bdata import Bdata
 from bs4 import BeautifulSoup
+from botflow.config import config
 headers = {
 
     'user-agent': "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36",
@@ -163,7 +164,7 @@ class HttpSender(object):
 class HttpServer(Route):
 
 
-    def __init__(self,route_path="/",port=8080,bind_address='127.0.0.1',timeout=None):
+    def __init__(self,route_path="/",port=8080,bind_address='127.0.0.1',timeout=10):
 
 
         super().__init__()
@@ -172,7 +173,9 @@ class HttpServer(Route):
         self.bind_address=bind_address
         self.timeout=timeout
         self.bm=BotManager()
+        self.waiters={}
 
+        config.never_stop=True
 
     async def response_stream(self, request: web.Request):
         breq = HttpRequest()
@@ -230,14 +233,17 @@ class HttpServer(Route):
         ori=Bdata(breq,0)
         bdata=Bdata(breq,ori)
 
+        #send result to q
         await self.output_q.put(bdata)
+        fut=self._loop.create_future()
+        self.waiters[bdata]=fut
+        r=await asyncio.wait_for(fut,self.timeout)
+
 
         try:
-            r=await asyncio.wait_for(self.databoard.wait_ori(ori),5)
-            self.databoard.drop_ori(breq)
+
             return web.json_response(r)
         except:
-            self.databoard.drop_ori(breq)
             raise
 
 
@@ -254,11 +260,13 @@ class HttpServer(Route):
         server = web.Server(self.put_input_queue)
 
         fs=self._loop.create_server(server, self.bind_address, self.port)
+        BotFrame.make_bot_raw(self.start_q,self.output_q,HttpServer,fs)
 
 
-
-        self.bm.make_bot_raw(self.start_q,self.output_q,HttpServer,fs)
-
+    async def route_in(self,bdata):
+        if bdata.ori in self.waiters:
+            waiter=self.waiters[bdata.ori]
+            waiter.set_result(bdata.data)
 
 
 class HttpAck(Route):

@@ -1,37 +1,42 @@
 
 from botflow.botbase import BotManager
 from botflow.node import Flat
-from botflow.route import Return,Pipe,Loop,Branch
-from botflow import BotFlow
+from botflow.route import Return,Pipe,Loop,Branch,Join
+from botflow import BotFlow,Filter
+from botflow.node import Delay,Zip
+from botflow.config import config
 
-def plus_one(i):
-    print(i)
-    return i+1
+class A:
+    pass
+class B:
+    pass
 
+class C:
+    pass
 
-b=Return(
-    plus_one,
+def only_a(data):
+    if not isinstance(data,A):
+        raise Exception()
 
+def check_stop(i):
+    if i>10:
+        BotFlow.stop()
 
-)
-
-
-
-
+    return i
 
 Pipe(
-    10,
+    Join(
+        "a","b","c"
 
-        Branch(print)
-
-
-
-
+    ),
+    Zip(n_stream=3),
+    lambda r:'l_'+r,
+    print,
 
 
 )
-BotFlow.render('ex_output/crawler')
-try:
-    BotFlow.run()
-except:
-    BotFlow.debug_print()
+
+
+BotFlow.render("ex_output/test")
+BotFlow.run()
+

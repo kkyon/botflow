@@ -3,6 +3,8 @@ from botflow.node import Flat
 from botflow.route import SendTo
 from botflow.queue import QueueManager
 from botflow.bdata import Databoard
+from botflow.config import config
+config.queue_max_size=0
 
 QueueManager().debug = True
 

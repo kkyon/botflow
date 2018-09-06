@@ -68,6 +68,7 @@ def main():
 
     )
     #生成流程图
+    BotFlow.debug_print()
     BotFlow.render('ex_output/baiduspider')
     BotFlow.run()
 

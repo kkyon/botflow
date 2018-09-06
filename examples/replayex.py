@@ -1,4 +1,4 @@
-from botflow.flow import Pipe, Loop, Fork
+from botflow import Pipe, Loop, Fork
 from botflow.botframe import BotFrame
 from botflow.config import config
 import time

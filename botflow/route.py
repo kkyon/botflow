@@ -2,7 +2,8 @@ import asyncio
 import logging
 from .botframe import BotFrame
 from .config import config
-import  botflow.queue  as queue
+
+from .queue import DataQueue,NullQueue,CachedQueue,ProxyQueue
 from botflow.bdata import Bdata,Databoard
 from .botbase import BotManager
 from .routebase import Route
@@ -17,24 +18,24 @@ class Pipe(Route):
 
     def __init__(self, *args):
         self.bm=BotManager()
-        q_o = queue.DataQueue()
+        q_o = DataQueue()
 
         # get this pip own inside bot
         self.start_index = len(self.bm.get_bots())
-        self.q_start = q_o
+        self.start_q = q_o
         self.joined = False
         import sys
         self.pickle_name = sys.modules['__main__'].__file__ + 'palyback.pk'
         for idx,func in enumerate(args):
             q_i = q_o
             if idx == len(args)-1:
-                q_o = queue.NullQueue()
+                q_o = ProxyQueue()
 
             else:
                 if config.replay_mode:
-                    q_o=queue.CachedQueue()
+                    q_o=CachedQueue()
                 else:
-                    q_o = queue.DataQueue()
+                    q_o = DataQueue()
 
             bis=BotFrame.make_bot(q_i, q_o, func)
             for b in bis:
@@ -46,7 +47,7 @@ class Pipe(Route):
             #         self.joined = True
 
         self.end_index = len(self.bm.get_bots())
-
+        self.output_q=q_o
         bots=self.bm.get_bots()
 
         self.all_q = set()
@@ -68,11 +69,13 @@ class Pipe(Route):
         #     self.check_joined_node()
 
         #start to work
-        self.q_start.put_nowait(Bdata.make_Bdata_zori(0))
+        #self.q_start.put_nowait(Bdata.make_Bdata_zori(0))
         BotManager().add_pipes(self)
 
 
-
+    def start(self):
+        self.output_q.set_q(NullQueue())
+        self.start_q.put_nowait(Bdata.make_Bdata_zori(0))
 
 
 
@@ -81,7 +84,7 @@ class Pipe(Route):
         bm=BotManager()
         bi=bm.get_botinfo_current_task()
         for q in bi.pipeline.all_q:
-            if isinstance(q,queue.NullQueue):
+            if isinstance(q,NullQueue):
                 continue
             if q.empty() == False:
                 print("id:{}".format(id(q)))
@@ -189,8 +192,12 @@ class Pipe(Route):
                 return False
         return True
 
-    def __call__(self, list):
-        pass
+    async def __call__(self, data):
+
+        await self.start_q.put(Bdata.make_Bdata_zori(data))
+        r=await self.output_q.get()
+        return r.data
+
 
     def __repr__(self):
         return 'Pip_' + str(id(self))
@@ -225,11 +232,7 @@ class Timer(Route):
 
 
 
-class Filter(Route):
 
-    def make_route_bot(self,oq):
-        self.start_q=[oq]
-        self.output_q=queue.NullQueue()
 
 
 class Branch(Route):
@@ -244,12 +247,12 @@ class Branch(Route):
 
 
 
-        q_o = queue.DataQueue()
+        q_o = DataQueue()
         self.outer_iq=iq
         self.outer_oq=oq
 
         self.start_q=[q_o]
-        self.output_q=queue.DataQueue()
+        self.output_q=DataQueue()
         # if self.share:
         #     self.start_q.append(oq)
         for idx,func in enumerate(self.args):
@@ -258,9 +261,9 @@ class Branch(Route):
                 if self.joined :
                     q_o = self.output_q
                 else:
-                    q_o = queue.NullQueue()
+                    q_o = NullQueue()
             else:
-                q_o = queue.DataQueue()
+                q_o = DataQueue()
 
 
 
@@ -292,7 +295,7 @@ class Return(Route):
                 q_o = self.output_q
 
             else:
-                q_o = queue.DataQueue()
+                q_o = DataQueue()
 
 
 
@@ -309,13 +312,13 @@ class Loop(Route):
         self.outer_oq=oq
 
 
-        q_o= queue.DataQueue()
+        q_o= DataQueue()
         self.start_q = [q_o]
         # if self.share:
         #     self.start_q.append(oq)
         for idx,func in enumerate(self.args):
             q_i = q_o
-            q_o = queue.DataQueue()
+            q_o = DataQueue()
 
             BotFrame.make_bot(q_i, q_o, func)
 
@@ -350,14 +353,14 @@ class Fork(Route):
         if self.joined:
             q_o = oq
         else:
-            q_o = queue.NullQueue()
+            q_o = NullQueue()
 
         self.start_q = []
         self.output_q = oq
 
         #parallel in sub network not in node
         for func in self.args:
-            q_i = queue.DataQueue()
+            q_i = DataQueue()
             self.start_q.append(q_i)
             BotFrame.make_bot(q_i, q_o, func)
 
@@ -379,7 +382,7 @@ class SendTo(Route):
 
         self.route_target_q=self.target_node.outer_iq
 
-        self.start_q = [queue.DataQueue(maxsize=0)]
+        self.start_q = [DataQueue(maxsize=0)]
         self.output_q=oq
 
 
@@ -406,7 +409,7 @@ class SendTo(Route):
         #         # if size >110 and start_q.qsize() >110:
         #         #     #print('a')
         #         #     if self.flag==0:
-        #         #         queue.QueueManager().debug()
+        #         #         QueueManager().debug()
         #         #         self.flag=1
         #          #   pass
         #
@@ -465,14 +468,14 @@ class Join(Route):
         if self.joined:
             q_o = oq
         else:
-            q_o = queue.NullQueue()
+            q_o = NullQueue()
 
         self.start_q = []
         self.output_q = oq
 
 
         for func in self.args:
-            q_i = queue.DataQueue()
+            q_i = DataQueue()
             self.start_q.append(q_i)
             BotFrame.make_bot(q_i, q_o, func)
 
@@ -480,8 +483,8 @@ class Join(Route):
 
         self.start_q = []
         self.output_q = oq
-        self.merge_q = queue.DataQueue()
-        self.inner_output_q = queue.DataQueue()
+        self.merge_q = DataQueue()
+        self.inner_output_q = DataQueue()
 
         self.share = False
         self.joined = True
@@ -489,7 +492,7 @@ class Join(Route):
         self.count = 0
 
         for func in self.args:
-            i_q = queue.DataQueue()
+            i_q = DataQueue()
             self.start_q.append(i_q)
             BotFrame.make_bot(i_q, self.output_q, func)
 
@@ -549,109 +552,6 @@ class Merge(Route):
         await self.output_q.put(Bdata.make_Bdata_zori(result))
 
 
-#
-# class BlockedJoin(Route):
-#
-#
-#
-#
-#     def __init__(self,*args,merge_node=None):
-#
-#
-#         super(Route, self).__init__()
-#
-#         self.route_type=[object]
-#         self.route_func=None
-#         self.merge_node=merge_node
-#         self.args=args
-#         self.databoard=Databoard()
-#
-#
-#     def make_route_bot(self,oq):
-#
-#         self.start_q = []
-#         self.output_q=oq
-#         self.merge_q=queue.DataQueue()
-#         self.inner_output_q=queue.DataQueue()
-#         null=queue.DataQueue()
-#         self.share = False
-#         self.joined=True
-#         self.raw_bdata = True
-#         self.count=0
-#
-#
-#         self.start_index = len(BotFrame.bots)
-#         for func in self.args:
-#
-#             i_q = queue.DataQueue()
-#             self.start_q.append(i_q)
-#             BotFrame.make_bot(i_q, self.output_q, func)
-#
-#         #self.merge_route=Merge(pair=self)
-#         #BotFrame.make_bot(self.inner_output_q,self.output_q,self.merge_route)
-#
-#
-#
-#         self.end_index = len(BotFrame.bots)
-#
-#
-#
-#     def callback(self,fut):
-#         print(fut._result)
-#         self.merge_route.put_result(fut._result)
-#
-#
-#     async def route_in(self,bdata):
-#
-#
-#
-#         if bdata.is_BotControl():
-#             await super().route_in(bdata)
-#
-#         else:
-#
-#             data=Bdata(bdata.data,bdata)
-#             data.count=0
-#             await super().route_in(data)
-#             # f=asyncio.ensure_future(self.databoard.wait_ori(bdata))
-#             # self.merge_route.future_list.append(f)
-#            #f=self.databoard.create_future(data.ori,self.callback)
-#             #self.merge_route.future_list.append(f)
-#             r = await self.databoard.wait_ori(bdata)
-#             await self.merge_node.put_result(r)
-#             self.databoard.drop_ori(bdata)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        # def init_param(self):
-        #     self.raw_bdata=True
-        # async def __call__(self,bdata):
-        #         #await self.inner_output_q.get()
-        #         parent=self.kwargs['parent']
-        #         parent.joined_result[bdata.ori].append(bdata.data)
-        #         if len(parent.joined_result[bdata.ori]) == len(parent.args):
-        #             #del self.joined_result[bdata.ori]
-        #             await parent.output_q.put(Bdata(parent.joined_result[bdata.ori],ori=bdata.ori))
-
-
-    # def get_route_output_q_desc(self):
-    #
-    #     return  [self.inner_output_q]
-
-
-
 
 
 
@@ -667,7 +567,6 @@ class Merge(Route):
 ###########short name ############
 
 F = Fork
-Fi=Filter
 J = Join
 P = Pipe
 B = Branch

@@ -7,7 +7,7 @@ from .config import config
 import logging
 from botflow.bdata import Bdata
 from .botbase import BotManager, BotInfo,raw_value_wrap
-from .bot import CallableBot,RouteOutBot,RouteInBot,TimerBot
+from .bot import CallableBot,RouteOutBot,RouteInBot,TimerBot,LoopBot
 from .queue import NullQueue,QueueManager
 logging.basicConfig(format='%(asctime)s %(name)-12s %(levelname)s:%(message)s', level=logging.INFO)
 from .base import BotExit
@@ -60,12 +60,35 @@ class BotFrame(object):
         return True
 
     @classmethod
+    def make_bot_raw(cls, iq, oq, func,coro):
+        task = asyncio.ensure_future(coro)
+        bi = BotInfo()
+        bi.iq = iq
+        if not isinstance(oq, list):
+            oq = [oq]
+        bi.oq = oq
+        bi.main_coro = coro
+        bi.main_task= task
+        bi.func = func
+
+        BotManager().add_bot(bi)
+
+    @classmethod
     def make_bot(cls, i, o, f):
 
 
 
         if not isinstance(f, typing.Callable):
-            f = raw_value_wrap(f)
+            if isinstance(f,(list,types.GeneratorType,range)):
+
+                tb = LoopBot(i, o, f)
+                bi = tb.make_botinfo()
+                return [bi]
+
+
+
+            else:
+                f = raw_value_wrap(f)
 
         if isinstance(f, route.Timer):
             f.make_route_bot(i,o)

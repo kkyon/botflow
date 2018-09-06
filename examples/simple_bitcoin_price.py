@@ -1,4 +1,4 @@
-from botflow import Pipe,Timer,BotFrame,HttpLoader,BotFlow
+from botflow import Pipe,Timer,HttpLoader,BotFlow
 
 def main():
     Pipe(

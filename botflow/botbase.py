@@ -10,6 +10,8 @@ from .queue import NullQueue
 import typing, types
 
 from .base import BotExit
+
+
 class BotPerf(object):
     __slots__ = ['processed_number', 'func_avr_time', 'func_max_time', 'func_min_time']
 
@@ -43,7 +45,8 @@ class BotInfo(object):
         self.parents = []
 
     def __repr__(self):
-        return " id {} ,func {} stoped {} idle {} tasks{}".format(str(id(self)),self.func,self.stoped,self.idle,len(self.sub_task))
+        return " id {} ,func {} stoped {} idle {} tasks{}".format(str(id(self)), self.func, self.stoped, self.idle,
+                                                                  len(self.sub_task))
 
 
 class BotManager(object, metaclass=Singleton):
@@ -53,6 +56,10 @@ class BotManager(object, metaclass=Singleton):
         self._pipes = set()
         self.bot_id = 0
 
+    def rest(self):
+        self._bots = []
+        self._pipes = set()
+        self.bot_id = 0
 
     def get_pipes(self):
         return self._pipes
@@ -77,15 +84,13 @@ class BotManager(object, metaclass=Singleton):
         self.bot_id += 1
         return self.bot_id
 
-    def add_pipes(self,pipe):
+    def add_pipes(self, pipe):
         self._pipes.add(pipe)
-
 
     def add_bot(self, bi):
         if bi.id == 0:
             bi.id = self.new_bot_id()
         self._bots.append(bi)
-
 
     def get_bots_bypipe(self, pipe):
         result = []
@@ -126,15 +131,13 @@ class BotManager(object, metaclass=Singleton):
         return None
 
     def get_all_q(self):
-        qs=set()
+        qs = set()
         for b in self._bots:
-            for q in b.iq+b.oq:
-                if not isinstance(q,NullQueue):
+            for q in b.iq + b.oq:
+                if not isinstance(q, NullQueue):
                     qs.add(q)
 
         return qs
-
-
 
     def get_botinfo_current_task(self) -> BotInfo:
         task = asyncio.Task.current_task()
@@ -152,7 +155,7 @@ class BotManager(object, metaclass=Singleton):
     #     bi.futr = fu
     #     bi.func = f
 
-        # self._bots.append(bi)
+    # self._bots.append(bi)
 
     def debug_print(self):
         logging.info('-' * 50)
@@ -173,7 +176,7 @@ class BotManager(object, metaclass=Singleton):
                 iq += 'q_' + str(id(q)) + ','
 
             logging.info('%s,botid %s,pipe:%s,func:%s stoped:%s,parents:%s  ,iq:%s, oq:%s' % (
-            b.id, b, b.pipeline, b.func, b.stoped, plist, iq, oq))
+                b.id, b, b.pipeline, b.func, b.stoped, plist, iq, oq))
 
         logging.info('-' * 50)
         for b in self._bots:
@@ -265,6 +268,59 @@ async def call_wrap(func, bdata, iq, oq, raw_bdata=False):
         await oq.put(Bdata(r_or_c, ori=ori))
 
 
+
+
+
+async def call_wrap_r(func, bdata):
+
+    logging.debug('call_wrap' + str(type(func)) + str(func))
+
+    if bdata.data is None:
+        return None
+    result=None
+
+    if not isinstance(bdata, Bdata):
+        raise Exception('bad data {}'.format(bdata))
+
+
+
+    try:
+
+        if isinstance(func,Node) and func.raw_bdata :
+            param=bdata
+        else:
+            param=bdata.data
+
+        if hasattr(func, 'boost_type'):
+            loop = asyncio.get_event_loop()
+            result = await loop.run_in_executor(None, func, param)
+
+
+        else:
+            r_or_c = func(param)
+            if isinstance(r_or_c, types.CoroutineType):
+                r_or_c = await r_or_c
+
+            if filter_out(r_or_c):
+                result = None
+            else:
+                result = r_or_c
+    except Exception as e:
+
+        if config.exception_policy == config.Exception_raise:
+            raise e
+        elif config.exception_policy == config.Exception_ignore:
+            result=None
+        elif config.exception_policy == config.Exception_pipein:
+            result = e
+        elif config.exception_policy == config.Exception_retry:
+            raise e  # TODO
+        else:
+            raise Exception('undefined exception policy')
+
+    return result
+
+
 def raw_value_wrap(message):
     def _raw_value_wrap(v):
 
@@ -350,7 +406,7 @@ class BotBase(object):
 
         tasks = []
         for data in data_list:
-            #if not data.is_BotControl():
+            # if not data.is_BotControl():
             coro = self.create_coro(data)
             self.bi.sub_coro.add(coro)
             task = asyncio.ensure_future(coro)

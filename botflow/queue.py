@@ -1,7 +1,7 @@
 import asyncio
 from .bdata import Bdata
 from .base import Singleton
-
+from .config import config
 class QueueManager(object,metaclass=Singleton):
 
     def __init__(self):
@@ -24,7 +24,7 @@ class QueueManager(object,metaclass=Singleton):
 
 
 class DataQueue(asyncio.Queue):
-    def __init__(self,maxsize=0):
+    def __init__(self,maxsize=config.queue_max_size):
         qm=QueueManager()
         self.debug = False
         if qm.debug:
@@ -69,7 +69,7 @@ class NullQueue(asyncio.Queue):
         QueueManager().add(self)
 
     def empty(self):
-        return False
+        return True
 
     def put_nowait(self, item):
         raise NotImplementedError()
@@ -122,3 +122,30 @@ class CachedQueue(asyncio.Queue):
         self.last_put = item
         await super().put(item)
         self.cache.append(item)
+
+class ProxyQueue(asyncio.Queue):
+
+    # |
+    # X
+    def __init__(self, maxsize=0, *, loop=None):
+        super().__init__(maxsize=maxsize,loop=loop)
+        self._q=DataQueue()
+
+
+    def set_q(self,q):
+        #it will make the data lose
+        self._q=q
+    def empty(self):
+        return self._q.empty()
+
+    def put_nowait(self, item):
+        return self._q.put_nowait(item)
+
+    async def put(self, item):
+        return await self._q.put(item)
+
+    async def get(self):
+        return await self._q.get()
+
+    def get_nowait(self):
+        return self._q.get_nowait()
