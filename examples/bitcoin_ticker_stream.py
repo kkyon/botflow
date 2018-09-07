@@ -1,11 +1,10 @@
-from databot.flow import Pipe, Loop, Fork,Join,Branch,BlockedJoin,Return
-from databot import flow
-from databot.botframe import BotFrame
-from databot.http.http import HttpLoader
+from botflow import Pipe, Join, Return,Timer,Branch
+from botflow import BotFlow
+from botflow.ex.http import HttpLoader
 
 import time
 import datetime
-from databot.config import config
+from botflow.config import config
 
 
 class Tick(object):
@@ -41,6 +40,11 @@ def parse_bittrex(response):
 
 
 config.exception_policy=config.Exception_ignore
+
+def print_list(d:list):
+    print(d)
+    return d
+
 def main():
 
 
@@ -48,7 +52,8 @@ def main():
 
     Pipe(
 
-        flow.Timer(delay=3,max_time=5),
+        Timer(delay=3,max_time=5),
+
         Join(
             Return("https://api.kraken.com/0/public/Ticker?pair=XBTUSD", hget, parse_kraken),
             Return("https://bittrex.com/api/v1.1/public/getticker?market=USD-BTC", hget, parse_bittrex),
@@ -58,8 +63,8 @@ def main():
 
     )
 
-    BotFrame.render('ex_output/bitcoin_arbitrage')
-    BotFrame.run()
+    BotFlow.render('ex_output/bitcoin_arbitrage')
+    BotFlow.run()
 
 
 

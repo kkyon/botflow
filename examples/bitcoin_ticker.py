@@ -1,9 +1,10 @@
-from databot.flow import Pipe, Loop, Fork,Join,Branch,BlockedJoin,Return,Timer
-from databot.botframe import BotFrame
-from databot.http.http import HttpLoader
+from botflow import Pipe, Join, Return,Timer,Zip
+from botflow import BotFlow
+from botflow.ex.http import HttpLoader
 import time
 import datetime
-from databot.config import config
+from botflow.config import config
+from botflow.node import print_list
 class Tick(object):
 
 
@@ -77,25 +78,32 @@ def parse_coindesk(response):
     return t
 
 config.exception_policy=config.Exception_pipein
+
 def main():
 
     httpload=HttpLoader(timeout=2)
     Pipe(
 
-        Timer(delay=10,max_time=5),
-        BlockedJoin(
+        Timer(delay=2,max_time=5),
+        Join(
             Return("https://api.kraken.com/0/public/Ticker?pair=XBTUSD",httpload , parse_kraken),
             Return("https://bittrex.com/api/v1.1/public/getticker?market=USD-BTC", httpload, parse_bittrex),
             Return("https://www.bitstamp.net/api/ticker/", httpload, parse_bitstamp),
             Return("https://api.bitfinex.com/v1/ticker/btcusd", httpload, parse_bitfinex),
             Return("https://bitpay.com/api/rates", httpload, parse_bitpay),
             Return("http://api.coindesk.com/v1/bpi/currentprice.json", httpload, parse_coindesk),
+
+
+
         ),
-        print,
+
+        Zip(n_stream=6),
+        print_list
+
     )
 
-    BotFrame.render('ex_output/bitcoin_arbitrage')
-    BotFrame.run()
+    BotFlow.render('ex_output/bitcoin_arbitrage')
+    BotFlow.run()
 
 
 

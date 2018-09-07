@@ -1,4 +1,4 @@
-from databot import Bot,Pipe,HttpLoader,Branch,aiofile
+from botflow import BotFlow,Pipe,HttpLoader,Branch,AioFile
 from bs4 import BeautifulSoup
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -23,7 +23,7 @@ class ResultItem:
 def get_all_items(response):
     soup = BeautifulSoup(response.text, "lxml")
     items = soup.select('div.result.c-container')
-    result = []
+    #result = []
     for rank, item in enumerate(items):
         import uuid
         id = uuid.uuid4()
@@ -31,8 +31,9 @@ def get_all_items(response):
         r.id = id
         r.page_rank = rank
         r.name = item.h3.get_text()
-        result.append(r)
-    return result
+        yield r
+        #result.append(r)
+    #return result
 
 
 # 解析分页链接
@@ -45,9 +46,9 @@ def get_all_page_url(response):
         no = item.get_text()
         if '下一页' in no:
             break
-        itemList.append('https://www.baidu.com' + href)
+        yield 'https://www.baidu.com' + href
 
-    return itemList
+    # return itemList
 
 
 def main():
@@ -58,7 +59,7 @@ def main():
 
 
 
-    outputfile=aiofile('ex_output/baidu.txt')
+    outputfile=AioFile('ex_output/baidu.txt')
     Pipe(
         urls,
         HttpLoader(),
@@ -67,8 +68,9 @@ def main():
 
     )
     #生成流程图
-    Bot.render('ex_output/baiduspider')
-    Bot.run()
+    BotFlow.debug_print()
+    BotFlow.render('ex_output/baiduspider')
+    BotFlow.run()
 
 
 main()

@@ -1,22 +1,12 @@
+from .base import CountRef
+
 class dotdict(dict):
     """dot.notation access to dictionary attributes"""
     __getattr__ = dict.get
     __setattr__ = dict.__setitem__
     __delattr__ = dict.__delitem__
 
-class CountRef(object):
-    def __init__(self):
-        self.count=0
 
-    def incr(self):
-        self.count=self.count+1
-        return self.count
-
-    def decr(self):
-
-        self.count=self.count-1
-
-        return self.count
 
 class Node(CountRef):
     boost_by_thread=1
@@ -28,12 +18,18 @@ class Node(CountRef):
 
         self.inited = False
         self.closed = False
+        self.raw_bdata=False
         self.init_param()
         super().__init__()
 
     def init_param(self):
         pass
 
+    async def init(self):
+        return
+
+    async def close(self):
+        return
 
 
     async def node_init(self):
@@ -49,21 +45,25 @@ class Node(CountRef):
     def boost(cls,f):
 
 
-        f.boost_type=type
+        f.boost_type=cls.boost_by_thread
 
         return f
 
+    #
+    # @classmethod
+    # def boost_type(cls,type=boost_by_thread):
+    #
+    #     def wrap(f):
+    #         f.boost_type=type
+    #
+    #         return f
+    #
+    #
+    #     return wrap
 
-    @classmethod
-    def boost_type(cls,type=boost_by_thread):
-
-        def wrap(f):
-            f.boost_type=type
-
-            return f
 
 
-        return wrap
+
 
 
 

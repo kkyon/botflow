@@ -1,4 +1,4 @@
-from databot import Pipe,Timer,BotFrame,HttpLoader,Bot
+from botflow import Pipe,Timer,HttpLoader,BotFlow
 
 def main():
     Pipe(
@@ -10,7 +10,7 @@ def main():
         print,
     )
 
-    Bot.render('ex_output/simple_bitcoin_price')
-    Bot.run()
+    BotFlow.render('ex_output/simple_bitcoin_price')
+    BotFlow.run()
 
 main()

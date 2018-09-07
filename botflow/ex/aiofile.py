@@ -1,8 +1,8 @@
-from databot.node import Node
+from botflow.node import Node
 from functools import partial
 import asyncio
 
-class aiofile(Node):
+class AioFile(Node):
 
     async def open(self,filename,mode='w'):
 

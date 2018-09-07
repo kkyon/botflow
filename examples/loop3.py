@@ -1,5 +1,5 @@
-from databot.flow import Pipe,Branch,Loop
-from databot.botframe import BotFrame
+from botflow import Pipe,Branch,BotFlow
+from botflow.botframe import BotFrame
 class Sum(object):
     def __init__(self):
         self.sum=0
@@ -13,12 +13,12 @@ op_sum=Sum()
 
 def main():
     Pipe(
-        Loop(range(10)),
-        Loop(range(10)),
+        range(10),
+        range(10),
             Branch(op_sum,print)
         )
 
-    BotFrame.run()
+    BotFlow.run()
     print(op_sum)
 main()
 

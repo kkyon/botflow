@@ -1,9 +1,9 @@
-from databot.flow import Pipe, Branch, Loop, Timer
-from databot.botframe import BotFrame
+from botflow import Pipe, Branch, Timer
+from botflow import BotFlow
 from bs4 import BeautifulSoup
 from dataclasses import dataclass
-from databot.http.http import HttpLoader
-from databot.config import config
+from botflow.ex.http import HttpLoader
+from botflow.config import config
 
 
 @dataclass
@@ -36,13 +36,15 @@ def get_all_items(response):
         r.id = id
         r.page_rank = rank
         r.name = item.h3.get_text()
-        result.append(r)
-    return result
+        yield r
+
 
 
 # 解析 分页 链接
 def get_all_page_url(response):
     itemList = []
+    #BD_URL='https://180.97.33.108' #
+    BD_URL='https://www.baidu.com'
     soup = BeautifulSoup(response.text, "lxml")
     page = soup.select('div#page')
     for item in page[0].find_all('a'):
@@ -50,9 +52,9 @@ def get_all_page_url(response):
         no = item.get_text()
         if '下一页' in no:
             break
-        itemList.append('https://www.baidu.com' + href)
+        yield BD_URL + href
 
-    return itemList
+
 
 
 result = []
@@ -83,8 +85,8 @@ def main():
         Branch(get_all_page_url, HttpLoader(), get_all_items, collect),
 
     )
-    Pipe(Timer(delay=delay, until=p1.finished), show_progress)
-    BotFrame.run()
+    Pipe(Timer(delay=delay), show_progress)
+    BotFlow.run()
 
 
 main()
