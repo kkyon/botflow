@@ -24,7 +24,7 @@ setup(name='botflow',
           'License :: OSI Approved :: BSD License',
           'Programming Language :: Python :: 3'
       ],
-      packages=['databot', 'databot.db', 'databot.http'],
+      packages=['databot', 'databot.ex'],
       install_requires=[
           'aiohttp>=3.3.0',
           'aiomysql>=0.0.19',
