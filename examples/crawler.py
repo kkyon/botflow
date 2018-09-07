@@ -1,17 +1,16 @@
-from botflow import *
-from botflow.node import Flat,Node
-from botflow.route import SendTo
-from botflow.queue import QueueManager
-from botflow.bdata import Databoard
-from botflow.config import config
 import logging
-logging.basicConfig(level=logging.DEBUG)
-config.coroutine_batch_size = 16
+
+
+#logging.basicConfig(level=logging.DEBUG)
+logger=logging.getLogger(__name__)
+from botflow import *
+from botflow.route import SendTo
+from botflow.config import config
+from botflow.node import Delay,Node,SpeedLimit
+from botflow.queue import QueueManager
+config.coroutine_batch_size = 8
 config.default_queue_max_size=0
 
-
-
-QueueManager().debug = True
 
 import datetime
 
@@ -22,6 +21,11 @@ to_do = set()
 
 count = 1
 
+def print_speed():
+    end = datetime.datetime.now()
+    s=(end-start).total_seconds()
+    print(f"count {count} time {s} speed{count/s}")
+    # QueueManager().debug_print()
 
 def fitler(url):
     global count
@@ -33,16 +37,18 @@ def fitler(url):
 
     count += 1
 
-    if count % 10000 == 0:
-        print(count)
+    if count % 5000 == 0:
+        print_speed()
 
     seen.add(url)
     return url
 
-@Node.boost
+
 def perf_parse(r):
     for a in r.soup.find_all('a', href=True):
         yield a.get('href')
+
+
 
 
 # 0:00:46.989379 是否拆分，区别不大
@@ -54,16 +60,9 @@ b = Return(
 
 
 
-)
-
-# 0:00:45.922213 without boot
-# 0:00:43.879830 with boost
-c = Return(
-    fitler,
-    HttpLoader(),
-    perf_parse
 
 )
+
 
 Pipe(
     "http://127.0.0.1:8080/",
@@ -74,9 +73,7 @@ Pipe(
 BotFlow.render('ex_output/crawler')
 
 try:
-    # from pympler.tracker import SummaryTracker
-    #
-    # tracker = SummaryTracker()
+
     BotFlow.debug_print()
     BotFlow.run()
 
@@ -86,7 +83,6 @@ except KeyboardInterrupt:
 
 except:
     raise
-end = datetime.datetime.now()
-print(end - start)
-print(count)
+BotFlow.debug_print()
+print_speed()
 BotFlow.stop()

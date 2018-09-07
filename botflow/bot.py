@@ -4,7 +4,7 @@ from .nodebase import Node
 from .bdata import Bdata
 from .config import config
 import typing,types
-from .botbase import BotBase,BotManager,BotInfo,call_wrap_r
+from .botbase import BotBase,BotManager,BotInfo,filter_out
 from .base import BotExit,flatten
 
 logger = logging.getLogger(__name__)
@@ -51,12 +51,58 @@ class CallableBot(BotBase):
             r=await r
         return r
 
+    async def call_wrap_r(self,func, bdata):
+        self.consumed_count += 1
+        logger.debug('call_wrap' + str(type(func)) + str(func))
+
+        if bdata.data is None:
+            return None
+        result = None
+
+        if not isinstance(bdata, Bdata):
+            raise Exception('bad data {}'.format(bdata))
+
+        try:
+
+            if isinstance(func, Node) and func.raw_bdata:
+                param = bdata
+            else:
+                param = bdata.data
+
+            if hasattr(func, 'boost_type'):
+                loop = asyncio.get_event_loop()
+                result = await loop.run_in_executor(None, func, param)
+
+
+            else:
+                r_or_c = func(param)
+                if isinstance(r_or_c, types.CoroutineType):
+                    r_or_c = await r_or_c
+
+                if filter_out(r_or_c):
+                    result = None
+                else:
+                    result = r_or_c
+        except Exception as e:
+
+            if config.exception_policy == config.Exception_raise:
+                raise e
+            elif config.exception_policy == config.Exception_ignore:
+                result = None
+            elif config.exception_policy == config.Exception_pipein:
+                result = e
+            elif config.exception_policy == config.Exception_retry:
+                raise e  # TODO
+            else:
+                raise Exception('undefined exception policy')
+
+        return result
 
     async def merge_list(self,func,bdata):
         tasks=[]
         for d in  flatten(bdata.data): #TODO to deal with too large list and generator!!!
             if self.type_hint is None or isinstance(d,self.type_hint):
-                task=asyncio.ensure_future(call_wrap_r(func, Bdata(d,bdata.ori)))
+                task=asyncio.ensure_future(self.call_wrap_r(func, Bdata(d,bdata.ori)))
                 tasks.append(task)
 
         #will keep order
@@ -74,14 +120,17 @@ class CallableBot(BotBase):
                 if not i is None:
                     all_none=False
             if all_none == False:
+                self.produced_count += 1
                 await q.put(Bdata(r, bdata.ori))
 
         elif isinstance(r,typing.Generator):
             for i in r:
+                self.produced_count+=1
                 await q.put(Bdata(i, bdata.ori))
 
         else:
             if r is not None :
+                self.produced_count += 1
                 await q.put(Bdata(r,bdata.ori))
 
 
@@ -109,12 +158,12 @@ class CallableBot(BotBase):
         else:
             if self.type_hint is not None :
                 if isinstance(bdata.data,self.type_hint):
-                    coro = self.append_q(call_wrap_r,self.func, bdata, self.output_q)
+                    coro = self.append_q(self.call_wrap_r,self.func, bdata, self.output_q)
                 else:
                     coro = self.output_q.put(bdata)
 
             else:
-                coro = self.append_q(call_wrap_r,self.func, bdata, self.output_q)
+                coro = self.append_q(self.call_wrap_r,self.func, bdata, self.output_q)
 
             return coro
 

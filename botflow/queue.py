@@ -3,7 +3,7 @@ from .bdata import Bdata
 from .base import Singleton
 from .config import config
 import logging
-
+import datetime
 logger = logging.getLogger(__name__)
 
 class QueueManager(object,metaclass=Singleton):
@@ -22,10 +22,10 @@ class QueueManager(object,metaclass=Singleton):
 
 
         for q in self.q_list:
-            if  isinstance(q,DataQueue):
-                logger.debug("qid :{},max size:{},qsize:{},high water:{},data:{}".format(id(q),q.maxsize,q.qsize(),q.high_water,type(q)))
+            if isinstance(q,DataQueue):
+                logger.info("qid :{},max size:{},qsize:{},high water:{},data:{}".format(id(q),q.maxsize,q.qsize(),q.high_water,type(q)))
             else:
-                logger.debug("qid :{},type:{}".format(id(q),type(q)))
+                logger.info("qid :{},type:{}".format(id(q),type(q)))
 
 
 
@@ -38,13 +38,14 @@ class DataQueue(asyncio.Queue):
 
         super().__init__(maxsize=maxsize,loop=None)
         self.qm=QueueManager()
-        self.debug = False
+        self.debug = True
         self.high_water = 0
-        #logging.info("debug %s %s",self.debug,self.qm.debug)
-        if logger.level == logging.DEBUG:
-            self.qm.add(self)
-            self.debug = True
+        self.qm.add(self)
+        self.put_count=0
 
+        self.start_time=datetime.datetime.now()
+        self.speed_limit=config.backpressure_rate_limit
+        self.lock=asyncio.Lock()
 
         self.put_callback=None
 
@@ -61,10 +62,37 @@ class DataQueue(asyncio.Queue):
         self.put_callback=f
 
     async def put(self, item):
+        '''with out any limit ,the max put speed 23200 from list a generator'''
         if not isinstance(item,Bdata):
             e=Exception('not right data'+str(type(item)))
             logger.error(e)
             raise e
+
+        if self.speed_limit !=0:
+            self.put_count += 1
+
+
+            if self.put_count >self.speed_limit*2:
+                await self.lock.acquire()
+                end = datetime.datetime.now()
+                s = (end - self.start_time).total_seconds()
+                speed_now = self.put_count / s
+                logger.debug(f"q{id(self)} speed now:{speed_now} {s} {self.put_count}")
+                if speed_now > (self.speed_limit * 1.1):
+                    sleep_time = self.put_count / self.speed_limit - s
+                    logger.debug(f"q{id(self)} need to sleep{sleep_time} ")
+                    logger.debug(f"start q{id(self)} {datetime.datetime.now()}")
+                    self.start_time = datetime.datetime.now()
+                    await asyncio.sleep(sleep_time)
+                    logger.debug(f"end q{id(self)} {datetime.datetime.now()}")
+
+                else:
+                    self.start_time = datetime.datetime.now()
+                self.put_count = 0
+
+
+                self.lock.release()
+
 
         r= await super().put(item)
 

@@ -15,13 +15,14 @@ class Config(object):
         self.execute_mode=self.stream
         self.replay_mode=False
         self.graph_optimize=True
-        self.coroutine_batch_size=16  #for http loader the batch size don't effect time effort too much
+        self.coroutine_batch_size=4  #for http loader the batch size don't effect time effort too much
         self.debug=False
         self.never_stop=False
         self.main_lock=asyncio.Lock()
         self.main_lock._locked=True
         self.check_stoping=True
-        self.default_queue_max_size=128
+        self.default_queue_max_size=1000
+        self.backpressure_rate_limit=1000 #per sec
 
 
     def __repr__(self):

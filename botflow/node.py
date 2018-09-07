@@ -4,6 +4,8 @@ from .bdata import Bdata
 from .base import flatten
 import asyncio
 
+import datetime
+
 
 
 import typing
@@ -124,7 +126,33 @@ class Delay(Node):
         self.lock.release()
         return data
 
+class SpeedLimit(Node):
+    def __init__(self,speed):
+        super().__init__()
+        self.processed_count=0
+        self.start_time=datetime.datetime.now()
+        self.speed_limit=speed
+        self.lock=asyncio.Lock()
 
+    async def __call__(self,data):
+        self.processed_count += 1
+        if self.processed_count%100==0:
+            await self.lock.acquire()
+            end = datetime.datetime.now()
+            s=(end-self.start_time).total_seconds()
+            speed_now=self.processed_count/s
+            if speed_now>(self.speed_limit*1.1) :
+                sleep_time=self.processed_count/self.speed_limit-s
+                print(f"need to sleep{sleep_time}")
+                if sleep_time > 2:
+                    sleep_time=2
+                await asyncio.sleep(sleep_time)
+
+            self.processed_count=0
+            self.start_time=datetime.datetime.now()
+            self.lock.release()
+
+        return data
 
 def print_list(d:list):
     print(d)

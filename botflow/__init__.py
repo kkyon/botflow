@@ -11,3 +11,5 @@ from .config import config
 __all__ = ["Pipe","Timer","Branch","Join","Return","Zip",
           "HttpLoader", "AioFile", "Loop", "route",
            "Bdata","HttpServer","BotFlow","SendTo"]
+
+Bot=BotFlow

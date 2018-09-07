@@ -78,6 +78,7 @@ class Pipe(Route):
         self.start_q.put_nowait(Bdata.make_Bdata_zori(0))
 
 
+
     def aiohttp_json_handle(self):
 
         from aiohttp import web
@@ -209,6 +210,21 @@ class Pipe(Route):
             if not (task.done() or  task.cancelled()) and bot.idle == False:
                 return False
         return True
+
+    async def write(self,data):
+        await self.start_q.put(Bdata.make_Bdata_zori(data))
+
+    async def read(self):
+        r =await self.output_q.get()
+        yield r
+
+        while not self.output_q.empty():
+            r=self.output_q.get_nowait()
+            yield r
+
+
+
+
 
     async def __call__(self, data):
 

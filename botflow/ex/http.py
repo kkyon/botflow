@@ -13,6 +13,9 @@ from botflow import queue
 from botflow.bdata import Bdata
 from bs4 import BeautifulSoup
 from botflow.config import config
+import datetime
+import logging
+logger=logging.getLogger(__name__)
 headers = {
 
     'user-agent': "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36",
@@ -99,7 +102,9 @@ class HttpLoader(Node):
     def __init__(self,delay=0,proxy=None,header=None,session_policy=None,timeout=20):
         self.delay=delay
         self.timeout=timeout
-
+        # self.processed_count=0
+        # self.start_time=datetime.datetime.now()
+        # self.lock=asyncio.Lock()
         super().__init__()
 
     async def init(self):
@@ -115,7 +120,15 @@ class HttpLoader(Node):
 
 
     async def __call__(self, v):
-
+        # self.processed_count += 1
+        # if self.processed_count%1000==0:
+        #     await self.lock.acquire()
+        #     end = datetime.datetime.now()
+        #     s=(end-self.start_time).total_seconds()
+        #     logger.info(f"speed {self.processed_count/s} ")
+        #     self.processed_count = 0
+        #     self.start_time=datetime.datetime.now()
+        #     self.lock.release()
 
         if  isinstance(v, str):
             req=HttpRequest()

@@ -11,6 +11,7 @@ import typing, types
 
 logger=logging.getLogger(__name__)
 from .base import BotExit
+import datetime
 
 
 class BotPerf(object):
@@ -272,54 +273,6 @@ async def call_wrap(func, bdata, iq, oq, raw_bdata=False):
 
 
 
-async def call_wrap_r(func, bdata):
-
-    logger.debug('call_wrap' + str(type(func)) + str(func))
-
-    if bdata.data is None:
-        return None
-    result=None
-
-    if not isinstance(bdata, Bdata):
-        raise Exception('bad data {}'.format(bdata))
-
-
-
-    try:
-
-        if isinstance(func,Node) and func.raw_bdata :
-            param=bdata
-        else:
-            param=bdata.data
-
-        if hasattr(func, 'boost_type'):
-            loop = asyncio.get_event_loop()
-            result = await loop.run_in_executor(None, func, param)
-
-
-        else:
-            r_or_c = func(param)
-            if isinstance(r_or_c, types.CoroutineType):
-                r_or_c = await r_or_c
-
-            if filter_out(r_or_c):
-                result = None
-            else:
-                result = r_or_c
-    except Exception as e:
-
-        if config.exception_policy == config.Exception_raise:
-            raise e
-        elif config.exception_policy == config.Exception_ignore:
-            result=None
-        elif config.exception_policy == config.Exception_pipein:
-            result = e
-        elif config.exception_policy == config.Exception_retry:
-            raise e  # TODO
-        else:
-            raise Exception('undefined exception policy')
-
-    return result
 
 
 def raw_value_wrap(message):
@@ -355,6 +308,11 @@ class BotBase(object):
         self.tasks = []
         self.input_q = None
         self.output_q = None
+        self.consumed_count=0
+        self.produced_count=0
+        self.start_time=datetime.datetime.now()
+        self.speed_limit=100
+        self.lock=asyncio.Lock()
 
     # def pre_hook(self):
     # def post_hook(self):
@@ -379,6 +337,23 @@ class BotBase(object):
             try:
 
                 await self.main_logic()
+
+                # if self.produced_count > 100:
+                #         await self.lock.acquire()
+                #         end = datetime.datetime.now()
+                #         s = (end - self.start_time).total_seconds()
+                #         speed_now = self.produced_count / s
+                #         if speed_now > (self.speed_limit * 1.1):
+                #             sleep_time = self.produced_count / self.speed_limit - s
+                #             logger.info(f"{self.func} need to sleep{sleep_time} speed{speed_now} {s} {self.produced_count}")
+                #             #await asyncio.sleep(sleep_time)
+                #
+                #
+                #         self.produced_count = 0
+                #         self.start_time = datetime.datetime.now()
+                #
+                #         self.lock.release()
+
             except BotExit:
                 break
             except:
@@ -408,6 +383,8 @@ class BotBase(object):
         tasks = []
         for data in data_list:
             # if not data.is_BotControl():
+
+
             coro = self.create_coro(data)
             self.bi.sub_coro.add(coro)
             task = asyncio.ensure_future(coro)

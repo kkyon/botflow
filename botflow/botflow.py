@@ -53,6 +53,8 @@ class BotFlow(object):
 
             # await  config.main_lock.acquire()
             stop=True
+            if logger.level == logging.DEBUG:
+                QueueManager().debug_print()
             #QueueManager().debug_print()
             for bot in bm.get_bots():
                 if len(bot.sub_task) != 0:
