@@ -49,7 +49,13 @@ class DataQueue(asyncio.Queue):
         self.put_callback=None
 
 
+    async def readable(self):
+        pass
+        #TODO
 
+    async def writable(self):
+        pass
+        #TODO
 
     def set_put_callback(self,f):
         self.put_callback=f

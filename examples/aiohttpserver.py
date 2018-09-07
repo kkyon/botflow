@@ -43,13 +43,9 @@ def json_wrap(p):
     return _wrap
 
 app = web.Application()
-app.add_routes([web.get('/', json_wrap(p))
+app.add_routes([web.get('/', p.json_handle())
                ])
  
-
-
-
-
 BotFlow.render('ex_output/httpserver')
 BotFlow.run_app(app)
 

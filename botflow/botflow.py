@@ -103,10 +103,10 @@ class BotFlow(object):
     @classmethod
     def run_app(cls,app,host='0.0.0.0', port=8080):
 
+        print(f"BotFlow start web server {host}:{port}")
         config.never_stop = True
 
         bot_nodes=cls.start()
-        bm = BotManager()
 
         app_task = asyncio.ensure_future(cls.run_web_app(app,host,port))
         bot_nodes.append(app_task)

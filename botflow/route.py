@@ -78,6 +78,24 @@ class Pipe(Route):
         self.start_q.put_nowait(Bdata.make_Bdata_zori(0))
 
 
+    def aiohttp_json_handle(self):
+
+        from aiohttp import web
+        async def _wrap(request):
+            r = await self(request)
+            return web.json_response(r)
+
+        return _wrap
+
+    def sanic_json_handle(self):
+        from sanic.response import json
+        async def _wrap(request):
+            r = await self(request)
+            return json(r)
+
+        return _wrap
+
+
 
     @classmethod
     def empty(cls):
