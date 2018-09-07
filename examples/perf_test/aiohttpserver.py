@@ -23,7 +23,6 @@ app = web.Application()
 #     return _wrap
 #
 #
-
 app.add_routes([
     web.get('/', p.aiohttp_json_handle())
 ])
