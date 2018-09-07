@@ -1,4 +1,4 @@
-from botflow import BotFlow,Pipe,HttpLoader,Branch,aiofile
+from botflow import BotFlow,Pipe,HttpLoader,Branch,AioFile
 from bs4 import BeautifulSoup
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -59,7 +59,7 @@ def main():
 
 
 
-    outputfile=aiofile('ex_output/baidu.txt')
+    outputfile=AioFile('ex_output/baidu.txt')
     Pipe(
         urls,
         HttpLoader(),
