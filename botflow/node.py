@@ -10,16 +10,20 @@ import typing
 
 class Flat(Node):
 
+    def __init__(self,level=0):
+        super().__init__()
+        self.level=0
+        self.raw_bdata=True
 
-    def __call__(self, message):
-        if isinstance(message, (list,typing.Generator)):
+    def __call__(self, bdata):
+        if isinstance(bdata.data, (list,typing.Generator)):
 
-            for i in message:
+            for i in bdata.data:
                 yield i
 
         else:
 
-            yield message
+            yield bdata.data
 
 
 

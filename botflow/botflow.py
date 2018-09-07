@@ -52,6 +52,7 @@ class BotFlow(object):
 
             # await  config.main_lock.acquire()
             stop=True
+            #QueueManager().debug_print()
             for bot in bm.get_bots():
                 if len(bot.sub_task) != 0:
                     logging.debug("{} {}".format(id(bot),len(bot.sub_task)))
@@ -62,7 +63,7 @@ class BotFlow(object):
                 if isinstance(q, NullQueue):
                     continue
                 if q.empty() == False:
-                    print("id:{} size:{}".format(id(q),q.qsize()))
+                    #print("id:{} size:{}".format(id(q),q.qsize()))
                     logging.debug("id:{} size:{}".format(id(q),q.qsize()))
                     stop = False
                     break

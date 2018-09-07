@@ -1,10 +1,14 @@
 from botflow import *
-from botflow.node import Flat
+from botflow.node import Flat,Node
 from botflow.route import SendTo
 from botflow.queue import QueueManager
 from botflow.bdata import Databoard
 from botflow.config import config
-config.queue_max_size=0
+
+config.coroutine_batch_size = 16
+config.default_queue_max_size=0
+
+
 
 QueueManager().debug = True
 
@@ -16,7 +20,6 @@ seen = set()
 to_do = set()
 
 count = 1
-config.coroutine_batch_size = 16
 
 
 def fitler(url):
@@ -35,7 +38,7 @@ def fitler(url):
     seen.add(url)
     return url
 
-
+@Node.boost
 def perf_parse(r):
     for a in r.soup.find_all('a', href=True):
         yield a.get('href')
@@ -46,9 +49,8 @@ b = Return(
 
     fitler,
     HttpLoader(),
-    lambda r: r.soup.find_all('a', href=True),
-    Flat(),
-    lambda r: r.get('href'),
+    perf_parse,
+
 
 
 )

@@ -382,7 +382,7 @@ class SendTo(Route):
 
         self.route_target_q=self.target_node.outer_iq
 
-        self.start_q = [DataQueue(maxsize=0)]
+        self.start_q = [DataQueue()]
         self.output_q=oq
 
 
@@ -395,30 +395,6 @@ class SendTo(Route):
 
         await self.route_target_q.put(data)
 
-        #
-        # #async with self.lock:
-        #     await self.start_q[0].put(data)
-        #
-        #     start_q=self.start_q[0]
-        #     #print("start q id {} rate {}".format(id(start_q), start_q.qsize()))
-        #     maxsize = self.route_target_q.maxsize
-        #
-        #     while True:
-        #         size = self.route_target_q.qsize()
-        #
-        #         # if size >110 and start_q.qsize() >110:
-        #         #     #print('a')
-        #         #     if self.flag==0:
-        #         #         QueueManager().debug()
-        #         #         self.flag=1
-        #          #   pass
-        #
-        #
-        #         if  size/maxsize > 0.9 or self.start_q[0].qsize()  ==0 :
-        #             break
-        #         #print("trage q id {} rate {},{}".format(id(self.route_target_q),size / maxsize,size))
-        #         r=await self.start_q[0].get()
-        #         await self.route_target_q.put(r)  ##Loop to start q
 
 
 

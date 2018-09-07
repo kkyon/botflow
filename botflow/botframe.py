@@ -36,6 +36,10 @@ def cmp_q_list(aql,bql):
     return False
 
 
+from concurrent import futures
+executor = futures.ThreadPoolExecutor(max_workers=10)
+asyncio.get_event_loop().set_default_executor(executor)
+
 class BotFrame(object):
 
 

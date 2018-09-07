@@ -21,7 +21,7 @@ class Config(object):
         self.main_lock=asyncio.Lock()
         self.main_lock._locked=True
         self.check_stoping=True
-        self.queue_max_size=128
+        self.default_queue_max_size=128
 
 
 

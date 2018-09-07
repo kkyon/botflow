@@ -6,7 +6,7 @@ class QueueManager(object,metaclass=Singleton):
 
     def __init__(self):
         self.q_list=[]
-        self.debug=False
+        self.debug=True
 
     def add(self,q):
         self.q_list.append(q)
@@ -14,17 +14,16 @@ class QueueManager(object,metaclass=Singleton):
     def debug_print(self):
 
         print("*"*20,"QueueManager")
-
         for q in self.q_list:
             if  isinstance(q,DataQueue):
-                print("qid :{},size:{},high water:{},data:".format(id(q),q.qsize(),q.high_water,q))
+                print("qid :{},max size:{},qsize:{},high water:{},data:{}".format(id(q),q._maxsize,q.qsize(),q.high_water,type(q)))
             else:
                 print("qid :{},type:{}".format(id(q),type(q)))
         print("*"*20,"QueueManager")
 
 
 class DataQueue(asyncio.Queue):
-    def __init__(self,maxsize=config.queue_max_size):
+    def __init__(self,maxsize=0):
         qm=QueueManager()
         self.debug = False
         if qm.debug:

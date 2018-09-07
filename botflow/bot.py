@@ -1,7 +1,7 @@
 
 
 import asyncio
-
+import logging
 from .base import copy_size
 from .nodebase import Node
 from .bdata import Bdata
@@ -9,7 +9,6 @@ from .config import config
 import typing,types
 from .botbase import BotBase,BotManager,call_wrap,BotInfo,call_wrap_r
 from .base import BotExit,flatten
-
 import itertools
 
 class CallableBot(BotBase):
@@ -69,17 +68,23 @@ class CallableBot(BotBase):
 
     async def append_q(self,call_wrap_r,func,bdata,q):
         r=await call_wrap_r(func,bdata)
-
+        logging.debug("id:{} size:{}".format(id(q), q.qsize()))
         all_none = False
         if isinstance(r,list):
             all_none = True
             for i in r:
                 if not i is None:
                     all_none=False
+            if all_none == False:
+                await q.put(Bdata(r, bdata.ori))
 
+        elif isinstance(r,typing.Generator):
+            for i in r:
+                await q.put(Bdata(i, bdata.ori))
 
-        if r is not None and all_none ==False:
-            await q.put(Bdata(r,bdata.ori))
+        else:
+            if r is not None :
+                await q.put(Bdata(r,bdata.ori))
 
 
 
