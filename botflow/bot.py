@@ -1,15 +1,13 @@
-
-
 import asyncio
 import logging
-from .base import copy_size
 from .nodebase import Node
 from .bdata import Bdata
 from .config import config
 import typing,types
-from .botbase import BotBase,BotManager,call_wrap,BotInfo,call_wrap_r
+from .botbase import BotBase,BotManager,BotInfo,call_wrap_r
 from .base import BotExit,flatten
-import itertools
+
+logger = logging.getLogger(__name__)
 
 class CallableBot(BotBase):
 
@@ -68,7 +66,7 @@ class CallableBot(BotBase):
 
     async def append_q(self,call_wrap_r,func,bdata,q):
         r=await call_wrap_r(func,bdata)
-        logging.debug("id:{} size:{}".format(id(q), q.qsize()))
+        logger.debug("exe {} get data {}".format(func,r))
         all_none = False
         if isinstance(r,list):
             all_none = True

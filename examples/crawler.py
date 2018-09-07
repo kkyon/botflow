@@ -4,7 +4,8 @@ from botflow.route import SendTo
 from botflow.queue import QueueManager
 from botflow.bdata import Databoard
 from botflow.config import config
-
+import logging
+logging.basicConfig(level=logging.DEBUG)
 config.coroutine_batch_size = 16
 config.default_queue_max_size=0
 

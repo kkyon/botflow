@@ -24,5 +24,9 @@ class Config(object):
         self.default_queue_max_size=128
 
 
+    def __repr__(self):
+        return str(self.__dict__)
+
+
 
 config=Config()

@@ -1,8 +1,14 @@
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+from botflow.config import config
+config.default_queue_max_size=0
+
+logging.debug(config)
 from botflow import Pipe, Fork,Timer,Branch
-from botflow.botframe import BotFrame
+from botflow import BotFlow
 from botflow.node import Node
 import time
-
 
 #it will block whole main thread
 
@@ -24,7 +30,7 @@ def main():
 
     )
 
-    BotFrame.run()
+    BotFlow.run()
 
 
 main()

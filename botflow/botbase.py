@@ -9,6 +9,7 @@ from .bdata import Bdata
 from .queue import NullQueue
 import typing, types
 
+logger=logging.getLogger(__name__)
 from .base import BotExit
 
 
@@ -77,7 +78,7 @@ class BotManager(object, metaclass=Singleton):
             if p.stoped == False:
                 return False
         b = bi
-        logging.info('ready_to_stop botid %s' % (b))
+        logger.info('ready_to_stop botid %s' % (b))
         return True
 
     def new_bot_id(self):
@@ -158,7 +159,7 @@ class BotManager(object, metaclass=Singleton):
     # self._bots.append(bi)
 
     def debug_print(self):
-        logging.info('-' * 50)
+        logger.info('-' * 50)
         for b in self._bots:
 
             if not isinstance(b.iq, list):
@@ -175,12 +176,12 @@ class BotManager(object, metaclass=Singleton):
             for q in b.iq:
                 iq += 'q_' + str(id(q)) + ','
 
-            logging.info('%s,botid %s,pipe:%s,func:%s stoped:%s,parents:%s  ,iq:%s, oq:%s' % (
+            logger.info('%s,botid %s,pipe:%s,func:%s stoped:%s,parents:%s  ,iq:%s, oq:%s' % (
                 b.id, b, b.pipeline, b.func, b.stoped, plist, iq, oq))
 
-        logging.info('-' * 50)
+        logger.info('-' * 50)
         for b in self._bots:
-            logging.info(b)
+            logger.info(b)
             #
             #
 
@@ -213,7 +214,7 @@ def filter_out(data):
 
 
 async def call_wrap(func, bdata, iq, oq, raw_bdata=False):
-    logging.debug('call_wrap' + str(type(func)) + str(func))
+    logger.debug('call_wrap' + str(type(func)) + str(func))
 
     if raw_bdata:
         param = bdata
@@ -273,7 +274,7 @@ async def call_wrap(func, bdata, iq, oq, raw_bdata=False):
 
 async def call_wrap_r(func, bdata):
 
-    logging.debug('call_wrap' + str(type(func)) + str(func))
+    logger.debug('call_wrap' + str(type(func)) + str(func))
 
     if bdata.data is None:
         return None

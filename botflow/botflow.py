@@ -7,6 +7,7 @@ from .base import BotExit
 from aiohttp.web import AppRunner,TCPSite
 from .route import Pipe
 
+logger = logging.getLogger(__name__)
 class BotFlow(object):
 
 
@@ -55,7 +56,7 @@ class BotFlow(object):
             #QueueManager().debug_print()
             for bot in bm.get_bots():
                 if len(bot.sub_task) != 0:
-                    logging.debug("{} {}".format(id(bot),len(bot.sub_task)))
+                    logger.debug("bot id :{} sub task len:{} sopt to close".format(id(bot),len(bot.sub_task)))
                     stop = False
                     break
 
@@ -64,7 +65,7 @@ class BotFlow(object):
                     continue
                 if q.empty() == False:
                     #print("id:{} size:{}".format(id(q),q.qsize()))
-                    logging.debug("id:{} size:{}".format(id(q),q.qsize()))
+                    logger.debug("id:{} size:{} stop to close".format(id(q),q.qsize()))
                     stop = False
                     break
 
