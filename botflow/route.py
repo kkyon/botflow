@@ -3,7 +3,7 @@ import logging
 from .botframe import BotFrame
 from .config import config
 
-from .queue import DataQueue,NullQueue,CachedQueue,ProxyQueue
+from .queue import DataQueue,NullQueue,CachedQueue,ProxyQueue,ConditionalQueue
 from botflow.bdata import Bdata,Databoard
 from .botbase import BotManager
 from .routebase import Route
@@ -29,7 +29,7 @@ class Pipe(Route):
         for idx,func in enumerate(args):
             q_i = q_o
             if idx == len(args)-1:
-                q_o = ProxyQueue()
+                q_o = ProxyQueue(ConditionalQueue())
 
             else:
                 if config.replay_mode:
@@ -225,9 +225,14 @@ class Pipe(Route):
 
 
     async def __call__(self, data):
-
-        await self.start_q.put(Bdata.make_Bdata_zori(data))
-        r=await self.output_q.get()
+        ori=Bdata.make_Bdata_zori(data)
+        await self.start_q.put(Bdata(data,ori))
+        r=await self.output_q.get_by(ori)
+        self.output_q.clean(ori)
+        if isinstance(r.data,list):
+            for i,v in enumerate(r.data):
+                if isinstance(v,Exception):
+                    r.data[i]=None
         return r.data
 
 
@@ -462,8 +467,11 @@ class Join(Route):
 
     async def route_in(self,bdata):
         if self.merge_node is None:
-            new_data=Bdata(bdata.data, bdata)
-            await super().route_in(new_data)
+            if bdata.ori ==0:
+                new_data=Bdata(bdata.data, bdata)
+                await super().route_in(new_data)
+            else:
+                await super().route_in(bdata)
         else:
             await self.route_in_joinmerge(bdata)
 

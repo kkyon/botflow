@@ -1,10 +1,10 @@
-Version 0.1.9
-=============
+Botflow release v0.1.9 with Http Server support
+===============================================
 
 
 #. Officially  rename project to Botflow.
 
-#. Enable Http Server support.Pipe can be work as Coroutine for intergate other asyncio framework.
+#. Enable Http Server support.Pipe can be work as Coroutine for intergate other Asyncio framework.
 
     .. code-block:: python
 
@@ -27,38 +27,37 @@ Version 0.1.9
 
     .. code-block:: python
 
+        def filter_out(url):
+            global count
+            if 'http' not in url:
+                url = "http://127.0.0.1:8080{}".format(url)
 
-    def filter(url):
-        global count
-        if 'http' not in url:
-            url = "http://127.0.0.1:8080{}".format(url)
-
-        if url in seen : #filter out processed links
-            return None
-        seen.add(url)
-        return url
+            if url in seen : #filter out processed links
+                return None
+            seen.add(url)
+            return url
 
 
-    def find_all_links(r):
-        for a in r.soup.find_all('a', href=True):
-            yield a.get('href')
-
+        def find_all_links(r):
+            for a in r.soup.find_all('a', href=True):
+                yield a.get('href')
 
 
 
-    b = Return(
 
-        filter,
-        HttpLoader(),
-        find_all_links,
-    )
+        b = Return(
 
-    Pipe(
-        "http://127.0.0.1:8080/",
-        b,
-        SendTo(b),
+            filter_out, #filter out processed links
+            HttpLoader(),
+            find_all_links,  #find all links in new page.
+        )
 
-    )
+        Pipe(
+            "http://127.0.0.1:8080/",
+            b,
+            SendTo(b), #send new url to process again . it will make a loop
+
+        )
 
 #. Add new Node  type "SpeedLimit"  "Delay" .For speed control
 
@@ -66,4 +65,7 @@ Version 0.1.9
 
 #. Rewrite whole project for code more readable.
 
-#. import flow graph performance by reduce the node .
+#. Import flow  performance by optimize graph generate algorithm  .
+
+#. Import crawler case performance. For local server broad crawler bench test.
+   it can reach 760 pages per second. 10x faster than Scrapy.

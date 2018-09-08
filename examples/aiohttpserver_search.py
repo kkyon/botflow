@@ -7,7 +7,7 @@ import logging
 
 logging.basicConfig(level=logging.DEBUG)
 
-config.exception_policy=config.Exception_ignore
+config.exception_policy=config.Exception_pipein
 
 def parse_search(response):
     # raise Exception()
@@ -23,7 +23,7 @@ def parse_search(response):
 
 p=Pipe(
 
-    lambda r:r.query['q'],
+    lambda r:r.query.get('q',''),
     Join(
     lambda q:"https://www.bing.com/search?q={}".format(q),
     lambda q:"https://www.google.com/search?q={}".format(q),
@@ -31,7 +31,7 @@ p=Pipe(
     ),
 
     Zip(n_stream=3),
-    HttpLoader(),
+    HttpLoader(timeout=3),
     parse_search,
 )
 

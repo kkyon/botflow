@@ -84,7 +84,7 @@ class CallableBot(BotBase):
                 else:
                     result = r_or_c
         except Exception as e:
-
+            logger.error(e)
             if config.exception_policy == config.Exception_raise:
                 raise e
             elif config.exception_policy == config.Exception_ignore:
@@ -153,6 +153,8 @@ class CallableBot(BotBase):
                 coro = self.append_q(self.merge_list,self.func, bdata, self.output_q)
 
             return coro
+        elif isinstance(bdata.data,Exception):
+            return  self.output_q.put(bdata)
 
 
         else:

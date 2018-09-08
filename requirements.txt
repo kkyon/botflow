@@ -1,3 +1,4 @@
 aiohttp
-aiomysql
+beautifulsoup4
+lxml
 graphviz
