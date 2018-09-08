@@ -4,7 +4,7 @@ Route
 .. contents::
     :local:
 
-Route is important concept of the Databot. With it ,we can duplicate ,join,drop data.
+Route is important concept of the Botflow. With it ,we can duplicate ,join,drop data.
 and route message to muliti target Node.
 
 ```def __init__(self, *args, route_type=object,route_func=None, share=True, join=False):```
@@ -24,7 +24,7 @@ and route message to muliti target Node.
 
 Branch
 ------
-    most Basic route of the databot .it duplicate the parent from the parent pipe.
+    most Basic route of the Botflow .it duplicate the parent from the parent pipe.
 
 
 Return
@@ -40,7 +40,7 @@ Filter
 
 Fork
 ----
-    Basic route of databot. it create branch for every pass in (node or route).
+    Basic route of Botflow. it create branch for every pass in (node or route).
 
 
 

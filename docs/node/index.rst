@@ -8,8 +8,8 @@ Node is callable thing .In python world ,we have three callable things ,
 - lambada
 
 
-Major work  of user of databot  shouble be  writing core logic function,
-for parsing, mapping,calculating , aggregating. It is the main purpose of databot desing.
+Major work  of user of Botflow  shouble be  writing core logic function,
+for parsing, mapping,calculating , aggregating. It is the main purpose of Botflow desing.
 
 
 Pass into Node:

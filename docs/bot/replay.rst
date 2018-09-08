@@ -10,7 +10,7 @@ When it work?
 
 With ```config.replay_mode=True``` ,the Bot will turn replay mode.
 when an exception is raised at step N, you don't need to run from setup 1 to N.
-Databot will replay the data from nearest completed node, usually step N-1.
+Botflow will replay the data from nearest completed node, usually step N-1.
 It will save a lot of time in the development phase.
 
 There are two mandatory condition for replay mode.
@@ -23,9 +23,9 @@ executed any more.
 
 .. code-block:: python
 
-    from databot.flow import Pipe, Loop, Fork
-    from databot.botframe import BotFrame
-    from databot.config import config
+    from Botflow.flow import Pipe, Loop, Fork
+    from Botflow.botframe import BotFrame
+    from Botflow.config import config
     import time
 
     def double(a):

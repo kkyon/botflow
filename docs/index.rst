@@ -1,12 +1,12 @@
 
 
-Welcome to databot's world!
+Welcome to Botflow's world!
 ===================================
 
 
 
 
-The databot applicaton is made with one or many pipes and run by ```BotFrame.run()```.
+The Botflow applicaton is made with one or many pipes and run by ```BotFrame.run()```.
 The simplest applicaton looks like:
 
 .. code-block:: python
@@ -15,7 +15,7 @@ The simplest applicaton looks like:
     BotFrame.run()
 
 
-Concept of the databot is very simple. ```I doubt if it is good to write a guide :-)```
+Concept of the Botflow is very simple. ```I doubt if it is good to write a guide :-)```
 
 
 **Pipe** works at the Top level. It combines the Node and Route together.
@@ -53,7 +53,7 @@ case 2: crawler gets a google search result page. It may need to parse search re
 .. code-block:: python
 
       Pipe(
-         "https://www.google.com/search?q=kkyon+databot",
+         "https://www.google.com/search?q=kkyon+Botflow",
          HttpLoader(),
          Branch(parse_search_result,save_to_db),
          parse_all_page_url,

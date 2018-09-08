@@ -2,7 +2,7 @@ Branch,Return,Filter
 ====================
 
 
-.. image:: databot_branch.jpg
+.. image:: Botflow_branch.jpg
     :width: 300
 
 
