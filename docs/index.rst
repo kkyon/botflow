@@ -25,7 +25,7 @@ Concept of the Botflow is very simple.
 
 - function
 - function object. Class with ```__call__``` function overridden
-- lambada
+- lambda
 
 
 
