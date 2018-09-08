@@ -72,7 +72,7 @@ _Load the price of Bitcoin every 2 seconds. Advantage price aggregator sample ca
     main()
 
 
-- **Http server Support OOB** can publish your data pipe to public with high performance async http server.
+- **Http server Support OOB**  Publish your data pipe to public quickly.
 
 .. code-block:: python
 
