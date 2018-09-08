@@ -95,7 +95,7 @@ _Load the price of Bitcoin every 2 seconds. Advantage price aggregator sample ca
     ])
 
 
-    BotFlow.run_app(app)
+    Bot.run_app(app)
     #BotFlow start web server http://0.0.0.0:8080
 
 - **Flow Graph**

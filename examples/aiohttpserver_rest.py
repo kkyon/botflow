@@ -50,6 +50,6 @@ app = web.Application()
 app.add_routes(routes)
 
 
-BotFlow.render('ex_output/httpserver')
-BotFlow.run_app(app)
+Bot.render('ex_output/httpserver')
+Bot.run_app(app)
 

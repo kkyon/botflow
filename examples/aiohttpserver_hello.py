@@ -17,6 +17,6 @@ app.add_routes([
 ])
 
 
-BotFlow.run_app(app)
+Bot.run_app(app)
 #BotFlow start web server http://0.0.0.0:8080
 
