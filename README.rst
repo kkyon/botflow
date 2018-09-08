@@ -72,6 +72,31 @@ _Load the price of Bitcoin every 2 seconds. Advantage price aggregator sample ca
     main()
 
 
+- **Http server Support OOB** can publish your data pipe to public with high performance async http server.
+
+.. code-block:: python
+
+    from botflow import *
+    from aiohttp import web
+
+
+
+    p = Pipe(
+
+        {"msg":"hello world!"}
+    )
+
+
+
+    app = web.Application()
+
+    app.add_routes([
+        web.get('/', p.aiohttp_json_handle)
+    ])
+
+
+    BotFlow.run_app(app)
+    #BotFlow start web server http://0.0.0.0:8080
 
 - **Flow Graph**
 With render function:
@@ -146,12 +171,15 @@ Botflow has a few basic concepts to implement Data-driven programming .
 - **Node**
         It is callable unit.Any callable function and object can work as Node. It is driven by data. Custom functions work as Nodes.
         There are some built-in nodes:
-   .. role:: strike
-       * **Loop**: Works as a **for** loop
+
    
    * **Timer**: It will send a message in the pipe by timer param. **delay**, **max_time** **until** some finished
    * **HttpLoader**: Get a url and return the HTTP response
    * **File read/write**: for file I/O.
+   * **SpeedLimit**: limit the stream speed limit
+   * **Delay**: delay in special second.
+   * **Zip** : Wait for all branched to finish and merged the result into a tuple.
+   * **Filter** : Drop data from pipe if it does not match some condition
 
 
 - **Route**
@@ -160,9 +188,9 @@ Botflow has a few basic concepts to implement Data-driven programming .
         There are some pre built-in Route:
     * **Branch** : Duplicate data from parent pipe to a branch.
     * **Return** : Duplicate data from parent pipe, and return final result to parent pipe.
-    * **Filter** : Drop data from pipe if it does not match some condition
     * **Join** : Duplicate data to many branches, and return result to pipe.
-    * **Zip** : Wait for all branched to finish and merged the result into a tuple.
+    * **SendTo**: send stream to any Node.for make loop
+
 
 All units (Pipe, Node, Route) communicate via queues and perform parallel computation in coroutines.
 This is abstracted so that Botflow can be used with only limited knowledge of ``asyncio``.

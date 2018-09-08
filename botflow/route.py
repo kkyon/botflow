@@ -79,14 +79,12 @@ class Pipe(Route):
 
 
 
-    def aiohttp_json_handle(self):
+    async def aiohttp_json_handle(self,request):
 
         from aiohttp import web
-        async def _wrap(request):
-            r = await self(request)
-            return web.json_response(r)
+        r = await self(request)
+        return web.json_response(r)
 
-        return _wrap
 
     def sanic_json_handle(self):
         from sanic.response import json

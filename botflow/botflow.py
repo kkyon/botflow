@@ -105,7 +105,7 @@ class BotFlow(object):
     @classmethod
     def run_app(cls,app,host='0.0.0.0', port=8080):
 
-        print(f"BotFlow start web server {host}:{port}")
+        print(f"BotFlow start web server http://{host}:{port}")
         config.never_stop = True
 
         bot_nodes=cls.start()
