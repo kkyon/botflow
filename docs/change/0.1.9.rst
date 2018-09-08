@@ -4,7 +4,7 @@ Botflow release v0.1.9 with Http Server support
 
 #. Officially  rename project to Botflow.
 
-#. Enable Http Server support.Pipe can be work as Coroutine for intergate other Asyncio framework.
+#. Enable Http Server support.Pipe can be work as Coroutine to integrate with other Asyncio framework.
 
     .. code-block:: python
 
