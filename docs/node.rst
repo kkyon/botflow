@@ -1,6 +1,9 @@
 Node
 ====
 
+.. contents::
+    :local:
+
 Node is callable thing .In python world ,we have three callable things ,
 
 - function
@@ -46,12 +49,76 @@ Exception behavior will act according to ```config.Exception_policy = config.Exc
     :local:
 
 
-.. toctree::
-    :maxdepth: 1
+Timer
+------
 
-    http
-    db
-    file
-    util
+    It will send a message in the pipe by timer param. delay, max_time until some finished
+
+```Timer(self, delay=1, max_time=None, until=None)```
+
+
+:dealy:  the delay between every count
+:max_time: will stop when reach the max count time.
+:until: the function ref. Timer will count until function return True.
+
+
+HttpLoader
+-----------
+
+    Get a url and return the HTTP response
+
+    Init parameter
+    --------------
+
+    :timeout:
+            default timeout=20 .
+
+    Callable parameter:
+    ------------------
+
+    can be call by string (url), and Httprequest.
+
+    HttpResponse
+    ------------
+    HttpResponse
+
+
+    :json: return a json object
+    :text: get text body of the httpresponse
+    :xml:  get lxml object
+    :css: get css object
+
+
+    HttpRequest
+    ------------
+
+    :head:
+    :body:
+    :url:
+    :proxy:
+
+
+
+AioFile
+----------------
+    for file I/O.
+
+SpeedLimit
+----------
+
+    limit the stream speed limit
+
+Delay
+------
+
+    delay in special second.
+Zip
+-----
+    Wait for all branched to finish and merged the result into a tuple.
+
+Filter
+-----
+
+    Drop data from pipe if it does not match some condition
 
 

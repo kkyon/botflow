@@ -6,16 +6,17 @@ Welcome to Botflow's world!
 
 
 
-The Botflow applicaton is made with one or many pipes and run by ```BotFrame.run()```.
+The Botflow applicaton is made with one or many pipes and run by ```Bot.run()```.
 The simplest applicaton looks like:
 
 .. code-block:: python
 
+    from botflow import *
     Pipe(print)
-    BotFrame.run()
+    Bot.run()
 
 
-Concept of the Botflow is very simple. ```I doubt if it is good to write a guide :-)```
+Concept of the Botflow is very simple.
 
 
 **Pipe** works at the Top level. It combines the Node and Route together.
@@ -75,10 +76,10 @@ The above two code blocks look like pseudo code, but they are workable samples.
    :caption: Contents:
 
    bot/index
-   pipe/index
-   node/index
-   route/index
-   change/0.1.8
+   pipe
+   node
+   route
+   change/index
 
 .. toctree::
     :maxdepth: 1

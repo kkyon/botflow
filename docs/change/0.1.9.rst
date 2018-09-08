@@ -1,0 +1,69 @@
+Version 0.1.9
+=============
+
+
+#. Officially  rename project to Botflow.
+
+#. Enable Http Server support.Pipe can be work as Coroutine for intergate other asyncio framework.
+
+    .. code-block:: python
+
+        from botflow import *
+        from aiohttp import web
+
+         p = Pipe(
+            {"msg":"hello world!"}
+        )
+        app = web.Application()
+
+        app.add_routes([
+            web.get('/', p.aiohttp_json_handle)
+        ])
+
+        Bot.run_app(app)
+
+
+#. Add new Route "SendTo". It can be used for redirect to data flow to the Node.
+
+    .. code-block:: python
+
+
+    def filter(url):
+        global count
+        if 'http' not in url:
+            url = "http://127.0.0.1:8080{}".format(url)
+
+        if url in seen : #filter out processed links
+            return None
+        seen.add(url)
+        return url
+
+
+    def find_all_links(r):
+        for a in r.soup.find_all('a', href=True):
+            yield a.get('href')
+
+
+
+
+    b = Return(
+
+        filter,
+        HttpLoader(),
+        find_all_links,
+    )
+
+    Pipe(
+        "http://127.0.0.1:8080/",
+        b,
+        SendTo(b),
+
+    )
+
+#. Add new Node  type "SpeedLimit"  "Delay" .For speed control
+
+#. Add new Node  type "Zip". For zip multi flow item to list.
+
+#. Rewrite whole project for code more readable.
+
+#. import flow graph performance by reduce the node .
