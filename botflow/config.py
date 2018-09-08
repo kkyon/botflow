@@ -22,7 +22,7 @@ class Config(object):
         self.main_lock._locked=True
         self.check_stoping=True
         self.default_queue_max_size=1000
-        self.backpressure_rate_limit=1000 #per sec
+        self.backpressure_rate_limit=0 #per sec
 
 
     def __repr__(self):

@@ -12,7 +12,7 @@ setup(name='botflow',
       description='Data-driven and Reactive  programming framework'
                   ' ',
       long_description=read("README.rst"),
-      version='0.1.9',
+      version='0.1.9.1',
       url='https://github.com/kkyx/botflow',
       author='Guojian Li',
       author_email='guojianlee@gmail.com',
@@ -24,10 +24,9 @@ setup(name='botflow',
           'License :: OSI Approved :: BSD License',
           'Programming Language :: Python :: 3'
       ],
-      packages=['databot', 'databot.ex'],
+      packages=['botflow', 'botflow.ex'],
       install_requires=[
           'aiohttp>=3.3.0',
-          'aiomysql>=0.0.19',
           'graphviz'
 
       ],

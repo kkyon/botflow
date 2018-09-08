@@ -83,16 +83,17 @@ class BotFrame(object):
 
 
         if not isinstance(f, typing.Callable):
-            if isinstance(f,(list,types.GeneratorType,range)):
-
-                tb = LoopBot(i, o, f)
-                bi = tb.make_botinfo()
-                return [bi]
-
-
-
-            else:
-                f = raw_value_wrap(f)
+            f = raw_value_wrap(f)
+            # if isinstance(f,(list,types.GeneratorType,range)):
+            #
+            #     tb = LoopBot(i, o, f)
+            #     bi = tb.make_botinfo()
+            #     return [bi]
+            #
+            #
+            #
+            # else:
+            #     f = raw_value_wrap(f)
 
         if isinstance(f, route.Timer):
             f.make_route_bot(i,o)

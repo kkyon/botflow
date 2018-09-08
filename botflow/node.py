@@ -136,20 +136,19 @@ class SpeedLimit(Node):
 
     async def __call__(self,data):
         self.processed_count += 1
-        if self.processed_count%100==0:
+        if self.processed_count > self.speed_limit:
             await self.lock.acquire()
             end = datetime.datetime.now()
             s=(end-self.start_time).total_seconds()
             speed_now=self.processed_count/s
             if speed_now>(self.speed_limit*1.1) :
                 sleep_time=self.processed_count/self.speed_limit-s
-                print(f"need to sleep{sleep_time}")
-                if sleep_time > 2:
-                    sleep_time=2
+                self.start_time = datetime.datetime.now()
                 await asyncio.sleep(sleep_time)
-
+            else:
+                self.start_time = datetime.datetime.now()
             self.processed_count=0
-            self.start_time=datetime.datetime.now()
+
             self.lock.release()
 
         return data

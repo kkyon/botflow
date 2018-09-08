@@ -42,6 +42,7 @@ class DataQueue(asyncio.Queue):
         self.high_water = 0
         self.qm.add(self)
         self.put_count=0
+        self.get_count=0
 
         self.start_time=datetime.datetime.now()
         self.speed_limit=config.backpressure_rate_limit
@@ -51,6 +52,25 @@ class DataQueue(asyncio.Queue):
 
 
     async def readable(self):
+        while self.empty():
+            getter = self._loop.create_future()
+            self._getters.append(getter)
+            try:
+                await getter
+            except:
+                getter.cancel()  # Just in case getter is not done yet.
+
+                try:
+                    self._getters.remove(getter)
+                except ValueError:
+                    pass
+
+                if not self.empty() and not getter.cancelled():
+                    # We were woken up by put_nowait(), but can't take
+                    # the call.  Wake up the next in line.
+                    self._wakeup_next(self._getters)
+                raise
+
         pass
         #TODO
 
