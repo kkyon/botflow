@@ -84,7 +84,7 @@ class CallableBot(BotBase):
                 else:
                     result = r_or_c
         except Exception as e:
-            logger.error(e)
+            logger.exception("Exception when call {} with data {}".format(func,bdata.data))
             if config.exception_policy == config.Exception_raise:
                 raise e
             elif config.exception_policy == config.Exception_ignore:

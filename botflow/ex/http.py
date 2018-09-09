@@ -16,7 +16,7 @@ from botflow.config import config
 import datetime
 import logging
 logger=logging.getLogger(__name__)
-headers = {
+default_headers = {
 
     'user-agent': "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/67.0.3396.99 Safari/537.36",
 
@@ -28,14 +28,45 @@ headers = {
 
 class HttpRequest(object):
 
-    def __init__(self,url=None,headers=headers,payload=None,method='get'):
+    def __init__(self,url=None,headers=None,payload=None,method='get',request_headers=None):
+
+        if request_headers:
+            self.parse_headers_string(request_headers)
+
+        else:
+            if headers:
+                self.headers=headers
+            else:
+                self.headers=default_headers
+
         self.url=url
 
         self.query={}
-        self.headers=headers
         self.payload=payload
         self.method=method #GET or POST
         self.cookies=None
+
+
+
+    def parse_headers_string(self,s):
+        lines=[]
+        for line in s.split("\n"):
+            if len(line.strip()) ==0:
+                continue
+            lines.append(line.strip())
+        method,url,http_version=lines[0].split(" ")
+        headers={}
+        for line in lines[1:]:
+
+            k,v=line.split(":",1)
+            headers[k]=v
+
+        self.method=method
+        self.headers=headers
+        self.url="http://"+headers['Host']+url
+
+
+
 
     def __setitem__(self, key, value):
         setattr(self,key,value)
@@ -85,13 +116,18 @@ class HttpResponse(object):
 
         self._json=json.loads(self._body.decode(encoding))
         return self._json
-
+    def search(self,text):
+        self.soup.find_all()
+    def get_all_links(self):
+        for i in self.soup.find_all('a', href=True):
+            yield i
 
     @property
     def soup(self):
         if self._soup is not None:
             return self._soup
         self._soup = BeautifulSoup(self.text, "lxml")
+        setattr(self._soup,"get_all_links",self.get_all_links)
         return self._soup
 
     def __repr__(self):
@@ -110,7 +146,7 @@ class HttpLoader(Node):
     async def init(self):
 
         timeout = aiohttp.ClientTimeout(total=self.timeout)
-        self.session = ClientSession(headers=headers,timeout=timeout, connector=aiohttp.TCPConnector(verify_ssl=False))
+        self.session = ClientSession(headers=default_headers,timeout=timeout, connector=aiohttp.TCPConnector(verify_ssl=False))
 
 
     async def close(self):
