@@ -340,6 +340,7 @@ class Return(Route):
 
             BotFrame.make_bot(q_i, q_o, func)
 
+Line=Return
 
 class Loop(Route):
 
@@ -442,6 +443,7 @@ class SendTo(Route):
         raise Exception("should not be called")
 
 
+Link=SendTo
 
 class Join(Route):
 

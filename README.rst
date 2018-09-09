@@ -175,7 +175,7 @@ Botflow has a few basic concepts to implement Data-driven programming .
    
    * **Timer**: It will send a message in the pipe by timer param. **delay**, **max_time** **until** some finished
    * **HttpLoader**: Get a url and return the HTTP response
-   * **File read/write**: for file I/O.
+   * **AioFile**: for file I/O.
    * **SpeedLimit**: limit the stream speed limit
    * **Delay**: delay in special second.
    * **Zip** : Wait for all branched to finish and merged the result into a tuple.
@@ -187,9 +187,9 @@ Botflow has a few basic concepts to implement Data-driven programming .
         It is a powerful concept.
         There are some pre built-in Route:
     * **Branch** : Duplicate data from parent pipe to a branch.
-    * **Return** : Duplicate data from parent pipe, and return final result to parent pipe.
+    * **Line** : Extend the length of route.
     * **Join** : Duplicate data to many branches, and return result to pipe.
-    * **SendTo**: send stream to any Node.for make loop
+    * **Link**: Route flow to any Node or Route for making loop , circle
 
 
 All units (Pipe, Node, Route) communicate via queues and perform parallel computation in coroutines.
