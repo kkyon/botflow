@@ -93,13 +93,13 @@ class Route(object):
 
     def routeout_in_q(self):
         qs=[]
-        if not isinstance(self.output_q,queue.NullQueue):
+        if not isinstance(self.output_q, queue.SinkQueue):
             qs.append(self.output_q)
 
         return qs
 
     def routein_out_q(self):
-        if self.share and not isinstance(self.outer_oq,queue.NullQueue):
+        if self.share and not isinstance(self.outer_oq, queue.SinkQueue):
             return self.start_q+[self.outer_oq]
         else:
             return self.start_q
@@ -158,7 +158,7 @@ class Route(object):
     async def route_out(self):
 
         # for q in self.output_q:
-        if  isinstance(self.output_q,queue.NullQueue):
+        if  isinstance(self.output_q, queue.SinkQueue):
             return
         r=await self.output_q.get()
         return r

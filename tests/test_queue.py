@@ -28,7 +28,7 @@ async def fa():
     await q.put(Bdata(3,ori1))
 
 
-    o1= asyncio.ensure_future(q.get(ori1))
+    o1= asyncio.ensure_future(q.get_by(ori1))
 
     result=await asyncio.gather(o1)
     assert result[0].data==3

@@ -11,6 +11,7 @@ class QueueManager(object,metaclass=Singleton):
 
     def __init__(self):
         self.q_list=[]
+        self._dev_mode=False
 
 
     def add(self,q):
@@ -28,7 +29,8 @@ class QueueManager(object,metaclass=Singleton):
             else:
                 logger.info("qid :{},type:{}".format(id(q),type(q)))
 
-
+    def dev_mode(self):
+        self._dev_mode=True
 
 class DataQueue(asyncio.Queue):
     def __init__(self,maxsize=None,loop=None):
@@ -330,14 +332,15 @@ class ConditionalQueue:
 
 
 
-class NullQueue(asyncio.Queue):
+class SinkQueue(asyncio.Queue):
 
     # |
     # X
     def __init__(self):
         super().__init__()
         self.last_put = None
-        QueueManager().add(self)
+        self.qm=QueueManager()
+        self.qm.add(self)
         self._maxsize=0
     def empty(self):
         return True
@@ -351,6 +354,18 @@ class NullQueue(asyncio.Queue):
 
     async def put(self, item):
         # do nothing
+        if self.qm._dev_mode==True:
+            if isinstance(item.data,list):
+                max_len=3
+                print("-----Output a list len %d , first %d data:---"%(len(item.data),max_len))
+                for i,v in enumerate(item.data):
+                    if i >max_len:
+                        break
+
+                    print("Sink[%d]: %s"%(i,v))
+            else:
+                print("Sink:",item.data)
+
         item.destroy()
         del self.last_put
         self.last_put = item

@@ -3,11 +3,11 @@ import logging
 from .botframe import BotFrame
 from .config import config
 
-from .queue import DataQueue,NullQueue,CachedQueue,ProxyQueue,ConditionalQueue
+from .queue import DataQueue,SinkQueue,CachedQueue,ProxyQueue,ConditionalQueue,QueueManager
 from botflow.bdata import Bdata,Databoard
 from .botbase import BotManager
 from .routebase import Route
-
+import sys
 # main pipe
 class Pipe(Route):
 
@@ -24,8 +24,8 @@ class Pipe(Route):
         self.start_index = len(self.bm.get_bots())
         self.start_q = q_o
         self.joined = False
-        import sys
-        self.pickle_name = sys.modules['__main__'].__file__ + 'palyback.pk'
+
+
         for idx,func in enumerate(args):
             q_i = q_o
             if idx == len(args)-1:
@@ -74,7 +74,7 @@ class Pipe(Route):
 
 
     def start(self):
-        self.output_q.set_q(NullQueue())
+        self.output_q.set_q(SinkQueue())
         self.start_q.put_nowait(Bdata.make_Bdata_zori(0))
 
 
@@ -101,7 +101,7 @@ class Pipe(Route):
         bm=BotManager()
         bi=bm.get_botinfo_current_task()
         for q in bi.pipeline.all_q:
-            if isinstance(q,NullQueue):
+            if isinstance(q, SinkQueue):
                 continue
             if q.empty() == False:
                 print("id:{}".format(id(q)))
@@ -124,6 +124,7 @@ class Pipe(Route):
     def  save_for_replay(self):
         '''it will save cached data for pay back'''
 
+        self.pickle_name = sys.modules['__main__'].__file__ + 'palyback.pk'
         #1. get output queue of the nearest closed node in main pipe
         #2.save the data
         max_id=-1
@@ -223,7 +224,8 @@ class Pipe(Route):
 
 
 
-
+    def dev_mode(self):
+        QueueManager().dev_mode()
     async def __call__(self, data):
         ori=Bdata.make_Bdata_zori(data)
         await self.start_q.put(Bdata(data,ori))
@@ -298,7 +300,7 @@ class Branch(Route):
                 if self.joined :
                     q_o = self.output_q
                 else:
-                    q_o = NullQueue()
+                    q_o = SinkQueue()
             else:
                 q_o = DataQueue()
 
@@ -390,7 +392,7 @@ class Fork(Route):
         if self.joined:
             q_o = oq
         else:
-            q_o = NullQueue()
+            q_o = SinkQueue()
 
         self.start_q = []
         self.output_q = oq
@@ -484,7 +486,7 @@ class Join(Route):
         if self.joined:
             q_o = oq
         else:
-            q_o = NullQueue()
+            q_o = SinkQueue()
 
         self.start_q = []
         self.output_q = oq

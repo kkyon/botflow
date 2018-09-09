@@ -2,7 +2,7 @@ import asyncio
 from .config import config
 import logging
 from .botbase import BotManager
-from .queue import NullQueue, QueueManager
+from .queue import SinkQueue, QueueManager
 from .base import BotExit
 from aiohttp.web import AppRunner,TCPSite
 from .route import Pipe
@@ -63,7 +63,7 @@ class BotFlow(object):
                     break
 
             for q in all_q:
-                if isinstance(q, NullQueue):
+                if isinstance(q, SinkQueue):
                     continue
                 if q.empty() == False:
                     #print("id:{} size:{}".format(id(q),q.qsize()))
@@ -120,7 +120,10 @@ class BotFlow(object):
 
 
     @classmethod
-    def run(cls):
+    def run(cls,silent=False):
+
+        if not silent :
+            QueueManager().dev_mode()
 
         if config.replay_mode:
             try:

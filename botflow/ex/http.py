@@ -47,7 +47,7 @@ class HttpRequest(object):
 
     def __repr__(self):
 
-        return "url:{},method:{},payload:{}".format(self.url,self.method,self.payload)
+        return "{}(url:{},method:{},payload:{})".format(self.__class__,self.url,self.method,self.payload)
 
 #session tree
 class HttpResponse(object):
@@ -95,7 +95,7 @@ class HttpResponse(object):
         return self._soup
 
     def __repr__(self):
-        return 'httpresponse %s'%(id(self))
+        return '%s(%s)'%(self.__class__,self.text)
 
 class HttpLoader(Node):
 

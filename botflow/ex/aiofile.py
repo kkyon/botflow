@@ -24,7 +24,10 @@ class AioFile(Node):
         await  self.loop.run_in_executor(None, self.fd.close)
 
     async def __call__(self, text):
-        if not isinstance(text,(str,bytes)):
+        if isinstance(text,(list,tuple)):
+            text=",".join(text)
+        elif not isinstance(text,(str,bytes)):
             text=text.__repr__()
         text+="\n"
         await  self.loop.run_in_executor(None, self.fd.write,text)
+        return text

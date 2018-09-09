@@ -6,7 +6,7 @@ from .base import Singleton, list_included
 from .base import copy_size
 from .nodebase import Node
 from .bdata import Bdata
-from .queue import NullQueue
+from .queue import SinkQueue
 import typing, types
 
 logger=logging.getLogger(__name__)
@@ -136,7 +136,7 @@ class BotManager(object, metaclass=Singleton):
         qs = set()
         for b in self._bots:
             for q in b.iq + b.oq:
-                if not isinstance(q, NullQueue):
+                if not isinstance(q, SinkQueue):
                     qs.add(q)
 
         return qs

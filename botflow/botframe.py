@@ -8,7 +8,7 @@ import logging
 from botflow.bdata import Bdata
 from .botbase import BotManager, BotInfo,raw_value_wrap
 from .bot import CallableBot,RouteOutBot,RouteInBot,TimerBot,LoopBot
-from .queue import NullQueue,QueueManager
+from .queue import SinkQueue,QueueManager
 logging.basicConfig(format='%(asctime)s %(name)-12s %(levelname)s:%(message)s', level=logging.INFO)
 from .base import BotExit
 
@@ -20,11 +20,11 @@ def cmp_q_list(aql,bql):
     b=set()
 
     for aq in aql:
-        if not isinstance(aq,NullQueue):
+        if not isinstance(aq, SinkQueue):
             a.add(aq)
 
     for bq in bql:
-        if not isinstance(bq, NullQueue):
+        if not isinstance(bq, SinkQueue):
             b.add(bq)
 
     if len(a) !=len(b):
