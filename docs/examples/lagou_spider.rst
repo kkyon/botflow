@@ -125,7 +125,10 @@ lagou_spider（拉勾职位爬虫）
     #. 还有解析输出的json格式。
 
 
-如果是正常的python代码，我们一般这样写。
+最终版：
+======
+
+如果是正常的python代码，我们一般这样写用来获取全部城市和页面。
 
 .. code-block:: python
 
@@ -133,7 +136,7 @@ lagou_spider（拉勾职位爬虫）
         for page_no in range(1,30):
             print(city,page_no)
 
-多重循环必须要顺序执行（串行），使用Botflow就要消除多重循环，并且可以并发执行。所以
+但多重循环必须要顺序执行（串行），使用Botflow就要消除多重循环，并且可以并发执行。所以
 使用itertools.product来生成所有组合。
 
 
