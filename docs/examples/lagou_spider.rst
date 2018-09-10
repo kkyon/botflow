@@ -165,12 +165,12 @@ lagou_spider（拉勾职位爬虫）
     Bot.run()
 
 以上使用了python lambda ,和f-string 。product产生了所有组合， 在后续lambda表达式中，替换生成响应HTTP请求。
-现在执行以上代码。
-我们已经能取到全部的网页。现在加上解析函数 def parse 和输出到函数的操作就可以完成全部任务：
+
+我们已经能取到全部的网页。现在加上解析函数 def parse() 和输出到函数的操作就可以完成全部任务：
 
 .. code-block:: python
 
-    rom botflow import *
+    from botflow import *
     from botflow import HttpRequest
     from  itertools import product
 
