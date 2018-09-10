@@ -79,6 +79,7 @@ The above two code blocks look like pseudo code, but they are workable samples.
    pipe
    node
    route
+   examples/index
    change/index
 
 .. toctree::

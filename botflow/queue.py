@@ -13,6 +13,8 @@ class QueueManager(object,metaclass=Singleton):
         self.q_list=[]
         self._dev_mode=False
 
+    def reset(self):
+        self.q_list=[]
 
     def add(self,q):
 

@@ -162,6 +162,7 @@ class BotFlow(object):
 
             else:
                 raise e
+        BotFlow.reset()
 
     @classmethod
     def reset(cls):

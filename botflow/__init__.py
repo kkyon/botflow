@@ -9,7 +9,7 @@ from botflow.ex.http import HttpRequest,HttpLoader,HttpResponse,HttpServer,HttpA
 from .config import config
 Bot=BotFlow
 
-__all__ = ["Pipe","Timer","Branch","Join","Zip",
+__all__ = ["Pipe","Timer","Branch","Join","Zip","HttpRequest",
           "HttpLoader", "AioFile", "route",
            "Bdata","HttpServer","BotFlow","SendTo","Bot","Delay","SpeedLimit","Line","Link"]
 

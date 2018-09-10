@@ -34,6 +34,7 @@ class HttpRequest(object):
             self.parse_headers_string(request_headers)
 
         else:
+            self.method = method  # GET or POST
             if headers:
                 self.headers=headers
             else:
@@ -43,7 +44,7 @@ class HttpRequest(object):
 
         self.query={}
         self.payload=payload
-        self.method=method #GET or POST
+
         self.cookies=None
 
 

@@ -189,7 +189,7 @@ Botflow has a few basic concepts to implement Data-driven programming .
     * **Branch** : Duplicate data from parent pipe to a branch.
     * **Line** : Extend the length of route.
     * **Join** : Duplicate data to many branches, and return result to pipe.
-    * **Link**: Route flow to any Node or Route for making loop , circle
+    * **LinkTo**: Route flow to any Node or Route for making loop , circle
 
 
 All units (Pipe, Node, Route) communicate via queues and perform parallel computation in coroutines.

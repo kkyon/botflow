@@ -16,7 +16,3 @@ Pipe(
 )
 
 Bot.run()
-
-
-
-fetch("https://www.lagou.com/jobs/positionAjax.json?px=default&city=%E5%8C%97%E4%BA%AC&needAddtionalResult=false", {"credentials":"include","headers":{},"referrer":"https://www.lagou.com/jobs/list_python?px=default&city=%E5%8C%97%E4%BA%AC","referrerPolicy":"no-referrer-when-downgrade","body":"first=false&pn=2&kd=python","method":"POST","mode":"cors"});
