@@ -166,8 +166,7 @@ Data-driven programming is typically applied to streams of structured data for f
 
 Botflow has a few basic concepts to implement Data-driven programming .
 
-- **Pipe**
-   It is the main stream process of the program. All units will work inside.
+
 - **Node**
         It is callable unit.Any callable function and object can work as Node. It is driven by data. Custom functions work as Nodes.
         There are some built-in nodes:
@@ -186,8 +185,8 @@ Botflow has a few basic concepts to implement Data-driven programming .
         It will be used to create a complex data flow network, not just one main process. Botflow can nest Routes inside Routes.
         It is a powerful concept.
         There are some pre built-in Route:
+    * **Pipe**  It is the main stream process of the program. All units will work inside.
     * **Branch** : Duplicate data from parent pipe to a branch.
-    * **Line** : Extend the length of route.
     * **Join** : Duplicate data to many branches, and return result to pipe.
     * **LinkTo**: Route flow to any Node or Route for making loop , circle
 

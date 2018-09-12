@@ -5,7 +5,7 @@ from .bdata import Bdata
 from .config import config
 import typing,types
 from .botbase import BotBase,BotManager,BotInfo,filter_out
-from .base import BotExit,flatten
+from .base import BotExit,flatten,get_loop
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +70,7 @@ class CallableBot(BotBase):
                 param = bdata.data
 
             if hasattr(func, 'boost_type'):
-                loop = asyncio.get_event_loop()
+                loop = get_loop()
                 result = await loop.run_in_executor(None, func, param)
 
 

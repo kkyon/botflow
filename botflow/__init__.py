@@ -1,4 +1,5 @@
-from .route import Pipe,Timer,Branch,Join,Return,SendTo,Line,Link
+from .route import Timer,Branch,Join,Return,SendTo,Line,Link
+from .pipe import Pipe
 from .node import Node,Zip,Filter,Delay,SpeedLimit
 from  . import route
 from botflow.ex.aiofile import AioFile

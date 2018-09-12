@@ -77,3 +77,9 @@ def flatten(d):
 
 class BotExit(Exception):
     pass
+
+
+_BOT_LOOP=asyncio.new_event_loop()
+
+def get_loop():
+    return _BOT_LOOP

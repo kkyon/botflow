@@ -3,6 +3,7 @@ from aiohttp import ClientSession
 import aiohttp
 import asyncio
 from functools import partial
+from ..base import get_loop
 from botflow.nodebase import Node
 from botflow.routebase import Route
 import json
@@ -303,7 +304,7 @@ class HttpServer(Route):
         self.joined=True
         self.outer_iq=iq
         self.outer_oq=oq
-        self._loop=asyncio.get_event_loop()
+        self._loop=get_loop()
 
         self.start_q=[queue.DataQueue()]
         self.output_q=oq

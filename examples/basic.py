@@ -1,42 +1,28 @@
 
-from botflow.botbase import BotManager
-from botflow.node import Flat
-from botflow.route import Return,Pipe,Loop,Branch,Join
+from botflow import Return,Pipe,Branch,Join
 from botflow import BotFlow,Filter
-from botflow.node import Delay,Zip
-from botflow.config import config
+import logging
+logging.basicConfig(level=logging.DEBUG)
+logger=logging.getLogger('botflow.bot')
+logger.setLevel(logging.DEBUG)
+logger=logging.getLogger('botflow.pipe')
+logger.setLevel(logging.DEBUG)
 
-class A:
-    pass
-class B:
-    pass
-
-class C:
-    pass
-
-def only_a(data):
-    if not isinstance(data,A):
-        raise Exception()
-
-def check_stop(i):
-    if i>10:
-        BotFlow.stop()
-
-    return i
-
-Pipe(
-    Join(
-        "a","b","c"
-
-    ),
-    Zip(n_stream=3),
-    lambda r:'l_'+r,
-    print,
-
-
+p=Pipe(
+        ["a","b","c"],
 )
 
+p1=Pipe(lambda x:x+2)
 
-BotFlow.render("ex_output/test")
-BotFlow.run()
+p3=Pipe(lambda x:x+10,
+        Branch(p,print),
+    p1)
 
+
+
+# BotFrame.make_pipe([p1])
+# BotFlow.debug_print()
+#
+#print(p3(1))
+
+BotFlow.run(p3,p)

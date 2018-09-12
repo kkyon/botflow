@@ -1,6 +1,6 @@
 import asyncio
 from .bdata import Bdata
-from .base import Singleton
+from .base import Singleton,get_loop
 from .config import config
 import logging
 import datetime
@@ -13,13 +13,15 @@ class QueueManager(object,metaclass=Singleton):
         self.q_list=[]
         self._dev_mode=False
 
+
+
     def reset(self):
         self.q_list=[]
 
     def add(self,q):
 
         logger.debug(
-            "QM add qid :{},max size:{}".format(id(q), q.maxsize))
+            "QM add q_{},max size:{}".format(id(q), q.maxsize))
         self.q_list.append(q)
 
     def debug_print(self):
@@ -27,9 +29,9 @@ class QueueManager(object,metaclass=Singleton):
 
         for q in self.q_list:
             if isinstance(q,DataQueue):
-                logger.info("qid :{},max size:{},qsize:{},high water:{},data:{}".format(id(q),q.maxsize,q.qsize(),q.high_water,type(q)))
+                logger.info("q_{},max size:{},qsize:{},high water:{},data:{}".format(id(q),q.maxsize,q.qsize(),q.high_water,type(q)))
             else:
-                logger.info("qid :{},type:{}".format(id(q),type(q)))
+                logger.info("q_{},type:{}".format(id(q),type(q)))
 
     def dev_mode(self):
         self._dev_mode=True
@@ -41,7 +43,7 @@ class DataQueue(asyncio.Queue):
         if maxsize is None:
             maxsize=config.default_queue_max_size
 
-        super().__init__(maxsize=maxsize,loop=None)
+        super().__init__(maxsize=maxsize,loop=get_loop())
         self.qm=QueueManager()
         self.debug = True
         self.high_water = 0
@@ -81,14 +83,14 @@ class DataQueue(asyncio.Queue):
                 end = datetime.datetime.now()
                 s = (end - self.start_time).total_seconds()
                 speed_now = self.put_count / s
-                logger.debug(f"q{id(self)} speed now:{speed_now} {s} {self.put_count}")
+                logger.debug(f"q_{id(self)} speed now:{speed_now} {s} {self.put_count}")
                 if speed_now > (self.speed_limit * 1.1):
                     sleep_time = self.put_count / self.speed_limit - s
-                    logger.debug(f"q{id(self)} need to sleep{sleep_time} ")
-                    logger.debug(f"start q{id(self)} {datetime.datetime.now()}")
+                    logger.debug(f"q_{id(self)} need to sleep{sleep_time} ")
+                    logger.debug(f"start q_{id(self)} {datetime.datetime.now()}")
                     self.start_time = datetime.datetime.now()
                     await asyncio.sleep(sleep_time)
-                    logger.debug(f"end q{id(self)} {datetime.datetime.now()}")
+                    logger.debug(f"end q_{id(self)} {datetime.datetime.now()}")
 
                 else:
                     self.start_time = datetime.datetime.now()
@@ -107,6 +109,13 @@ class DataQueue(asyncio.Queue):
         # if self.put_callback is not None:
              # asyncio.ensure_future(self.put_callback(item))
         return r
+
+    def __repr__(self):
+        return "{}({})".format(self.__class__,id(self))
+
+
+    def __str__(self):
+        return "{}({})".format(self.__class__,id(self))
 
     async def get(self):
 
@@ -150,7 +159,9 @@ class ConditionalQueue:
 
     def __init__(self, maxsize=0, *, loop=None):
 
-        self._loop = asyncio.get_event_loop()
+        self.qm = QueueManager()
+
+        self._loop =get_loop()
 
         self._maxsize = maxsize
 
@@ -162,7 +173,7 @@ class ConditionalQueue:
 #        self._finished = asyncio.Lock.Event(loop=self._loop)
 #        self._finished.set()
         self._init(maxsize)
-        self.qm=QueueManager()
+
         self.debug = True
         self.high_water = 0
         self.qm.add(self)
@@ -339,7 +350,7 @@ class SinkQueue(asyncio.Queue):
     # |
     # X
     def __init__(self):
-        super().__init__()
+        super().__init__(loop=get_loop())
         self.last_put = None
         self.qm=QueueManager()
         self.qm.add(self)
@@ -387,7 +398,7 @@ class CachedQueue(asyncio.Queue):
         self.last_put = None
         self.is_load =False
         self.cache=[]
-        super().__init__(maxsize=128)
+        super().__init__(maxsize=128,loop=get_loop())
         QueueManager().add(self)
 
 

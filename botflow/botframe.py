@@ -8,9 +8,9 @@ import logging
 from botflow.bdata import Bdata
 from .botbase import BotManager, BotInfo,raw_value_wrap
 from .bot import CallableBot,RouteOutBot,RouteInBot,TimerBot,LoopBot
-from .queue import SinkQueue,QueueManager
+from .queue import SinkQueue,QueueManager,DataQueue
 logging.basicConfig(format='%(asctime)s %(name)-12s %(levelname)s:%(message)s', level=logging.INFO)
-from .base import BotExit
+from .base import BotExit,get_loop
 
 
 
@@ -38,7 +38,7 @@ def cmp_q_list(aql,bql):
 
 from concurrent import futures
 executor = futures.ThreadPoolExecutor(max_workers=10)
-asyncio.get_event_loop().set_default_executor(executor)
+get_loop().set_default_executor(executor)
 
 class BotFrame(object):
 
@@ -76,6 +76,14 @@ class BotFrame(object):
         bi.func = func
 
         BotManager().add_bot(bi)
+
+    @classmethod
+    def make_pipe(cls,pipes):
+
+        for p in pipes:
+            sq=DataQueue()
+            eq=SinkQueue()
+            p.make_route_bot(sq,eq)
 
     @classmethod
     def make_bot(cls, i, o, f):

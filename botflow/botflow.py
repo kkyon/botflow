@@ -2,10 +2,12 @@ import asyncio
 from .config import config
 import logging
 from .botbase import BotManager
-from .queue import SinkQueue, QueueManager
-from .base import BotExit
+from .queue import SinkQueue, QueueManager,DataQueue,ConditionalQueue
+from .base import BotExit,get_loop
 from aiohttp.web import AppRunner,TCPSite
-from .route import Pipe
+from .pipe import Pipe
+from .botframe import BotFrame
+from .bdata import Bdata
 
 logger = logging.getLogger(__name__)
 class BotFlow(object):
@@ -43,6 +45,7 @@ class BotFlow(object):
             for get in q._getters:
                 get.set_exception(BotExit("Bot exit now"))
         cls.stopped=True
+        bm.loop.stop()
 
     @classmethod
     async def check_stop(cls):
@@ -91,15 +94,14 @@ class BotFlow(object):
 
     @classmethod
     def start(cls):
-        bot_nodes = []
-        bots = BotManager().get_bots()
-        for b in bots:
-            # if not b.stoped:
-            if b.main_coro is not None:
-                task = asyncio.ensure_future(b.main_coro)
-                b.main_task = task
-                bot_nodes.append(task)
-        return bot_nodes
+        tasks = []
+        pipes = BotManager().get_pipes()
+        for p in pipes:
+            start_q=DataQueue()
+            end_q=ConditionalQueue()
+            tasks.append(p._make_and_start(start_q,end_q))
+
+        return tasks
 
 
     @classmethod
@@ -115,13 +117,17 @@ class BotFlow(object):
 
         f = asyncio.gather(*bot_nodes)
 
-        asyncio.get_event_loop().run_until_complete(f)
+        get_loop().run_until_complete(f)
 
 
 
     @classmethod
-    def run(cls,silent=False):
+    def run(cls,*pipes,silent=False,render=None):
 
+
+        bm=BotManager()
+        if render is not None:
+            cls.render(render)
         if not silent :
             QueueManager().dev_mode()
 
@@ -131,28 +137,21 @@ class BotFlow(object):
             except:
                 raise
 
-        bot_nodes=cls.start()
-        bm = BotManager()
-
-
-
-
-
-
-        if len(bot_nodes) != len(set(bot_nodes)):
-            raise Exception("")
-
         try:
 
-            for p in bm.get_pipes():
-                p.start()
+            tasks=[]
+            if pipes is None:
+                pipes=bm.get_pipes()
+            for p in pipes:
+                start_q=DataQueue()
+                end_q  =SinkQueue()
+                bdata=Bdata.make_Bdata_zori(0)
+                task=get_loop().create_task(p._true_run(start_q,end_q,bdata))
+                tasks.append(task)
 
-            if not config.never_stop :
-                pipe_loop = asyncio.ensure_future(cls.check_stop())
-                bot_nodes.append(pipe_loop)
-            f = asyncio.gather(*bot_nodes)
+            f = asyncio.gather(*tasks)
 
-            asyncio.get_event_loop().run_until_complete(f)
+            get_loop().run_until_complete(f)
 
 
         except Exception as e:
@@ -162,7 +161,8 @@ class BotFlow(object):
 
             else:
                 raise e
-        BotFlow.reset()
+        finally:
+            BotFlow.reset()
 
     @classmethod
     def reset(cls):

@@ -1,7 +1,7 @@
 from botflow.node import Node
 from functools import partial
 import asyncio
-
+from ..botflow import BotManager
 class AioFile(Node):
 
     async def open(self,filename,mode='w'):
@@ -15,7 +15,9 @@ class AioFile(Node):
         self.filename=fileame
         self.mode=mode
         self.fd=None
-        self.loop=asyncio.get_event_loop()
+        self.bm=BotManager()
+        self.loop=self.bm.loop
+
         super().__init__()
 
     async def init(self):

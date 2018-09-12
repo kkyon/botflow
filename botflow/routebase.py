@@ -66,6 +66,7 @@ class Route(object):
 
     def __init__(self, *args, route_type=object,route_func=None, share=True, join=False):
 
+        self.name=str(self.__class__)
         self.in_table = RouteTable()
         self.out_table = RouteTable()
         self.args = args
