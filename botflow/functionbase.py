@@ -8,7 +8,7 @@ class dotdict(dict):
 
 
 
-class Node(CountRef):
+class Function(CountRef):
     boost_by_thread=1
     boost_by_process=2
     #boost_by_cluster=3

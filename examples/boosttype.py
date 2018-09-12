@@ -5,7 +5,7 @@ from botflow.config import config
 config.default_queue_max_size=0
 
 logging.debug(config)
-from botflow import Pipe, Fork,Timer,Branch
+from botflow import Pipe,Timer,Branch
 from botflow import BotFlow
 from botflow.node import Node
 import time

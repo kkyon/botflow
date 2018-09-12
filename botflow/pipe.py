@@ -12,7 +12,113 @@ from .base import BotExit
 import sys
 import logging
 logger=logging.getLogger(__name__)
-class Pipe(Route):
+
+
+class Runnable(object):
+    def stop(self, force=False):
+        bm = BotManager()
+
+        for bot in bm.get_bots_bypipe(self):
+            bot.stoped = True
+
+        for q in self.all_q:
+            for get in q._getters:
+                get.set_exception(BotExit("Bot exit now"))
+
+    async def check_stop(self):
+
+        all_q = self.all_q
+
+        while True:
+
+            # await  config.main_lock.acquire()
+            stop = True
+            if logger.level == logging.DEBUG:
+                QueueManager().debug_print()
+            # QueueManager().debug_print()
+            for bot in self.bm.get_bots_bypipe(self):
+                if len(bot.sub_task) != 0:
+                    logger.debug("bot id :{} sub task len:{} sopt to close".format(id(bot), len(bot.sub_task)))
+                    stop = False
+                    break
+
+            for q in all_q:
+                if isinstance(q, SinkQueue) or self.output_q == q:
+                    continue
+                if q.empty() == False:
+                    # print("id:{} size:{}".format(id(q),q.qsize()))
+                    logger.debug("id:{} size:{} stop to close".format(id(q), q.qsize()))
+                    stop = False
+                    break
+
+            if stop and config.check_stoping:
+                break
+
+            await asyncio.sleep(2)
+
+        logging.info("pipe_{} ready to exit".format(id(self)))
+        self.stop()
+
+
+
+    def get_start_q(self):
+        return self.start_q[0]
+
+    async def run_async(self, data):
+
+        ori = Bdata.make_Bdata_zori(data)
+        await self.get_start_q().put(Bdata(data, ori))
+        r = await self.output_q.get_by(ori)
+        self.output_q.clean(ori)
+        if isinstance(r.data, list):
+            for i, v in enumerate(r.data):
+                if isinstance(v, Exception):
+                    r.data[i] = None
+        return r.data
+
+
+    def _start(self):
+
+
+        bots = BotManager().get_bots_bypipe(self)
+        tasks = []
+        for b in bots:
+            # if not b.stoped:
+            if b.main_coro is not None:
+                task = self.bm.loop.create_task(b.main_coro)
+                b.main_task = task
+                tasks.append(task)
+
+        return tasks
+    def _make(self,start_q,end_q):
+
+        self.make_route_bot(start_q, end_q)
+
+    async def _true_run(self,  bdata):
+
+
+        await self.get_start_q().put(bdata)
+        await self.check_stop()
+
+    def run(self, data):
+
+        start_q = DataQueue()
+        end_q = DataQueue()
+        bdata = Bdata.make_Bdata_zori(data)
+        self._make(start_q,end_q)
+        self._start()
+        self.bm.loop.run_until_complete(self._true_run(bdata))
+        result = []
+        while True:
+            try:
+                r = self.output_q.get_nowait()
+                result.append(r.data)
+            except:
+                break
+        self.bm.loop.stop()
+        return result
+
+class Pipe(Runnable,Route):
 
     # |
     # |
@@ -32,6 +138,7 @@ class Pipe(Route):
         self.joined = False
         self.args=args
         self.bots=[]
+        BotManager().add_pipes(self)
 
 
     def make_route_bot(self,iq,oq):
@@ -78,7 +185,7 @@ class Pipe(Route):
 
         self.bm.make_bot_flowgraph(self)
 
-        BotManager().add_pipes(self)
+
 
 
 
@@ -87,7 +194,7 @@ class Pipe(Route):
     async def aiohttp_json_handle(self,request):
 
         from aiohttp import web
-        r = await self(request)
+        r = await self.run_async(request)
         return web.json_response(r)
 
 
@@ -236,115 +343,7 @@ class Pipe(Route):
         return self.run(data)
 
 
-    def stop(self,force=False):
-        bm = BotManager()
 
-        for bot in bm.get_bots_bypipe(self):
-            bot.stoped = True
-
-        for q in self.all_q:
-            for get in q._getters:
-                get.set_exception(BotExit("Bot exit now"))
-
-
-
-    async def check_stop(self):
-
-        all_q = self.all_q
-
-        while True:
-
-            # await  config.main_lock.acquire()
-            stop=True
-            if logger.level == logging.DEBUG:
-                QueueManager().debug_print()
-            #QueueManager().debug_print()
-            for bot in self.bm.get_bots_bypipe(self):
-                if len(bot.sub_task) != 0:
-                    logger.debug("bot id :{} sub task len:{} sopt to close".format(id(bot),len(bot.sub_task)))
-                    stop = False
-                    break
-
-            for q in all_q:
-                if isinstance(q, SinkQueue) or self.output_q == q:
-                    continue
-                if q.empty() == False:
-                    #print("id:{} size:{}".format(id(q),q.qsize()))
-                    logger.debug("id:{} size:{} stop to close".format(id(q),q.qsize()))
-                    stop = False
-                    break
-
-            if stop and config.check_stoping :
-                break
-
-            await asyncio.sleep(2)
-
-        logging.info("pipe_{} ready to exit".format(id(self)))
-        self.stop()
-
-    def start(self):
-            #        self.output_q.set_q(SinkQueue())
-            self.start_q[0].put_nowait(Bdata.make_Bdata_zori(0))
-
-    async def run_async(self,data):
-
-        ori = Bdata.make_Bdata_zori(data)
-        await self.start_q.put(Bdata(data, ori))
-        r = await self.output_q.get_by(ori)
-        self.output_q.clean(ori)
-        if isinstance(r.data, list):
-            for i, v in enumerate(r.data):
-                if isinstance(v, Exception):
-                    r.data[i] = None
-        return r.data
-
-
-
-    def _make_and_start(self,start_q,end_q):
-        self.make_route_bot(start_q,end_q)
-
-        bots = BotManager().get_bots_bypipe(self)
-        bot_nodes = []
-        for b in bots:
-            # if not b.stoped:
-            if b.main_coro is not None:
-                task = self.bm.loop.create_task(b.main_coro)
-                b.main_task = task
-                bot_nodes.append(task)
-
-
-
-
-
-    async def _true_run(self,start_q,end_q,bdata):
-
-        self._make_and_start(start_q,end_q)
-
-        await start_q.put(bdata)
-        await self.check_stop()
-
-
-
-
-
-
-
-
-    def run(self,data):
-
-        start_q=DataQueue()
-        end_q=DataQueue()
-        bdata=Bdata.make_Bdata_zori(data)
-        self.bm.loop.run_until_complete(self._true_run(start_q,end_q,bdata))
-        result=[]
-        while True:
-            try:
-                r=self.output_q.get_nowait()
-                result.append(r.data)
-            except:
-                break
-        self.bm.loop.stop()
-        return result
 
     def __repr__(self):
         return 'Pip_' + str(id(self))

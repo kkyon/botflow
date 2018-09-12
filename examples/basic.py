@@ -24,5 +24,5 @@ p3=Pipe(lambda x:x+10,
 # BotFlow.debug_print()
 #
 #print(p3(1))
-
+BotFlow.render("ex_output/basic")
 BotFlow.run(p3,p)

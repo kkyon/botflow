@@ -1,4 +1,7 @@
+import logging
+logging.basicConfig(level=logging.DEBUG)
 from botflow import *
+
 from aiohttp import web
 
 

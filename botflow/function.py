@@ -1,7 +1,7 @@
-from .nodebase import Node
+from .functionbase import Function
 from .botframe import BotFrame
 from .bdata import Bdata
-from .base import flatten
+from .base import flatten,get_loop
 import asyncio
 
 import datetime
@@ -10,7 +10,7 @@ import datetime
 
 import typing
 
-class Flat(Node):
+class Flat(Function):
 
     def __init__(self,level=0):
         super().__init__()
@@ -61,7 +61,7 @@ class Flat(Node):
 #         await q.put(message)
 
 
-class Zip(Node):
+class Zip(Function):
     def __init__(self,n_stream=0):
         if  n_stream == 0:
             raise Exception('for Zip node ,need to set join_ref or n_stream')
@@ -88,7 +88,7 @@ class Zip(Node):
 
 
 
-class Filter(Node):
+class Filter(Function):
 
 
     def __init__(self, filter_types=None,filter_func=None):
@@ -114,11 +114,11 @@ class Filter(Node):
             return data
 
 
-class Delay(Node):
+class Delay(Function):
     def __init__(self,delay_time=1):
         super().__init__()
         self.delay_time=delay_time
-        self.lock=asyncio.Lock()
+        self.lock=asyncio.Lock(loop=get_loop())
 
     async def __call__(self,data):
         await self.lock.acquire()
@@ -126,7 +126,7 @@ class Delay(Node):
         self.lock.release()
         return data
 
-class SpeedLimit(Node):
+class SpeedLimit(Function):
     def __init__(self,speed):
         super().__init__()
         self.processed_count=0

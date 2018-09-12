@@ -1,6 +1,6 @@
 import asyncio
 from . import route
-import botflow.nodebase as node
+import botflow.functionbase as function
 import typing
 import types
 from .config import config

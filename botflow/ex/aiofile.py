@@ -1,8 +1,8 @@
-from botflow.node import Node
+from botflow.function import Function
 from functools import partial
 import asyncio
 from ..botflow import BotManager
-class AioFile(Node):
+class AioFile(Function):
 
     async def open(self,filename,mode='w'):
 

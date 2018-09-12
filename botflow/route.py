@@ -238,7 +238,7 @@ class Join(Route):
 
     async def route_in(self,bdata):
         if self.merge_node is None:
-            if bdata.ori ==0:
+            if bdata.ori.ori ==0:
                 new_data=Bdata(bdata.data, bdata)
                 await super().route_in(new_data)
             else:

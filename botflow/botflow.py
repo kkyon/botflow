@@ -3,23 +3,31 @@ from .config import config
 import logging
 from .botbase import BotManager
 from .queue import SinkQueue, QueueManager,DataQueue,ConditionalQueue
-from .base import BotExit,get_loop
+from .base import BotExit,get_loop,_BOT_LOOP
 from aiohttp.web import AppRunner,TCPSite
 from .pipe import Pipe
 from .botframe import BotFrame
 from .bdata import Bdata
 
 logger = logging.getLogger(__name__)
+class MyEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
+
+    def get_event_loop(self):
+        # Do something with loop ...
+        return _BOT_LOOP
+
 class BotFlow(object):
 
 
 
+    started=False
     @classmethod
     def render(cls, filename):
         from graphviz import Digraph
         f = Digraph(comment=__file__, format='png')
         f.attr('node', shape='circle')
-
+        cls.start()
+        cls.started=True
         bots = BotManager().get_bots()
         for idx, b in enumerate(bots):
             name = str(b.func).replace('>', '').replace('<', '')
@@ -34,53 +42,7 @@ class BotFlow(object):
 
         f.render(filename, view=True)
 
-    @classmethod
-    def stop(cls,force=False):
-        bm = BotManager()
-        all_q = bm.get_all_q()
-        for bot in bm.get_bots():
-            bot.stoped = True
 
-        for q in all_q:
-            for get in q._getters:
-                get.set_exception(BotExit("Bot exit now"))
-        cls.stopped=True
-        bm.loop.stop()
-
-    @classmethod
-    async def check_stop(cls):
-        bm = BotManager()
-        all_q = bm.get_all_q()
-
-        while True:
-
-            # await  config.main_lock.acquire()
-            stop=True
-            if logger.level == logging.DEBUG:
-                QueueManager().debug_print()
-            #QueueManager().debug_print()
-            for bot in bm.get_bots():
-                if len(bot.sub_task) != 0:
-                    logger.debug("bot id :{} sub task len:{} sopt to close".format(id(bot),len(bot.sub_task)))
-                    stop = False
-                    break
-
-            for q in all_q:
-                if isinstance(q, SinkQueue):
-                    continue
-                if q.empty() == False:
-                    #print("id:{} size:{}".format(id(q),q.qsize()))
-                    logger.debug("id:{} size:{} stop to close".format(id(q),q.qsize()))
-                    stop = False
-                    break
-
-            if stop and config.check_stoping :
-                break
-
-            await asyncio.sleep(2)
-
-        logging.info("ready to exit")
-        cls.stop()
 
     @classmethod
     async def run_web_app(cls,app,host,port):
@@ -94,30 +56,32 @@ class BotFlow(object):
 
     @classmethod
     def start(cls):
-        tasks = []
+        if cls.started:
+            return
         pipes = BotManager().get_pipes()
         for p in pipes:
             start_q=DataQueue()
             end_q=ConditionalQueue()
-            tasks.append(p._make_and_start(start_q,end_q))
+            p._make(start_q,end_q)
+            p._start()
 
-        return tasks
+
 
 
     @classmethod
     def run_app(cls,app,host='0.0.0.0', port=8080):
 
+        asyncio.set_event_loop_policy(MyEventLoopPolicy())
         print(f"BotFlow start web server http://{host}:{port}")
         config.never_stop = True
 
-        bot_nodes=cls.start()
+        cls.start()
 
-        app_task = asyncio.ensure_future(cls.run_web_app(app,host,port))
-        bot_nodes.append(app_task)
+        asyncio.ensure_future(cls.run_web_app(app,host,port))
 
-        f = asyncio.gather(*bot_nodes)
 
-        get_loop().run_until_complete(f)
+
+        get_loop().run_forever()
 
 
 
@@ -126,6 +90,7 @@ class BotFlow(object):
 
 
         bm=BotManager()
+        loop=get_loop()
         if render is not None:
             cls.render(render)
         if not silent :
@@ -140,16 +105,18 @@ class BotFlow(object):
         try:
 
             tasks=[]
-            if pipes is None:
+            if len(pipes) == 0:
                 pipes=bm.get_pipes()
             for p in pipes:
                 start_q=DataQueue()
                 end_q  =SinkQueue()
+                p._make(start_q,end_q)
+                p._start()
                 bdata=Bdata.make_Bdata_zori(0)
-                task=get_loop().create_task(p._true_run(start_q,end_q,bdata))
+                task=get_loop().create_task(p._true_run(bdata))
                 tasks.append(task)
 
-            f = asyncio.gather(*tasks)
+            f = asyncio.gather(*tasks,loop=loop)
 
             get_loop().run_until_complete(f)
 

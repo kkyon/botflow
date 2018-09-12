@@ -4,7 +4,7 @@ import logging
 from .base import Singleton, list_included,get_loop
 
 from .base import copy_size
-from .nodebase import Node
+from .functionbase import Function
 from .bdata import Bdata
 from .queue import SinkQueue
 import typing, types

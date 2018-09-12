@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from .nodebase import Node
+from .functionbase import Function
 from .bdata import Bdata
 from .config import config
 import typing,types
@@ -33,7 +33,7 @@ class CallableBot(BotBase):
 
     async def pre_hook(self):
 
-        if isinstance(self.func, Node):
+        if isinstance(self.func, Function):
             await self.func.node_init()
 
             self.raw_bdata = self.func.raw_bdata
@@ -42,7 +42,7 @@ class CallableBot(BotBase):
             self.raw_bdata = False
 
     async def post_hook(self):
-        if isinstance(self.func, Node):
+        if isinstance(self.func, Function):
             await self.func.node_close()
 
     async def sync_to_async(self, f, data):
@@ -64,7 +64,7 @@ class CallableBot(BotBase):
 
         try:
 
-            if isinstance(func, Node) and func.raw_bdata:
+            if isinstance(func, Function) and func.raw_bdata:
                 param = bdata
             else:
                 param = bdata.data
@@ -153,7 +153,7 @@ class CallableBot(BotBase):
                 coro = self.append_q(self.merge_list,self.func, bdata, self.output_q)
 
             return coro
-        elif isinstance(bdata.data,Exception):
+        elif config.exception_policy != config.Exception_pipein and isinstance(bdata.data,Exception):
             return  self.output_q.put(bdata)
 
 

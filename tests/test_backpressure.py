@@ -1,5 +1,5 @@
 from botflow import *
-from botflow.node import SpeedLimit
+from botflow.function import SpeedLimit
 from botflow.config import config
 import logging
 logger=logging.getLogger("botflow.queue")
