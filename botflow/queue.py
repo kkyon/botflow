@@ -1,6 +1,6 @@
 import asyncio
 from .bdata import Bdata
-from .base import Singleton
+from .base import Singleton,get_loop
 from .config import config
 import logging
 import datetime
@@ -13,13 +13,15 @@ class QueueManager(object,metaclass=Singleton):
         self.q_list=[]
         self._dev_mode=False
 
+
+
     def reset(self):
         self.q_list=[]
 
     def add(self,q):
 
         logger.debug(
-            "QM add qid :{},max size:{}".format(id(q), q.maxsize))
+            "QM add q_{},max size:{}".format(id(q), q.maxsize))
         self.q_list.append(q)
 
     def debug_print(self):
@@ -27,9 +29,9 @@ class QueueManager(object,metaclass=Singleton):
 
         for q in self.q_list:
             if isinstance(q,DataQueue):
-                logger.info("qid :{},max size:{},qsize:{},high water:{},data:{}".format(id(q),q.maxsize,q.qsize(),q.high_water,type(q)))
+                logger.info("q_{},max size:{},qsize:{},high water:{},data:{}".format(id(q),q.maxsize,q.qsize(),q.high_water,type(q)))
             else:
-                logger.info("qid :{},type:{}".format(id(q),type(q)))
+                logger.info("q_{},type:{}".format(id(q),type(q)))
 
     def dev_mode(self):
         self._dev_mode=True
@@ -41,7 +43,7 @@ class DataQueue(asyncio.Queue):
         if maxsize is None:
             maxsize=config.default_queue_max_size
 
-        super().__init__(maxsize=maxsize,loop=None)
+        super().__init__(maxsize=maxsize,loop=get_loop())
         self.qm=QueueManager()
         self.debug = True
         self.high_water = 0
@@ -81,14 +83,14 @@ class DataQueue(asyncio.Queue):
                 end = datetime.datetime.now()
                 s = (end - self.start_time).total_seconds()
                 speed_now = self.put_count / s
-                logger.debug(f"q{id(self)} speed now:{speed_now} {s} {self.put_count}")
+                logger.debug(f"q_{id(self)} speed now:{speed_now} {s} {self.put_count}")
                 if speed_now > (self.speed_limit * 1.1):
                     sleep_time = self.put_count / self.speed_limit - s
-                    logger.debug(f"q{id(self)} need to sleep{sleep_time} ")
-                    logger.debug(f"start q{id(self)} {datetime.datetime.now()}")
+                    logger.debug(f"q_{id(self)} need to sleep{sleep_time} ")
+                    logger.debug(f"start q_{id(self)} {datetime.datetime.now()}")
                     self.start_time = datetime.datetime.now()
                     await asyncio.sleep(sleep_time)
-                    logger.debug(f"end q{id(self)} {datetime.datetime.now()}")
+                    logger.debug(f"end q_{id(self)} {datetime.datetime.now()}")
 
                 else:
                     self.start_time = datetime.datetime.now()
@@ -107,6 +109,13 @@ class DataQueue(asyncio.Queue):
         # if self.put_callback is not None:
              # asyncio.ensure_future(self.put_callback(item))
         return r
+
+    def __repr__(self):
+        return "{}({})".format(self.__class__,id(self))
+
+
+    def __str__(self):
+        return "{}({})".format(self.__class__,id(self))
 
     async def get(self):
 
@@ -150,37 +159,45 @@ class ConditionalQueue:
 
     def __init__(self, maxsize=0, *, loop=None):
 
-        self._loop = asyncio.get_event_loop()
+        self.qm = QueueManager()
+
+        self._loop =get_loop()
 
         self._maxsize = maxsize
 
         # Futures.
-        self._getters = {} #collections.deque()
+        self._inernel_getters = {} #collections.deque()
         # Futures.
         self._putters = collections.deque()
 #        self._unfinished_tasks = 0
 #        self._finished = asyncio.Lock.Event(loop=self._loop)
 #        self._finished.set()
         self._init(maxsize)
-        self.qm=QueueManager()
+
         self.debug = True
         self.high_water = 0
         self.qm.add(self)
         self.put_count=0
 
     # These three are overridable in subclasses.
+    @property
+    def _getters(self):
+        r=[]
+        for k,v in self._inernel_getters.items():
+            r.extend(v)
+        return r
 
     def _init(self, maxsize):
         self._queue = {} #collections.deque()
     def _init_dict(self,ori):
-        if ori not in self._getters:
-            self._getters[ori]=collections.deque()
+        if ori not in self._inernel_getters:
+            self._inernel_getters[ori]=collections.deque()
 
         if ori not in self._queue:
             self._queue[ori]=collections.deque()
 
     def clean(self,ori):
-        del self._getters[ori]
+        del self._inernel_getters[ori]
         del self._queue[ori]
 
 
@@ -214,8 +231,8 @@ class ConditionalQueue:
         result = 'maxsize={!r}'.format(self._maxsize)
         if getattr(self, '_queue', None):
             result += ' _queue={!r}'.format(list(self._queue))
-        if self._getters:
-            result += ' _getters[{}]'.format(len(self._getters))
+        if self._inernel_getters:
+            result += ' _getters[{}]'.format(len(self._inernel_getters))
         if self._putters:
             result += ' _putters[{}]'.format(len(self._putters))
         if self._unfinished_tasks:
@@ -234,9 +251,15 @@ class ConditionalQueue:
         """Number of items allowed in the queue."""
         return self._maxsize
 
-    def empty(self,ori):
+    def empty(self,ori=None):
         """Return True if the queue is empty, False otherwise."""
-        return not self._queue[ori]
+        if ori:
+            return not self._queue[ori]
+        else:
+            for k,v in self._queue.items():
+                if len(v) >0:
+                    return False
+            return True
 
     def full(self):
         """Return True if there are maxsize items in the queue.
@@ -283,27 +306,27 @@ class ConditionalQueue:
         self._put(item)
         # self._unfinished_tasks += 1
         # self._finished.clear()
-        self._wakeup_next(self._getters[item.ori])
+        self._wakeup_next(self._inernel_getters[item.ori])
 
     async def readable(self,ori):
 
         while self.empty(ori):
             getter = self._loop.create_future()
-            self._getters[ori].append(getter)
+            self._inernel_getters[ori].append(getter)
             try:
                 await getter
             except:
                 getter.cancel()  # Just in case getter is not done yet.
 
                 try:
-                    self._getters[ori].remove(getter)
+                    self._inernel_getters[ori].remove(getter)
                 except ValueError:
                     pass
 
                 if not self.empty(ori) and not getter.cancelled():
                     # We were woken up by put_nowait(), but can't take
                     # the call.  Wake up the next in line.
-                    self._wakeup_next(self._getters[ori])
+                    self._wakeup_next(self._inernel_getters[ori])
                 raise
 
 
@@ -339,7 +362,7 @@ class SinkQueue(asyncio.Queue):
     # |
     # X
     def __init__(self):
-        super().__init__()
+        super().__init__(loop=get_loop())
         self.last_put = None
         self.qm=QueueManager()
         self.qm.add(self)
@@ -387,7 +410,7 @@ class CachedQueue(asyncio.Queue):
         self.last_put = None
         self.is_load =False
         self.cache=[]
-        super().__init__(maxsize=128)
+        super().__init__(maxsize=128,loop=get_loop())
         QueueManager().add(self)
 
 

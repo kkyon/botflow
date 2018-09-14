@@ -1,4 +1,4 @@
-from .base import CountRef,Singleton
+from .base import CountRef,Singleton,get_loop
 
 import asyncio
 import logging
@@ -133,7 +133,7 @@ class Databoard(object,metaclass=Singleton):
         if ori == 0:
             raise Exception("can't wait for 0 input")
             return
-        future = asyncio.get_event_loop().create_future()
+        future = get_loop().create_future()
         future.add_done_callback(callback)
         self._futures[ori] = future
         return future
@@ -142,7 +142,7 @@ class Databoard(object,metaclass=Singleton):
         if ori == 0 or ori in self._futures:
             raise Exception("can't wait for 0 input")
             return
-        future = asyncio.get_event_loop().create_future()
+        future = get_loop().create_future()
         self._futures[ori] = future
 
         return await future

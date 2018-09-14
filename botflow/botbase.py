@@ -1,10 +1,10 @@
 import asyncio
 from .config import config
 import logging
-from .base import Singleton, list_included
+from .base import Singleton, list_included,get_loop
 
 from .base import copy_size
-from .nodebase import Node
+from .functionbase import Function
 from .bdata import Bdata
 from .queue import SinkQueue
 import typing, types
@@ -57,6 +57,8 @@ class BotManager(object, metaclass=Singleton):
         self._bots = []
         self._pipes = set()
         self.bot_id = 0
+        self.loop=get_loop()
+
 
     def rest(self):
         self._bots = []
@@ -85,6 +87,12 @@ class BotManager(object, metaclass=Singleton):
     def new_bot_id(self):
         self.bot_id += 1
         return self.bot_id
+    def remove_by_pipe(self,pipe):
+
+        self._bots = [ b for b  in self._bots if b.pipeline != pipe ]
+
+
+
 
     def add_pipes(self, pipe):
         self._pipes.add(pipe)
@@ -226,7 +234,7 @@ async def call_wrap(func, bdata, iq, oq, raw_bdata=False):
     ori = bdata.ori
 
     if hasattr(func, 'boost_type'):
-        loop = asyncio.get_event_loop()
+        loop = get_loop()
         r_or_c = await loop.run_in_executor(None, func, param)
 
     else:
@@ -355,6 +363,7 @@ class BotBase(object):
                 #         self.lock.release()
 
             except BotExit:
+                logger.debug("bot_{} exit".format(id(self)))
                 break
             except:
                 raise

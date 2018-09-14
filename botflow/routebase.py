@@ -1,7 +1,7 @@
 import botflow.queue  as queue
 import typing
 from .bdata import Databoard
-
+from .base import get_loop
 
 class RouteRule(object):
     __slots__ = ['output_q', 'type_list', 'share']
@@ -10,6 +10,7 @@ class RouteRule(object):
         self.output_q = output_q
         self.type_list = types_list
         self.share = share
+        self.loop=get_loop()
 
     def is_match(self, o):
         for t in self.type_list:
@@ -66,6 +67,7 @@ class Route(object):
 
     def __init__(self, *args, route_type=object,route_func=None, share=True, join=False):
 
+        self.name=str(self.__class__)
         self.in_table = RouteTable()
         self.out_table = RouteTable()
         self.args = args
@@ -75,7 +77,7 @@ class Route(object):
         self.joined = join
         self.outer_iq=None
         self.outer_oq=None
-
+        self.loop=get_loop()
         self.start_q=None
         self.output_q=None
         self.route_func=route_func
@@ -93,7 +95,13 @@ class Route(object):
 
     def routeout_in_q(self):
         qs=[]
-        if not isinstance(self.output_q, queue.SinkQueue):
+        if isinstance(self.output_q,list):
+            for q in self.output_q:
+                if isinstance(self.output_q, queue.SinkQueue):
+                    continue
+                qs.append(q)
+
+        elif not isinstance(self.output_q, queue.SinkQueue):
             qs.append(self.output_q)
 
         return qs

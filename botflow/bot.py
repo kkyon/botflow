@@ -1,11 +1,12 @@
 import asyncio
 import logging
-from .nodebase import Node
+from .functionbase import Function
+from . import function
 from .bdata import Bdata
 from .config import config
 import typing,types
 from .botbase import BotBase,BotManager,BotInfo,filter_out
-from .base import BotExit,flatten
+from .base import BotExit,flatten,get_loop
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +34,7 @@ class CallableBot(BotBase):
 
     async def pre_hook(self):
 
-        if isinstance(self.func, Node):
+        if isinstance(self.func, Function):
             await self.func.node_init()
 
             self.raw_bdata = self.func.raw_bdata
@@ -42,7 +43,7 @@ class CallableBot(BotBase):
             self.raw_bdata = False
 
     async def post_hook(self):
-        if isinstance(self.func, Node):
+        if isinstance(self.func, Function):
             await self.func.node_close()
 
     async def sync_to_async(self, f, data):
@@ -64,13 +65,13 @@ class CallableBot(BotBase):
 
         try:
 
-            if isinstance(func, Node) and func.raw_bdata:
+            if isinstance(func, Function) and func.raw_bdata:
                 param = bdata
             else:
                 param = bdata.data
 
             if hasattr(func, 'boost_type'):
-                loop = asyncio.get_event_loop()
+                loop = get_loop()
                 result = await loop.run_in_executor(None, func, param)
 
 
@@ -121,7 +122,10 @@ class CallableBot(BotBase):
                     all_none=False
             if all_none == False:
                 self.produced_count += 1
-                await q.put(Bdata(r, bdata.ori))
+                if len(r) ==1:
+                    await q.put(Bdata(r[0], bdata.ori))
+                else:
+                    await q.put(Bdata(r, bdata.ori))
 
         elif isinstance(r,typing.Generator):
             for i in r:
@@ -129,7 +133,9 @@ class CallableBot(BotBase):
                 await q.put(Bdata(i, bdata.ori))
 
         else:
-            if r is not None :
+            #None only can ignore when Filter Node.
+
+            if r is not None or (bdata.ori.data!=0  and not isinstance(func,function.Filter)):
                 self.produced_count += 1
                 await q.put(Bdata(r,bdata.ori))
 
@@ -153,7 +159,7 @@ class CallableBot(BotBase):
                 coro = self.append_q(self.merge_list,self.func, bdata, self.output_q)
 
             return coro
-        elif isinstance(bdata.data,Exception):
+        elif config.exception_policy != config.Exception_pipein and isinstance(bdata.data,Exception):
             return  self.output_q.put(bdata)
 
 

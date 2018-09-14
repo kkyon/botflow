@@ -1,42 +1,16 @@
+from botflow import *
 
-from botflow.botbase import BotManager
-from botflow.node import Flat
-from botflow.route import Return,Pipe,Loop,Branch,Join
-from botflow import BotFlow,Filter
-from botflow.node import Delay,Zip
-from botflow.config import config
+p = Pipe(
+    range(3),
+    lambda
+        p: f"https://www.amazon.com/s/ref=sr_pg_{p}?fst=p90x%3A1&page={p}&rh=n%3A283155%2Ck%3Apython&keywords=python&ie=UTF8&qid=1536500367",
+    HttpLoader(),
 
-class A:
-    pass
-class B:
-    pass
-
-class C:
-    pass
-
-def only_a(data):
-    if not isinstance(data,A):
-        raise Exception()
-
-def check_stop(i):
-    if i>10:
-        BotFlow.stop()
-
-    return i
-
-Pipe(
-    Join(
-        "a","b","c"
-
-    ),
-    Zip(n_stream=3),
-    lambda r:'l_'+r,
-    print,
-
-
+    lambda r: r.soup.find_all("li"),
+    Flat()
 )
 
+links = p.run(0)
 
-BotFlow.render("ex_output/test")
-BotFlow.run()
-
+print(links)
+#li=Pipe(links).Flat().run()

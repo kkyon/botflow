@@ -3,7 +3,8 @@ from aiohttp import ClientSession
 import aiohttp
 import asyncio
 from functools import partial
-from botflow.nodebase import Node
+from ..base import get_loop
+from botflow.functionbase import Function
 from botflow.routebase import Route
 import json
 from aiohttp import web
@@ -87,10 +88,10 @@ class HttpResponse(object):
     def __init__(self,body,encoding):
         self.url=''
         self._body=body
-        self._headers=Node
+        self._headers=Function
         self._encoding=encoding
-        self._cookies = Node
-        self._status=Node
+        self._cookies = Function
+        self._status=Function
         self._json=None
         self._soup=None
         self._text=None
@@ -134,7 +135,7 @@ class HttpResponse(object):
     def __repr__(self):
         return '%s(%s)'%(self.__class__,self.text)
 
-class HttpLoader(Node):
+class HttpLoader(Function):
 
     def __init__(self,delay=0,proxy=None,header=None,session_policy=None,timeout=20):
         self.delay=delay
@@ -303,7 +304,7 @@ class HttpServer(Route):
         self.joined=True
         self.outer_iq=iq
         self.outer_oq=oq
-        self._loop=asyncio.get_event_loop()
+        self._loop=get_loop()
 
         self.start_q=[queue.DataQueue()]
         self.output_q=oq

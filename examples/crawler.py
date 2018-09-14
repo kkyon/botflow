@@ -1,6 +1,6 @@
 import logging
 from botflow import *
-from botflow.route import SendTo
+from botflow.route import Link
 from botflow.config import config
 import datetime
 
@@ -47,7 +47,7 @@ def find_all_links(r):
         yield a.get('href')
 
 
-b = Return(
+b = Pipe(
 
     filter_out,
     HttpLoader(),
@@ -57,7 +57,7 @@ b = Return(
 Pipe(
     "http://127.0.0.1:8080/",
     b,
-    SendTo(b),
+    Link(b),
 
 )
 Bot.render('ex_output/crawler')

@@ -1,10 +1,13 @@
 =======
 Botflow
 =======
+0.2.0 alpha
+
 
 * Data-driven programming framework
 * Paralleled in coroutines and ThreadPool
 * Type- and content-based route function
+* Interactive programming with Jupyter Notebook
 
 
 Installing
@@ -71,6 +74,20 @@ _Load the price of Bitcoin every 2 seconds. Advantage price aggregator sample ca
         Bot.run()
     main()
 
+**Or write in chain style**
+
+
+.. code-block:: python
+
+
+
+    from botflow import *
+    p_cd_bitcoin=Pipe().Timer(delay=2).Loop("http://api.coindesk.com/v1/bpi/currentprice.json")\
+                .HttpLoader().Map(lambda r: r.json['bpi']['USD']['rate_float']).Map(print)
+
+    p_cd_bitcoin.run()
+
+
 
 - **Http server Support OOB**  Publish your data pipe to public quickly.
 
@@ -127,7 +144,28 @@ Botflow will replay the data from nearest completed node, usually step N-1.
 It will save a lot of time in the development phase.
 
 Release
-=======
+
+:**0.2.0**: Milestone release.:
+
+            # Jupyter support. Able to run inside Jupyter note book.
+
+            # pipe can be nest in another Pipe.
+
+
+            p1=Pipe(get_image)
+            p2=Pipe(get_price)
+            p_get_all=Pipe(Zip(p1,p2)).Filter
+
+            # Support Chain style pipe line creating.
+
+                Pipe(range(1,10)).Map(lambda x:x+1).Fiter(lambda x:x>2)
+
+                same as :
+
+                Pipe(range(1,10),lambda x:x+1,Filter(lambda x:x>2))
+
+
+
 :**0.1.9**: Major change see below .:
 
             # Backpressure rate limit support
@@ -166,30 +204,37 @@ Data-driven programming is typically applied to streams of structured data for f
 
 Botflow has a few basic concepts to implement Data-driven programming .
 
-- **Pipe**
-   It is the main stream process of the program. All units will work inside.
-- **Node**
-        It is callable unit.Any callable function and object can work as Node. It is driven by data. Custom functions work as Nodes.
+- **Source**
+        It is feed stream data to the pipe.
+
+    * **Timer**: It will send a message in the pipe by timer param. **delay**, **max_time** **until** some finished
+    * **Pipe.run**: you can use Pipe.run to trigger the data into pipe. By default it will feed int **0**
+
+
+
+- **Function**
+        It is callable unit.Any callable function and object can work as Node. It is driven by data. Custom functions work as Map unit.
         There are some built-in nodes:
 
    
-   * **Timer**: It will send a message in the pipe by timer param. **delay**, **max_time** **until** some finished
-   * **HttpLoader**: Get a url and return the HTTP response
+
+   * **Fetch**: (Alias:HttpLoader)  Get a url and return the HTTP response
    * **AioFile**: for file I/O.
    * **SpeedLimit**: limit the stream speed limit
    * **Delay**: delay in special second.
-   * **Zip** : Wait for all branched to finish and merged the result into a tuple.
+   * **Map**  : Work ad Convert unit.
    * **Filter** : Drop data from pipe if it does not match some condition
+   * **Flat** : Drop data from pipe if it does not match some condition
 
 
 - **Route**
         It will be used to create a complex data flow network, not just one main process. Botflow can nest Routes inside Routes.
         It is a powerful concept.
         There are some pre built-in Route:
-    * **Branch** : Duplicate data from parent pipe to a branch.
-    * **Line** : Extend the length of route.
-    * **Join** : Duplicate data to many branches, and return result to pipe.
-    * **LinkTo**: Route flow to any Node or Route for making loop , circle
+    * **Pipe**: It is the main stream process of the program. All units will work inside.
+    * **Tee** : (Alias:Branch) Duplicate data from parent pipe to a child pipe as branch.
+    * **Zip** :   Combine multi pipes result to list.
+    * **Link**: (Alias: LinkTo)  Route flow to any Node or Route for making loop , circle
 
 
 All units (Pipe, Node, Route) communicate via queues and perform parallel computation in coroutines.

@@ -86,7 +86,7 @@ def main():
 
     )
     Pipe(Timer(delay=delay), show_progress)
-    BotFlow.run()
+    BotFlow.run(silent=True)
 
 
 main()

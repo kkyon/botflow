@@ -38,7 +38,7 @@ p=Pipe(
 routes = web.RouteTableDef()
 @routes.get('/')
 async def json_handle(request):
-    r = await p(request)
+    r = await p.run_async(request)
     return web.json_response(r)
 
 
