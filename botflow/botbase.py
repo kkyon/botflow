@@ -87,6 +87,12 @@ class BotManager(object, metaclass=Singleton):
     def new_bot_id(self):
         self.bot_id += 1
         return self.bot_id
+    def remove_by_pipe(self,pipe):
+
+        self._bots = [ b for b  in self._bots if b.pipeline != pipe ]
+
+
+
 
     def add_pipes(self, pipe):
         self._pipes.add(pipe)
@@ -357,7 +363,7 @@ class BotBase(object):
                 #         self.lock.release()
 
             except BotExit:
-                logger.info("bot_{} exit".format(id(self)))
+                logger.debug("bot_{} exit".format(id(self)))
                 break
             except:
                 raise

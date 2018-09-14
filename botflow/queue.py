@@ -166,7 +166,7 @@ class ConditionalQueue:
         self._maxsize = maxsize
 
         # Futures.
-        self._getters = {} #collections.deque()
+        self._inernel_getters = {} #collections.deque()
         # Futures.
         self._putters = collections.deque()
 #        self._unfinished_tasks = 0
@@ -180,18 +180,24 @@ class ConditionalQueue:
         self.put_count=0
 
     # These three are overridable in subclasses.
+    @property
+    def _getters(self):
+        r=[]
+        for k,v in self._inernel_getters.items():
+            r.extend(v)
+        return r
 
     def _init(self, maxsize):
         self._queue = {} #collections.deque()
     def _init_dict(self,ori):
-        if ori not in self._getters:
-            self._getters[ori]=collections.deque()
+        if ori not in self._inernel_getters:
+            self._inernel_getters[ori]=collections.deque()
 
         if ori not in self._queue:
             self._queue[ori]=collections.deque()
 
     def clean(self,ori):
-        del self._getters[ori]
+        del self._inernel_getters[ori]
         del self._queue[ori]
 
 
@@ -225,8 +231,8 @@ class ConditionalQueue:
         result = 'maxsize={!r}'.format(self._maxsize)
         if getattr(self, '_queue', None):
             result += ' _queue={!r}'.format(list(self._queue))
-        if self._getters:
-            result += ' _getters[{}]'.format(len(self._getters))
+        if self._inernel_getters:
+            result += ' _getters[{}]'.format(len(self._inernel_getters))
         if self._putters:
             result += ' _putters[{}]'.format(len(self._putters))
         if self._unfinished_tasks:
@@ -245,9 +251,15 @@ class ConditionalQueue:
         """Number of items allowed in the queue."""
         return self._maxsize
 
-    def empty(self,ori):
+    def empty(self,ori=None):
         """Return True if the queue is empty, False otherwise."""
-        return not self._queue[ori]
+        if ori:
+            return not self._queue[ori]
+        else:
+            for k,v in self._queue.items():
+                if len(v) >0:
+                    return False
+            return True
 
     def full(self):
         """Return True if there are maxsize items in the queue.
@@ -294,27 +306,27 @@ class ConditionalQueue:
         self._put(item)
         # self._unfinished_tasks += 1
         # self._finished.clear()
-        self._wakeup_next(self._getters[item.ori])
+        self._wakeup_next(self._inernel_getters[item.ori])
 
     async def readable(self,ori):
 
         while self.empty(ori):
             getter = self._loop.create_future()
-            self._getters[ori].append(getter)
+            self._inernel_getters[ori].append(getter)
             try:
                 await getter
             except:
                 getter.cancel()  # Just in case getter is not done yet.
 
                 try:
-                    self._getters[ori].remove(getter)
+                    self._inernel_getters[ori].remove(getter)
                 except ValueError:
                     pass
 
                 if not self.empty(ori) and not getter.cancelled():
                     # We were woken up by put_nowait(), but can't take
                     # the call.  Wake up the next in line.
-                    self._wakeup_next(self._getters[ori])
+                    self._wakeup_next(self._inernel_getters[ori])
                 raise
 
 

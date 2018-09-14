@@ -1,6 +1,7 @@
 import asyncio
 import logging
 from .functionbase import Function
+from . import function
 from .bdata import Bdata
 from .config import config
 import typing,types
@@ -121,7 +122,10 @@ class CallableBot(BotBase):
                     all_none=False
             if all_none == False:
                 self.produced_count += 1
-                await q.put(Bdata(r, bdata.ori))
+                if len(r) ==1:
+                    await q.put(Bdata(r[0], bdata.ori))
+                else:
+                    await q.put(Bdata(r, bdata.ori))
 
         elif isinstance(r,typing.Generator):
             for i in r:
@@ -129,7 +133,9 @@ class CallableBot(BotBase):
                 await q.put(Bdata(i, bdata.ori))
 
         else:
-            if r is not None :
+            #None only can ignore when Filter Node.
+
+            if r is not None or (bdata.ori.data!=0  and not isinstance(func,function.Filter)):
                 self.produced_count += 1
                 await q.put(Bdata(r,bdata.ori))
 

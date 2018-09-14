@@ -82,4 +82,5 @@ class BotExit(Exception):
 _BOT_LOOP=asyncio.new_event_loop()
 
 def get_loop():
+    # _BOT_LOOP.set_debug(enabled=True)
     return _BOT_LOOP

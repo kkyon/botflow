@@ -8,9 +8,13 @@ from botflow.bdata import Bdata,Databoard
 from .botbase import BotManager
 from .routebase import Route
 from .base import BotExit
-
+from . import ex
+from . import function,route
 import sys
+import types,typing
 import logging
+import inspect
+import time
 logger=logging.getLogger(__name__)
 
 
@@ -24,6 +28,7 @@ class Runnable(object):
         for q in self.all_q:
             for get in q._getters:
                 get.set_exception(BotExit("Bot exit now"))
+
 
     async def check_stop(self):
 
@@ -43,7 +48,7 @@ class Runnable(object):
                     break
 
             for q in all_q:
-                if isinstance(q, SinkQueue) or self.output_q == q:
+                if isinstance(q, (SinkQueue,ConditionalQueue)) or self.output_q == q:
                     continue
                 if q.empty() == False:
                     # print("id:{} size:{}".format(id(q),q.qsize()))
@@ -100,22 +105,22 @@ class Runnable(object):
         await self.get_start_q().put(bdata)
         await self.check_stop()
 
-    def run(self, data):
+    def run(self, data=0):
 
         start_q = DataQueue()
-        end_q = DataQueue()
-        bdata = Bdata.make_Bdata_zori(data)
+        end_q = DataQueue(maxsize=0)
+        if isinstance(data,(list,range)):
+
+            self.args.insert(0,data)
+            bdata = Bdata.make_Bdata_zori(0)
+        else:
+            bdata = Bdata.make_Bdata_zori(data)
         self._make(start_q,end_q)
         self._start()
         self.bm.loop.run_until_complete(self._true_run(bdata))
-        result = []
-        while True:
-            try:
-                r = self.output_q.get_nowait()
-                result.append(r.data)
-            except:
-                break
-        self.bm.loop.stop()
+        result = self.get_result()
+        self.bm.remove_by_pipe(self)
+
         return result
 
 class Pipe(Runnable,Route):
@@ -136,10 +141,87 @@ class Pipe(Runnable,Route):
         self.bot_end_index=0
 
         self.joined = False
-        self.args=args
+        self.args=[]
+        self.args.extend(args)
         self.bots=[]
+        for fn in function.__all__+route.__all__+ex.__all__:
+
+            setattr(self,fn,self.function_wrap(fn))
+
         BotManager().add_pipes(self)
 
+    def function_wrap(self,func_name):
+
+        if func_name in function.__all__:
+            to_call = getattr(function, func_name)
+        elif func_name in ex.__all__:
+
+            to_call = getattr(ex, func_name)
+
+        else:
+            to_call = getattr(route, func_name)
+
+        def _wrap(*args,**kwargs):
+
+
+            self.args.append(to_call(*args,**kwargs))
+            return self
+
+
+        return _wrap
+
+
+    def part_wrape(self,f_list):
+
+        def _wrape(data):
+            r=data
+            for f in f_list:
+
+                if isinstance(r,(list,typing.Generator)):
+                    _r = []
+                    for i in r:
+                        __r=f(i)
+                        #if __r is not None:
+                        _r.append(__r)
+                    if len(_r) == 1:
+                        r=_r[0]
+                    else:
+                        r=_r
+                else:
+                    r=f(r)
+
+            if isinstance(r, ( typing.Generator)):
+                result=[]
+                for i in r:
+                    result.append(i)
+                return result
+            return r
+
+        return _wrape
+    def merge_args(self):
+        _list=[]
+        part = []
+        for f in self.args:
+
+            if not isinstance(f, (typing.Callable,Route)):
+                f = function.Loop(f)
+
+            if isinstance(f,Route) or\
+                    isinstance(f , function.Flat) or \
+                inspect.iscoroutinefunction(f.__call__):
+                if len(part) !=0:
+                    _list.append(self.part_wrape(part))
+                    part = []
+
+                _list.append(f)
+            else:
+                part.append(f)
+        if len(part)==1:
+            _list.append(f)
+        elif len(part)>1:
+            _list.append(self.part_wrape(part))
+
+        return _list
 
     def make_route_bot(self,iq,oq):
         self.share=False
@@ -152,6 +234,7 @@ class Pipe(Runnable,Route):
         self.bot_start_index = len(self.bm.get_bots())
         self.start_q = [iq]
         q_o=self.start_q[0]
+        #self.args=self.merge_args()
         for idx, func in enumerate(self.args):
             q_i = q_o
             if idx == len(self.args) - 1:
@@ -334,13 +417,22 @@ class Pipe(Runnable,Route):
             yield r
 
 
-
+    def get_result(self):
+        result=[]
+        while True:
+            try:
+                r = self.output_q.get_nowait()
+                result.append(r.data)
+            except:
+                break
+        #self.bm.loop.stop()
+        if len(result)==1:
+            return result[0]
+        return result
 
     def dev_mode(self):
         QueueManager().dev_mode()
-    def __call__(self, data):
 
-        return self.run(data)
 
 
 

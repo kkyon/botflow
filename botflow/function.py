@@ -1,15 +1,14 @@
 from .functionbase import Function
-from .botframe import BotFrame
-from .bdata import Bdata
+from .botbase import raw_value_wrap
 from .base import flatten,get_loop
 import asyncio
-
 import datetime
 
 
 
 import typing
 
+__all__=["Filter","Delay","SpeedLimit","Map","ToText","Loop","Flat"]
 class Flat(Function):
 
     def __init__(self,level=0):
@@ -18,6 +17,7 @@ class Flat(Function):
         self.raw_bdata=True
 
     def __call__(self, bdata):
+
         if isinstance(bdata.data, (list,typing.Generator)):
 
             for i in bdata.data:
@@ -30,88 +30,70 @@ class Flat(Function):
 
 
 
-# class SendTo(Node):
+
+# class Zip(Function):
+#     def __init__(self,n_stream=0):
+#         if  n_stream == 0:
+#             raise Exception('for Zip node ,need to set join_ref or n_stream')
 #
-#     def __init__(self,node):
 #         super().__init__()
-#         self.node=node
-#         self.target_q=None
+#         #self.join_ref=join_ref
+#         self.n_stream=n_stream
+#         self.buffer={}
 #         self.raw_bdata=True
 #
-#     def init(self):
 #
-#         b=BotFrame.bots[self.node_id]
-#         # self.target_q=b.iq[0]
-#         # return b.iq[0]
+#     # def init(self):
+#     #self.n_stream=self.join_ref.n_stream
+#     #     return
 #
-#     def get_target_q(self):
-#         if self.target_q is not None:
-#             return self.target_q
+#     def __call__(self, bdata):
+#         if bdata.ori not in self.buffer:
+#             self.buffer[bdata.ori] = []
 #
-#         self.target_q=self.node.outer_iq
-#         return self.target_q
-#         # b=BotFrame.bots[self.node_id]
-#         # self.target_q=b.iq[0]
-#         # return b.iq[0]
+#         self.buffer[bdata.ori].append(bdata.data)
 #
-#     async def __call__(self, message,route_type=object):
-#
-#         #get input q of node
-#         q=self.get_target_q()
-#         await q.put(message)
+#         if len(self.buffer[bdata.ori]) == self.n_stream:
+#             return self.buffer[bdata.ori]
 
 
-class Zip(Function):
-    def __init__(self,n_stream=0):
-        if  n_stream == 0:
-            raise Exception('for Zip node ,need to set join_ref or n_stream')
-
-        super().__init__()
-        #self.join_ref=join_ref
-        self.n_stream=n_stream
-        self.buffer={}
-        self.raw_bdata=True
-
-
-    # def init(self):
-    #self.n_stream=self.join_ref.n_stream
-    #     return
-
-    async def __call__(self, bdata):
-        if bdata.ori not in self.buffer:
-            self.buffer[bdata.ori] = []
-
-        self.buffer[bdata.ori].append(bdata.data)
-
-        if len(self.buffer[bdata.ori]) == self.n_stream:
-            return self.buffer[bdata.ori]
-
-
+Loop=raw_value_wrap
 
 class Filter(Function):
 
 
-    def __init__(self, filter_types=None,filter_func=None):
+    def __init__(self, filter_func):
         super().__init__()
-        if not isinstance(filter_types,list) and filter_types is not None:
-            filter_types=[filter_types]
+        # if not isinstance(filter_types,list) and filter_types is not None:
+        #     filter_types=[filter_types]
 
-        self.filter_types=filter_types
+        # self.filter_types=filter_types
         self.filter_func=filter_func
+        self.raw_bdata=True
+    def __call__(self, bdata):
 
-    async def __call__(self, data):
+        data=bdata.data
+        if isinstance(self.filter_func,str):
+            if self.filter_func in str(data):
+                return data
+            else:
+                return None
 
-        matched=False
-        if self.filter_types:
-            for t in self.filter_types:
-                if isinstance(data,t):
-                    matched=True
-                    break
-        else:
-            matched=True
 
-        if matched and (self.filter_func == None or self.filter_func(data)):
+        if self.filter_func(data):
             return data
+
+        # matched=False
+        # if self.filter_types:
+        #     for t in self.filter_types:
+        #         if isinstance(data,t):
+        #             matched=True
+        #             break
+        # else:
+        #     matched=True
+        #
+        # if matched and (self.filter_func == None or self.filter_func(data)):
+        #     return data
 
 
 class Delay(Function):
@@ -153,6 +135,26 @@ class SpeedLimit(Function):
 
         return data
 
-def print_list(d:list):
-    print(d)
-    return d
+
+
+class Map(Function):
+    def __init__(self,function):
+        super().__init__()
+        self.func=function
+
+
+    def __call__(self,data):
+
+        return self.func(data)
+
+
+class ToText(Function):
+    def __init__(self,func=None):
+        super().__init__()
+        self.func=func
+
+    def __call__(self, data):
+        if self.func :
+            return self.func(data)
+        else:
+            return str(data)
