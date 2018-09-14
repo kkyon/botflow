@@ -161,7 +161,7 @@ def test_filter():
     BotFlow.reset()
     Pipe(
         [A(),B(),C()],
-        Filter(filter_types=A),
+        Filter(lambda x:isinstance(x,A)),
         only_a
 
     )
@@ -177,17 +177,6 @@ def test_filter2():
 
     )
     BotFlow.run()
-#
-def test_filter3():
-    BotFlow.reset()
-    Pipe(
 
-        [A(),B(),C()],
-        Filter(filter_types=[A,B],filter_func=lambda r:isinstance(r,(A,C))),
-        only_a
-
-    )
-
-    BotFlow.run()
 
 

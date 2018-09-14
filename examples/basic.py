@@ -1,28 +1,16 @@
+from botflow import *
 
-from botflow import Return,Pipe,Branch,Join
-from botflow import BotFlow,Filter
-import logging
-logging.basicConfig(level=logging.DEBUG)
-logger=logging.getLogger('botflow.bot')
-logger.setLevel(logging.DEBUG)
-logger=logging.getLogger('botflow.pipe')
-logger.setLevel(logging.DEBUG)
+p = Pipe(
+    range(3),
+    lambda
+        p: f"https://www.amazon.com/s/ref=sr_pg_{p}?fst=p90x%3A1&page={p}&rh=n%3A283155%2Ck%3Apython&keywords=python&ie=UTF8&qid=1536500367",
+    HttpLoader(),
 
-p=Pipe(
-        ["a","b","c"],
+    lambda r: r.soup.find_all("li"),
+    Flat()
 )
 
-p1=Pipe(lambda x:x+2)
+links = p.run(0)
 
-p3=Pipe(lambda x:x+10,
-        Branch(p,print),
-    p1)
-
-
-
-# BotFrame.make_pipe([p1])
-# BotFlow.debug_print()
-#
-#print(p3(1))
-BotFlow.render("ex_output/basic")
-BotFlow.run(p3,p)
+print(links)
+#li=Pipe(links).Flat().run()

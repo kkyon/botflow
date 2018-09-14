@@ -12,7 +12,7 @@ setup(name='botflow',
       description='Data-driven and Reactive  programming framework'
                   ' ',
       long_description=read("README.rst"),
-      version='0.1.9.3',
+      version='0.2.0',
       url='https://github.com/kkyx/botflow',
       author='Guojian Li',
       author_email='guojianlee@gmail.com',
