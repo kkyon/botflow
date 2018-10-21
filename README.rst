@@ -9,6 +9,9 @@ Botflow
 * Type- and content-based route function
 * Interactive programming with Jupyter Notebook
 
+Requirements
+------------
+`Graphviz <http://brewformulas.org/Graphviz>`_.
 
 Installing
 ----------
