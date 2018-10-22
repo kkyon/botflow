@@ -205,11 +205,11 @@ Data-driven programming is typically applied to streams of structured data for f
 Botflow has a few basic concepts to implement Data-driven programming .
 
 - **Source**
-        It is feed stream data to the pipe.
+        It is emit stream data to the pipe.
 
     * **Timer**: It will send a message in the pipe by timer param. **delay**, **max_time** **until** some finished
     * **Pipe.run**: you can use Pipe.run to trigger the data into pipe. By default it will feed int **0**
-
+    * **CCT**:  Cryptocurrency Ticker .**TODO** will release on 0.2.1
 
 
 - **Function**
@@ -232,7 +232,7 @@ Botflow has a few basic concepts to implement Data-driven programming .
         It is a powerful concept.
         There are some pre built-in Route:
     * **Pipe**: It is the main stream process of the program. All units will work inside.
-    * **Tee** : (Alias:Branch) Duplicate data from parent pipe to a child pipe as branch.
+    * **Branch** : (Alias:Tee) Duplicate data from parent pipe to a child pipe as branch.
     * **Zip** :   Combine multi pipes result to list.
     * **Link**: (Alias: LinkTo)  Route flow to any Node or Route for making loop , circle
 

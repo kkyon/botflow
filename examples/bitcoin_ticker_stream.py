@@ -1,4 +1,4 @@
-from botflow import Pipe, Join, Return,Timer,Branch
+from botflow import Pipe, Join,Timer,Branch
 from botflow import BotFlow
 from botflow.ex.http import HttpLoader
 
@@ -50,21 +50,21 @@ def main():
 
     hget=HttpLoader(timeout=2)
 
-    Pipe(
+    p=Pipe(
 
         Timer(delay=3,max_time=5),
 
         Join(
-            Return("https://api.kraken.com/0/public/Ticker?pair=XBTUSD", hget, parse_kraken),
-            Return("https://bittrex.com/api/v1.1/public/getticker?market=USD-BTC", hget, parse_bittrex),
+            Pipe("https://api.kraken.com/0/public/Ticker?pair=XBTUSD", hget, parse_kraken),
+            Pipe ("https://bittrex.com/api/v1.1/public/getticker?market=USD-BTC", hget, parse_bittrex),
 
         ),
         print,
 
     )
 
-    BotFlow.render('ex_output/bitcoin_arbitrage')
-    BotFlow.run()
+ 
+    p.run()
 
 
 
