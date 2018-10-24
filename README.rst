@@ -4,7 +4,7 @@ Botflow
 0.2.0 alpha
 
 
-* Data-driven programming framework
+* Dataflow programming framework
 * Paralleled in coroutines and ThreadPool
 * Type- and content-based route function
 * Interactive programming with Jupyter Notebook
