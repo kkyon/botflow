@@ -28,7 +28,7 @@ http://botflow.readthedocs.io
 
 
 
-What's data-driven programming?
+What's dataflow programming?
 ===============================
 
 All functions are connected by pipes (queues) and communicate by data.  
@@ -42,7 +42,7 @@ Benefits:
 #. Decouple data and functionality
 #. Easy to reuse 
 
-Botflow provides pipe and route. It makes data-driven programming and powerful data flow processes easier.
+Botflow provides pipe and route. It makes dataflow programming and powerful data flow processes easier.
 
 
 Botflow is...
@@ -203,9 +203,10 @@ RoadMap
 More about Botflow
 ===============
 
-Data-driven programming is typically applied to streams of structured data for filtering, transforming, aggregating (such as computing statistics), or calling other programs.
+Data-
+programming is typically applied to streams of structured data for filtering, transforming, aggregating (such as computing statistics), or calling other programs.
 
-Botflow has a few basic concepts to implement Data-driven programming .
+Botflow has a few basic concepts to implement Dataflow programming .
 
 - **Source**
         It is feed stream data to the pipe.
