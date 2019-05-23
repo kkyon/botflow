@@ -92,32 +92,7 @@ _Load the price of Bitcoin every 2 seconds. Advantage price aggregator sample ca
 
 
 
-- **Http server Support OOB**  Publish your data pipe to public quickly.
-
-.. code-block:: python
-
-    from botflow import *
-    from aiohttp import web
-
-
-
-    p = Pipe(
-
-        {"msg":"hello world!"}
-    )
-
-
-
-    app = web.Application()
-
-    app.add_routes([
-        web.get('/', p.aiohttp_json_handle)
-    ])
-
-
-    Bot.run_app(app)
-    #BotFlow start web server http://0.0.0.0:8080
-
+ 
 - **Flow Graph**
 With render function:
 `Bot.render('bitcoin_arbitrage')`
