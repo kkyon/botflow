@@ -93,7 +93,7 @@ main()
 
 #
 # ---run result----
-#post man test result for a page requrest ;1100ms
+#post man test result for a page request ;1100ms
 #
 # PING www.a.shifen.com (180.97.33.108): 56 data bytes
 # 64 bytes from 180.97.33.108: icmp_seq=0 ttl=55 time=41.159 ms
